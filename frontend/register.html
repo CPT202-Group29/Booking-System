@@ -1,1 +1,43 @@
-
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>注册 - 专家预约系统</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>用户注册</h2>
+        <form id="registerForm">
+            <div class="form-group">
+                <label>姓名</label>
+                <input type="text" id="name" required>
+            </div>
+            <div class="form-group">
+                <label>邮箱</label>
+                <input type="email" id="email" required>
+            </div>
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" id="password" required>
+                <small id="pwdHint" style="color: gray;"></small>
+            </div>
+            <div class="form-group">
+                <label>确认密码</label>
+                <input type="password" id="confirmPassword" required>
+            </div>
+            <div class="form-group">
+                <label>验证码</label>
+                <div class="verification-row">
+                    <input type="text" id="verificationCode" required placeholder="6位验证码">
+                    <button type="button" id="sendCodeBtn">发送验证码</button>
+                </div>
+            </div>
+            <button type="submit">注册</button>
+            <p>已有账号？ <a href="login.html">立即登录</a></p>
+        </form>
+        <div id="message" class="message"></div>
+    </div>
+    <script type="module" src="js/auth.js"></script>
+</body>
+</html>
