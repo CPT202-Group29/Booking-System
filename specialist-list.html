@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Specialist List</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f6f8fb;
+      margin: 0;
+      padding: 40px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin-bottom: 12px;
+      color: #222;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 16px;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .specialist-card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .specialist-name {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 16px;
+      color: #222;
+    }
+
+    .info-row {
+      margin-bottom: 12px;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .label {
+      font-weight: bold;
+      color: #444;
+      display: inline-block;
+      width: 90px;
+    }
+
+    .status {
+      color: #15803d;
+      font-weight: bold;
+    }
+
+    .view-btn {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 10px 16px;
+      background: #2563eb;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+    }
+
+    .view-btn:hover {
+      background: #1d4ed8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Specialist List</h1>
+    <p class="subtitle">Browse available specialists and view their basic information.</p>
+
+    <div class="card-grid">
+      <div class="specialist-card">
+        <div class="specialist-name">Dr. Smith</div>
+        <div class="info-row"><span class="label">Expertise:</span> Psychology</div>
+        <div class="info-row"><span class="label">Level:</span> Senior</div>
+        <div class="info-row"><span class="label">Fee:</span> £50 / hour</div>
+        <div class="info-row"><span class="label">Status:</span> <span class="status">Available</span></div>
+        <a href="#" class="view-btn">View Details</a>
+      </div>
+
+      <div class="specialist-card">
+        <div class="specialist-name">Dr. Johnson</div>
+        <div class="info-row"><span class="label">Expertise:</span> Career Advice</div>
+        <div class="info-row"><span class="label">Level:</span> Intermediate</div>
+        <div class="info-row"><span class="label">Fee:</span> £40 / hour</div>
+        <div class="info-row"><span class="label">Status:</span> <span class="status">Available</span></div>
+        <a href="#" class="view-btn">View Details</a>
+      </div>
+
+      <div class="specialist-card">
+        <div class="specialist-name">Dr. Lee</div>
+        <div class="info-row"><span class="label">Expertise:</span> Academic Support</div>
+        <div class="info-row"><span class="label">Level:</span> Junior</div>
+        <div class="info-row"><span class="label">Fee:</span> £30 / hour</div>
+        <div class="info-row"><span class="label">Status:</span> <span class="status">Available</span></div>
+        <a href="#" class="view-btn">View Details</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
