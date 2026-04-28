@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <h2>Booking Admin</h2>
+      <nav>
+        <a class="active" href="#">Dashboard</a>
+        <a href="#">Specialists</a>
+        <a href="#">Bookings</a>
+        <a href="#">Expertise</a>
+        <a href="#">Reports</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="page-header">
+        <div>
+          <h1>Admin Dashboard</h1>
+          <p>Overview of specialists, bookings, and system activity.</p>
+        </div>
+        <button class="primary-btn" id="refreshBtn">Refresh Data</button>
+      </header>
+
+      <section class="stats-grid">
+        <div class="stat-card">
+          <p>Total Specialists</p>
+          <h2>12</h2>
+        </div>
+        <div class="stat-card">
+          <p>Active Specialists</p>
+          <h2>9</h2>
+        </div>
+        <div class="stat-card">
+          <p>Total Bookings</p>
+          <h2>36</h2>
+        </div>
+        <div class="stat-card">
+          <p>Pending Bookings</p>
+          <h2>8</h2>
+        </div>
+      </section>
+
+      <section class="content-grid">
+        <div class="panel large-panel">
+          <div class="panel-header">
+            <h2>Recent Bookings</h2>
+            <select id="statusFilter">
+              <option value="All">All Status</option>
+              <option value="Pending">Pending</option>
+              <option value="Confirmed">Confirmed</option>
+              <option value="Completed">Completed</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Booking ID</th>
+                <th>Customer</th>
+                <th>Specialist</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="bookingTableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="panel">
+          <h2>Booking Status Summary</h2>
+          <div class="status-row">
+            <span>Pending</span>
+            <strong>8</strong>
+          </div>
+          <div class="status-row">
+            <span>Confirmed</span>
+            <strong>15</strong>
+          </div>
+          <div class="status-row">
+            <span>Completed</span>
+            <strong>10</strong>
+          </div>
+          <div class="status-row">
+            <span>Cancelled</span>
+            <strong>3</strong>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
