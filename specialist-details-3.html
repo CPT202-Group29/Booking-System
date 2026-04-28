@@ -13,7 +13,7 @@
     }
 
     .container {
-      max-width: 800px;
+      max-width: 900px;
       margin: 0 auto;
       background: white;
       padding: 30px;
@@ -46,9 +46,65 @@
       vertical-align: top;
     }
 
+    .section-title {
+      margin-top: 32px;
+      margin-bottom: 16px;
+      font-size: 22px;
+      font-weight: bold;
+      color: #222;
+      border-bottom: 2px solid #e5e7eb;
+      padding-bottom: 8px;
+    }
+
+    .availability-box {
+      background-color: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 12px;
+    }
+
+    .availability-summary {
+      margin-bottom: 18px;
+      font-size: 17px;
+      line-height: 1.7;
+    }
+
+    .day-block {
+      margin-top: 18px;
+      padding: 16px;
+      background: white;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .day-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 12px;
+      color: #1f2937;
+    }
+
+    .slot-list {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .slot-list li {
+      margin-bottom: 8px;
+      font-size: 16px;
+      color: #374151;
+    }
+
+    .note {
+      color: #666;
+      font-size: 14px;
+      margin-top: 14px;
+    }
+
     .back-btn {
       display: inline-block;
-      margin-top: 24px;
+      margin-top: 28px;
       padding: 10px 18px;
       background: #2563eb;
       color: white;
@@ -72,8 +128,36 @@
     <div class="row"><span class="label">Fee:</span> 90.00</div>
     <div class="row"><span class="label">Status:</span> Available</div>
     <div class="row"><span class="label">Contact:</span> lee@example.com</div>
-    <div class="row"><span class="label">Availability:</span> To be confirmed</div>
     <div class="row"><span class="label">Description:</span> Supports students with academic planning and study advice.</div>
+
+    <div class="section-title">Availability</div>
+
+    <div class="availability-box">
+      <div class="availability-summary"><strong>Total Available Slots:</strong> 30</div>
+      <div class="availability-summary"><strong>Next Available Slot:</strong> 2026-04-28 09:00:00</div>
+
+      <div class="day-block">
+        <div class="day-title">2026-04-28 (TUESDAY)</div>
+        <ul class="slot-list">
+          <li>09:00 - 10:00</li>
+          <li>14:00 - 15:00</li>
+          <li>16:00 - 17:00</li>
+        </ul>
+      </div>
+
+      <div class="day-block">
+        <div class="day-title">2026-04-29 (WEDNESDAY)</div>
+        <ul class="slot-list">
+          <li>09:00 - 10:00</li>
+          <li>14:00 - 15:00</li>
+          <li>16:00 - 17:00</li>
+        </ul>
+      </div>
+
+      <p class="note">
+        Static prototype based on B2 availability API structure.
+      </p>
+    </div>
 
     <a href="specialist-list.html" class="back-btn">Back</a>
   </div>
