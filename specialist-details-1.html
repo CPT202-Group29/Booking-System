@@ -96,6 +96,12 @@
       color: #374151;
     }
 
+    .note {
+      color: #666;
+      font-size: 14px;
+      margin-top: 14px;
+    }
+
     .back-btn {
       display: inline-block;
       margin-top: 28px;
@@ -116,37 +122,108 @@
     <h1>Specialist Details</h1>
     <p class="subtitle">View detailed information about the selected specialist.</p>
 
-    <div class="row"><span class="label">Name:</span> Dr. Alice Smith</div>
-    <div class="row"><span class="label">Expertise:</span> Psychology</div>
-    <div class="row"><span class="label">Level:</span> Senior</div>
-    <div class="row"><span class="label">Fee:</span> 150.00</div>
-    <div class="row"><span class="label">Status:</span> Available</div>
-    <div class="row"><span class="label">Contact:</span> alice@example.com</div>
-    <div class="row"><span class="label">Description:</span> Experienced psychologist with 10 years in clinical practice.</div>
+    <div class="row"><span class="label">Name:</span> <span id="name"></span></div>
+    <div class="row"><span class="label">Expertise:</span> <span id="expertise"></span></div>
+    <div class="row"><span class="label">Level:</span> <span id="level"></span></div>
+    <div class="row"><span class="label">Fee:</span> <span id="fee"></span></div>
+    <div class="row"><span class="label">Status:</span> <span id="status"></span></div>
+    <div class="row"><span class="label">Contact:</span> <span id="contact"></span></div>
+    <div class="row"><span class="label">Description:</span> <span id="description"></span></div>
 
     <div class="section-title">Availability</div>
 
     <div class="availability-box">
-      <div class="availability-summary"><strong>Total Available Slots:</strong> 5</div>
-      <div class="availability-summary"><strong>Next Available Slot:</strong> 2026-04-28 09:00:00</div>
-
-      <div class="day-block">
-        <div class="day-title">2026-04-28 (TUESDAY)</div>
-        <ul class="slot-list">
-          <li>09:00 - 10:00</li>
-          <li>10:00 - 11:00</li>
-        </ul>
+      <div class="availability-summary">
+        <strong>Total Available Slots:</strong> <span id="totalSlots"></span>
+      </div>
+      <div class="availability-summary">
+        <strong>Next Available Slot:</strong> <span id="nextSlot"></span>
       </div>
 
-      <div class="day-block">
-        <div class="day-title">2026-04-29 (WEDNESDAY)</div>
-        <ul class="slot-list">
-          <li>14:00 - 15:00</li>
-        </ul>
-      </div>
+      <div id="availabilityDays"></div>
+
+      <p class="note">
+        Static prototype based on B2 availability API structure.
+      </p>
     </div>
 
     <a href="specialist-list.html" class="back-btn">Back</a>
   </div>
+
+  <script>
+    const specialistData = {
+      id: 1,
+      name: "Dr. Alice Smith",
+      expertise: "Psychology",
+      level: "Senior",
+      fee: 150.00,
+      status: 1,
+      contact: "alice@example.com",
+      description: "Experienced psychologist with 10 years in clinical practice.",
+      availability: {
+        specialistId: 200,
+        totalAvailableSlots: 5,
+        nextAvailableSlot: "2026-04-28 09:00:00",
+        byDay: [
+          {
+            date: "2026-04-28",
+            dayOfWeek: "TUESDAY",
+            slots: [
+              { slotId: 1, time: "09:00 - 10:00" },
+              { slotId: 2, time: "10:00 - 11:00" }
+            ]
+          },
+          {
+            date: "2026-04-29",
+            dayOfWeek: "WEDNESDAY",
+            slots: [
+              { slotId: 3, time: "14:00 - 15:00" }
+            ]
+          }
+        ]
+      }
+    };
+
+    function mapStatus(statusValue) {
+      return statusValue === 1 ? "Available" : "Unavailable";
+    }
+
+    document.getElementById("name").textContent = specialistData.name;
+    document.getElementById("expertise").textContent = specialistData.expertise;
+    document.getElementById("level").textContent = specialistData.level;
+    document.getElementById("fee").textContent = specialistData.fee.toFixed(2);
+    document.getElementById("status").textContent = mapStatus(specialistData.status);
+    document.getElementById("contact").textContent = specialistData.contact;
+    document.getElementById("description").textContent = specialistData.description;
+
+    document.getElementById("totalSlots").textContent =
+      specialistData.availability.totalAvailableSlots;
+    document.getElementById("nextSlot").textContent =
+      specialistData.availability.nextAvailableSlot;
+
+    const availabilityDaysContainer = document.getElementById("availabilityDays");
+
+    specialistData.availability.byDay.forEach(day => {
+      const dayBlock = document.createElement("div");
+      dayBlock.className = "day-block";
+
+      const dayTitle = document.createElement("div");
+      dayTitle.className = "day-title";
+      dayTitle.textContent = `${day.date} (${day.dayOfWeek})`;
+
+      const slotList = document.createElement("ul");
+      slotList.className = "slot-list";
+
+      day.slots.forEach(slot => {
+        const li = document.createElement("li");
+        li.textContent = slot.time;
+        slotList.appendChild(li);
+      });
+
+      dayBlock.appendChild(dayTitle);
+      dayBlock.appendChild(slotList);
+      availabilityDaysContainer.appendChild(dayBlock);
+    });
+  </script>
 </body>
 </html>
