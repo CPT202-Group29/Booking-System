@@ -13,7 +13,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 /**
@@ -269,5 +272,54 @@ public class BookingService {
             Long specialistId, LocalDateTime from, LocalDateTime to) {
         return timeSlotRepository.findAvailableSlotsBySpecialistAndDateRange(
                 specialistId, from, to);
+    }
+
+    /**
+     * Get frontend-friendly availability for a specialist.
+     * Groups available slots by date with human-readable time ranges.
+     * Default: next 7 days.
+     */
+    @Transactional(readOnly = true)
+    public AvailabilityResponse getSpecialistAvailability(
+            Long specialistId, LocalDateTime from, LocalDateTime to) {
+        List<TimeSlot> slots = timeSlotRepository
+                .findAvailableSlotsBySpecialistAndDateRange(specialistId, from, to);
+
+        AvailabilityResponse response = new AvailabilityResponse();
+        response.setSpecialistId(specialistId);
+        response.setTotalAvailableSlots(slots.size());
+
+        if (!slots.isEmpty()) {
+            response.setNextAvailableSlot(slots.get(0).getStartTime().toString());
+        }
+
+        // Group slots by date
+        Map<String, List<TimeSlot>> grouped = slots.stream()
+                .collect(Collectors.groupingBy(
+                        s -> s.getStartTime().toLocalDate().toString(),
+                        TreeMap::new,
+                        Collectors.toList()));
+
+        List<AvailabilityResponse.DayGroup> dayGroups = new ArrayList<>();
+        for (Map.Entry<String, List<TimeSlot>> entry : grouped.entrySet()) {
+            AvailabilityResponse.DayGroup group = new AvailabilityResponse.DayGroup();
+            group.setDate(entry.getKey());
+            group.setDayOfWeek(entry.getValue().get(0).getStartTime()
+                    .getDayOfWeek().toString());
+
+            List<AvailabilityResponse.SlotItem> items = new ArrayList<>();
+            for (TimeSlot s : entry.getValue()) {
+                AvailabilityResponse.SlotItem item = new AvailabilityResponse.SlotItem();
+                item.setSlotId(s.getId());
+                item.setTime(s.getStartTime().toLocalTime()
+                        + " - " + s.getEndTime().toLocalTime());
+                items.add(item);
+            }
+            group.setSlots(items);
+            dayGroups.add(group);
+        }
+        response.setByDay(dayGroups);
+
+        return response;
     }
 }

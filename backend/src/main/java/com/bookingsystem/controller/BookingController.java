@@ -99,6 +99,24 @@ public class BookingController {
                 bookingService.getAvailableSlots(specialistId, from, to));
     }
 
+    /**
+     * GET /api/v1/specialists/{id}/availability
+     * Returns frontend-friendly availability grouped by date.
+     * Default: next 7 days if from/to not specified.
+     */
+    @GetMapping("/specialists/{id}/availability")
+    public ResponseEntity<AvailabilityResponse> getAvailability(
+            @PathVariable Long id,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
+        LocalDateTime f = (from != null) ? from : LocalDateTime.now();
+        LocalDateTime t = (to != null) ? to : LocalDateTime.now().plusDays(7);
+        return ResponseEntity.ok(
+                bookingService.getSpecialistAvailability(id, f, t));
+    }
+
     /** GET /api/v1/health - Health check. */
     @GetMapping("/health")
     public ResponseEntity<Map<String, String>> health() {
