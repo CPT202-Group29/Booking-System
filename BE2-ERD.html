@@ -3,96 +3,104 @@
 <head>
 <meta charset="UTF-8">
 <title>BE2 Booking Module — ERD</title>
-<script src="https://cdn.bootcdn.net/ajax/libs/mermaid/10.9.0/mermaid.min.js"></script>
 <style>
-  body { font-family: -apple-system, sans-serif; max-width: 900px; margin: 40px auto; }
-  h1 { text-align: center; color: #2c3e50; }
-  .info { background: #f8f9fa; border-left: 4px solid #4A90D9; padding: 12px 16px; margin: 20px 0; font-size: 14px; line-height: 1.8; }
-  .info code { background: #e8e8e8; padding: 1px 4px; border-radius: 3px; }
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Consolas,monospace;background:#fff;padding:30px;color:#333}
+h1{text-align:center;margin-bottom:30px;font-size:18px;color:#2c3e50}
+.wrap{display:flex;gap:40px;justify-content:center;align-items:flex-start;flex-wrap:wrap}
+.table{border:2px solid #3498db;border-radius:6px;overflow:hidden;min-width:420px;background:#fff}
+.table .title{padding:10px 16px;font-size:14px;font-weight:bold;color:#fff;text-align:center}
+.table.ts .title{background:#3498db}
+.table.bk .title{background:#e74c3c}
+.table .row{display:flex;padding:6px 14px;font-size:13px;border-bottom:1px solid #eee}
+.table .row:last-child{border-bottom:none}
+.table .row .pk{color:#e67e22;font-weight:bold;width:36px}
+.table .row .fk{color:#27ae60;font-weight:bold;width:36px}
+.table .row .col{color:#888;width:36px;text-align:center}
+.table .row .name{flex:1;font-weight:bold}
+.table .row .type{color:#666;min-width:120px;text-align:right}
+.table .row .note{color:#999;font-size:11px;margin-left:8px;min-width:120px}
+.divider{background:#ecf0f1;border-bottom:1px solid #ddd;font-size:11px;padding:3px 14px;color:#888}
+.relation{display:flex;align-items:center;gap:8px;justify-content:center;margin:20px 0}
+.relation .line{width:60px;height:2px;background:#555;position:relative}
+.relation .label{font-size:12px;color:#555;font-weight:bold}
+.crowsfoot{font-size:20px;color:#e74c3c;font-weight:bold}
+.box{border:2px dashed #f39c12;border-radius:6px;padding:16px 20px;margin-top:20px;background:#fef9e7}
+.box h3{color:#e67e22;font-size:14px;margin-bottom:8px}
+.box .sm{font-size:12px;line-height:2;color:#555}
+.box code{background:#ffeaa7;padding:1px 4px;border-radius:3px}
+.external{margin-top:20px;font-size:12px;color:#999;line-height:1.8;border:1px solid #ddd;border-radius:6px;padding:12px 20px}
+.external strong{color:#555}
 </style>
 </head>
 <body>
-<h1>BE2 Booking Module — ERD</h1>
 
-<div class="mermaid" id="mermaid-diagram">
-erDiagram
-    time_slots {
-        bigint id PK "自增主键"
-        bigint specialist_id "逻辑FK → BE3"
-        datetime start_time
-        datetime end_time
-        boolean is_available
-        int version "乐观锁"
-        datetime created_at
-    }
+<h1>BE2 Booking Module — Entity-Relationship Diagram</h1>
 
-    bookings {
-        bigint id PK "自增主键"
-        bigint customer_id "逻辑FK → BE1"
-        bigint specialist_id "逻辑FK → BE3"
-        bigint time_slot_id FK "物理FK → time_slots"
-        varchar status "PENDING|CONFIRMED|CANCELLED|COMPLETED"
-        varchar topic "咨询主题"
-        varchar notes "备注"
-        decimal charge_amount "费用"
-        varchar cancel_reason "取消原因"
-        datetime created_at
-        datetime updated_at
-    }
+<div class="wrap">
+  <!-- time_slots table -->
+  <div class="table ts">
+    <div class="title">time_slots</div>
+    <div class="row"><span class="pk">PK</span><span class="name">id</span><span class="type">BIGINT</span><span class="note">自增主键</span></div>
+    <div class="row"><span class="col">—</span><span class="name">specialist_id</span><span class="type">BIGINT</span><span class="note">→ BE3 specialists</span></div>
+    <div class="row"><span class="col">—</span><span class="name">start_time</span><span class="type">DATETIME</span></div>
+    <div class="row"><span class="col">—</span><span class="name">end_time</span><span class="type">DATETIME</span></div>
+    <div class="row"><span class="col">—</span><span class="name">is_available</span><span class="type">BOOLEAN</span><span class="note">默认 TRUE</span></div>
+    <div class="row"><span class="col">—</span><span class="name">version</span><span class="type">INT</span><span class="note">乐观锁 @Version</span></div>
+    <div class="row"><span class="col">—</span><span class="name">created_at</span><span class="type">DATETIME</span></div>
+    <div class="divider">INDEX: specialist_id, is_available | CHECK: end_time > start_time</div>
+  </div>
 
-    time_slots ||--o{ bookings : "time_slot_id (1:N)"
-</mermaid>
+  <!-- relation -->
+  <div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding-top:80px">
+    <span style="font-size:13px;font-weight:bold;color:#3498db">1</span>
+    <div style="width:2px;height:20px;background:#555"></div>
+    <span style="font-size:11px;color:#888;font-style:italic">FK: time_slot_id</span>
+    <div style="width:2px;height:20px;background:#555"></div>
+    <span style="font-size:16px;font-weight:bold;color:#e74c3c">N</span>
+  </div>
 
-<div class="info">
-  <strong>状态机:</strong><br>
-  <code>PENDING → CONFIRMED → COMPLETED</code><br>
-  <code>  │          │</code><br>
-  <code>  └──→ CANCELLED ←──┘</code><br><br>
-
-  <strong>外部依赖:</strong><br>
-  • <code>customer_id</code> — BE1 用户模块提供<br>
-  • <code>specialist_id</code> — BE3 专家管理模块提供<br><br>
-
-  <strong>约束:</strong><br>
-  • <code>end_time &gt; start_time</code> (time_slots)<br>
-  • <code>status IN ('PENDING','CONFIRMED','CANCELLED','COMPLETED')</code> (bookings)<br>
-  • <code>charge_amount &gt;= 0</code> (bookings)<br>
-  • <code>time_slot_id</code> 有数据库外键约束，删时段前须先处理关联 booking<br>
-  • <code>version</code> 字段用 @Version 乐观锁，防并发重复预订<br><br>
-
-  <strong>索引:</strong><br>
-  • time_slots: <code>specialist_id</code>, <code>is_available</code><br>
-  • bookings: <code>customer_id</code>, <code>specialist_id</code>, <code>status</code>, <code>time_slot_id</code>
+  <!-- bookings table -->
+  <div class="table bk">
+    <div class="title">bookings</div>
+    <div class="row"><span class="pk">PK</span><span class="name">id</span><span class="type">BIGINT</span><span class="note">自增主键</span></div>
+    <div class="row"><span class="col">—</span><span class="name">customer_id</span><span class="type">BIGINT</span><span class="note">→ BE1 Users</span></div>
+    <div class="row"><span class="col">—</span><span class="name">specialist_id</span><span class="type">BIGINT</span><span class="note">→ BE3 specialists</span></div>
+    <div class="row"><span class="fk">FK</span><span class="name">time_slot_id</span><span class="type">BIGINT</span><span class="note">→ time_slots.id</span></div>
+    <div class="row"><span class="col">—</span><span class="name">status</span><span class="type">VARCHAR(20)</span><span class="note">4种枚举</span></div>
+    <div class="row"><span class="col">—</span><span class="name">topic</span><span class="type">VARCHAR(200)</span></div>
+    <div class="row"><span class="col">—</span><span class="name">notes</span><span class="type">VARCHAR(500)</span></div>
+    <div class="row"><span class="col">—</span><span class="name">charge_amount</span><span class="type">DECIMAL(10,2)</span></div>
+    <div class="row"><span class="col">—</span><span class="name">cancel_reason</span><span class="type">VARCHAR(300)</span></div>
+    <div class="row"><span class="col">—</span><span class="name">created_at</span><span class="type">DATETIME</span></div>
+    <div class="row"><span class="col">—</span><span class="name">updated_at</span><span class="type">DATETIME</span><span class="note">自动更新</span></div>
+    <div class="divider">INDEX: customer_id, specialist_id, status, time_slot_id</div>
+    <div class="divider">CHECK: status IN ('PENDING','CONFIRMED','CANCELLED','COMPLETED')</div>
+    <div class="divider">CHECK: charge_amount >= 0</div>
+  </div>
 </div>
 
-<script>
-window.addEventListener('load', function() {
-  setTimeout(function() {
-    var svg = document.querySelector('.mermaid svg');
-    if (!svg) {
-      document.getElementById('mermaid-diagram').innerHTML =
-        '<pre style="background:#fff3cd;padding:20px;border:2px solid #ffc107;border-radius:8px;font-size:13px;line-height:1.8;">' +
-        '╔══════════════════════════╗     ╔══════════════════════════╗\n' +
-        '║       time_slots        ║     ║        bookings         ║\n' +
-        '╠══════════════════════════╣     ╠══════════════════════════╣\n' +
-        '║ PK  id          BIGINT  ║ 1   ║ PK  id          BIGINT  ║\n' +
-        '║     specialist_id BIGINT║──N→ ║ FK  time_slot_id BIGINT ║\n' +
-        '║     start_time  DATETIME║     ║     customer_id BIGINT  ║──→ BE1\n' +
-        '║     end_time    DATETIME║     ║     specialist_id BIGINT║──→ BE3\n' +
-        '║     is_available BOOLEAN║     ║     status VARCHAR(20) ║\n' +
-        '║     version     INT     ║     ║     topic   VARCHAR    ║\n' +
-        '║     created_at  DATETIME║     ║     notes   VARCHAR    ║\n' +
-        '╚══════════════════════════╝     ║     charge_amount DEC ║\n' +
-        '                                 ║     cancel_reason VAR ║\n' +
-        '  状态机: PENDING → CONFIRMED     ║     created_at DATETIME║\n' +
-        '           → COMPLETED            ║     updated_at DATETIME║\n' +
-        '           ↓        ↓             ╚══════════════════════════╝\n' +
-        '          CANCELLED ←┘            文件位置: BE2-ERD.html\n' +
-        '</pre>' +
-        '<p style="color:#e74c3c;margin-top:10px;">⚠ Mermaid CDN 加载失败，上面是文本版 ERD。请截图发给 BE1。</p>';
-    }
-  }, 3000);
-});
-</script>
+<div class="box">
+  <h3>Booking Status State Machine</h3>
+  <div class="sm">
+    <code>PENDING</code> → <code>CONFIRMED</code> → <code>COMPLETED</code><br>
+    &nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+    &nbsp;&nbsp;&nbsp;└──→ <code>CANCELLED</code> ←──┘<br>
+    <br>
+    • confirm: PENDING → CONFIRMED（管理员操作）<br>
+    • complete: CONFIRMED → COMPLETED（专家操作）<br>
+    • cancel: PENDING/CONFIRMED → CANCELLED（客户 24h 前 / 管理员无限制）
+  </div>
+</div>
+
+<div class="external">
+  <strong>外部依赖：</strong><br>
+  • <code>customer_id</code> — 逻辑外键，引用 BE1 Users 表<br>
+  • <code>specialist_id</code> — 逻辑外键，引用 BE3 Specialists 表<br>
+  • <code>time_slot_id</code> — 物理外键，引用 time_slots.id<br>
+  <strong>并发控制：</strong>悲观锁 (SELECT FOR UPDATE) + 乐观锁 (version 字段)<br>
+  <strong>生成时间：</strong>2026-04-29 | <strong>分支：</strong>feature/be2-booking-workflow
+</div>
+
 </body>
 </html>
