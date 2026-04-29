@@ -16,7 +16,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -86,7 +86,7 @@ public class BookingService {
         }
 
         Booking saved = bookingRepository.save(booking);
-        return BookingResponse.fromEntity(saved);
+        return toResponse(saved);
     }
 
     /** Customer creates a booking request (status: PENDING). */
@@ -107,21 +107,23 @@ public class BookingService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new BookingException(
                         "Booking not found: " + bookingId, 404));
-        return BookingResponse.fromEntity(booking);
+        return toResponse(booking);
     }
 
     /** List bookings for a customer. */
     @Transactional(readOnly = true)
     public List<BookingResponse> getCustomerBookings(Long customerId) {
-        return bookingRepository.findByCustomerIdOrderByCreatedAtDesc(customerId)
-                .stream().map(BookingResponse::fromEntity).collect(Collectors.toList());
+        List<Booking> bookings = bookingRepository
+                .findByCustomerIdOrderByCreatedAtDesc(customerId);
+        return toResponseList(bookings);
     }
 
     /** List bookings for a specialist. */
     @Transactional(readOnly = true)
     public List<BookingResponse> getSpecialistBookings(Long specialistId) {
-        return bookingRepository.findBySpecialistIdOrderByCreatedAtDesc(specialistId)
-                .stream().map(BookingResponse::fromEntity).collect(Collectors.toList());
+        List<Booking> bookings = bookingRepository
+                .findBySpecialistIdOrderByCreatedAtDesc(specialistId);
+        return toResponseList(bookings);
     }
 
     /** Confirm a booking (admin action): PENDING -> CONFIRMED. */
@@ -135,7 +137,7 @@ public class BookingService {
                     + ". Current status: " + booking.getStatus(), 400);
         }
         booking.setStatus(BookingStatus.CONFIRMED);
-        return BookingResponse.fromEntity(bookingRepository.save(booking));
+        return toResponse(bookingRepository.save(booking));
     }
 
     /** Complete a booking (specialist action): CONFIRMED -> COMPLETED. */
@@ -149,7 +151,7 @@ public class BookingService {
                     + ". Current status: " + booking.getStatus(), 400);
         }
         booking.setStatus(BookingStatus.COMPLETED);
-        return BookingResponse.fromEntity(bookingRepository.save(booking));
+        return toResponse(bookingRepository.save(booking));
     }
 
     /**
@@ -194,7 +196,7 @@ public class BookingService {
             throw new BookingException("Slot release failed due to concurrent update.", 409, e);
         }
 
-        return BookingResponse.fromEntity(saved);
+        return toResponse(saved);
     }
 
     /**
@@ -263,7 +265,7 @@ public class BookingService {
                 ? BookingStatus.CONFIRMED : BookingStatus.PENDING);
         newBooking.setChargeAmount(chargeService.calculateCharge(existing.getSpecialistId()));
 
-        return BookingResponse.fromEntity(bookingRepository.save(newBooking));
+        return toResponse(bookingRepository.save(newBooking));
     }
 
     /** Get available slots for a specialist within a date range. */
@@ -321,5 +323,66 @@ public class BookingService {
         response.setByDay(dayGroups);
 
         return response;
+    }
+
+    // ==================== Admin booking management ====================
+
+    /** List all bookings, optionally filtered by status. */
+    @Transactional(readOnly = true)
+    public List<BookingResponse> listAllBookings(BookingStatus status) {
+        List<Booking> bookings = (status != null)
+                ? bookingRepository.findByStatus(status)
+                : bookingRepository.findAllByOrderByCreatedAtDesc();
+        return toResponseList(bookings);
+    }
+
+    /**
+     * Admin cancels a booking. Skips ownership check and 24-hour rule.
+     * Applicable to PENDING or CONFIRMED bookings.
+     */
+    public BookingResponse adminCancelBooking(Long bookingId, String cancelReason) {
+        Booking booking = bookingRepository.findByIdWithLock(bookingId)
+                .orElseThrow(() -> new BookingException(
+                        "Booking not found: " + bookingId, 404));
+
+        if (!booking.canCancel()) {
+            throw new BookingException(
+                    "Cannot cancel booking " + bookingId
+                    + " in " + booking.getStatus() + " state", 400);
+        }
+
+        booking.setStatus(BookingStatus.CANCELLED);
+        booking.setCancelReason(cancelReason);
+        Booking saved = bookingRepository.save(booking);
+
+        // Release the time slot
+        TimeSlot slot = timeSlotRepository.findById(booking.getTimeSlotId())
+                .orElseThrow(() -> new BookingException("Time slot not found", 404));
+        slot.setIsAvailable(true);
+        try {
+            timeSlotRepository.save(slot);
+        } catch (OptimisticLockingFailureException e) {
+            throw new BookingException("Slot release failed due to concurrent update.", 409, e);
+        }
+
+        return toResponse(saved);
+    }
+
+    // ==================== Response enrichment helpers ====================
+
+    private BookingResponse toResponse(Booking booking) {
+        TimeSlot slot = timeSlotRepository.findById(booking.getTimeSlotId()).orElse(null);
+        return BookingResponse.fromEntity(booking, slot);
+    }
+
+    private List<BookingResponse> toResponseList(List<Booking> bookings) {
+        if (bookings.isEmpty()) return List.of();
+        List<Long> slotIds = bookings.stream()
+                .map(Booking::getTimeSlotId).distinct().collect(Collectors.toList());
+        Map<Long, TimeSlot> slotMap = timeSlotRepository.findByIdIn(slotIds).stream()
+                .collect(Collectors.toMap(TimeSlot::getId, s -> s));
+        return bookings.stream()
+                .map(b -> BookingResponse.fromEntity(b, slotMap.get(b.getTimeSlotId())))
+                .collect(Collectors.toList());
     }
 }

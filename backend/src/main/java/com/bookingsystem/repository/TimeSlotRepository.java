@@ -34,4 +34,6 @@ public interface TimeSlotRepository extends JpaRepository<TimeSlot, Long> {
             @Param("to") LocalDateTime to);
 
     boolean existsByIdAndIsAvailableTrue(Long id);
+
+    List<TimeSlot> findByIdIn(List<Long> ids);
 }

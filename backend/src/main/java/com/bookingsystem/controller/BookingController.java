@@ -1,6 +1,7 @@
 package com.bookingsystem.controller;
 
 import com.bookingsystem.dto.*;
+import com.bookingsystem.model.BookingStatus;
 import com.bookingsystem.model.TimeSlot;
 import com.bookingsystem.service.BookingService;
 import jakarta.validation.Valid;
@@ -42,19 +43,22 @@ public class BookingController {
     }
 
     /**
+     * GET /api/v1/bookings — list all bookings
      * GET /api/v1/bookings?customerId={id}
      * GET /api/v1/bookings?specialistId={id}
+     * GET /api/v1/bookings?status=PENDING
      */
     @GetMapping("/bookings")
     public ResponseEntity<List<BookingResponse>> listBookings(
             @RequestParam(required = false) Long customerId,
-            @RequestParam(required = false) Long specialistId) {
+            @RequestParam(required = false) Long specialistId,
+            @RequestParam(required = false) BookingStatus status) {
         if (customerId != null) {
             return ResponseEntity.ok(bookingService.getCustomerBookings(customerId));
         } else if (specialistId != null) {
             return ResponseEntity.ok(bookingService.getSpecialistBookings(specialistId));
         }
-        return ResponseEntity.badRequest().build();
+        return ResponseEntity.ok(bookingService.listAllBookings(status));
     }
 
     /** PUT /api/v1/bookings/{id}/confirm - Admin confirms a PENDING booking. */
@@ -79,6 +83,15 @@ public class BookingController {
             @PathVariable Long id,
             @Valid @RequestBody CancelRequest request) {
         return ResponseEntity.ok(bookingService.cancelBooking(id, request));
+    }
+
+    /** POST /api/v1/bookings/{id}/admin-cancel - Admin cancels (no 24h/ownership check). */
+    @PostMapping("/bookings/{id}/admin-cancel")
+    public ResponseEntity<BookingResponse> adminCancelBooking(
+            @PathVariable Long id,
+            @Valid @RequestBody AdminCancelRequest request) {
+        return ResponseEntity.ok(
+                bookingService.adminCancelBooking(id, request.getCancelReason()));
     }
 
     /** POST /api/v1/bookings/{id}/reschedule - Customer reschedules. */

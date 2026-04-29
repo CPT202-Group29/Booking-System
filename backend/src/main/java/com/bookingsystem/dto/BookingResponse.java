@@ -2,9 +2,11 @@ package com.bookingsystem.dto;
 
 import com.bookingsystem.model.Booking;
 import com.bookingsystem.model.BookingStatus;
+import com.bookingsystem.model.TimeSlot;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 /**
  * Response DTO returned after booking operations.
@@ -15,6 +17,8 @@ public class BookingResponse {
     private Long customerId;
     private Long specialistId;
     private Long timeSlotId;
+    private String date;
+    private String time;
     private BookingStatus status;
     private String topic;
     private String notes;
@@ -24,6 +28,10 @@ public class BookingResponse {
     private LocalDateTime updatedAt;
 
     public static BookingResponse fromEntity(Booking booking) {
+        return fromEntity(booking, null);
+    }
+
+    public static BookingResponse fromEntity(Booking booking, TimeSlot slot) {
         BookingResponse resp = new BookingResponse();
         resp.id = booking.getId();
         resp.customerId = booking.getCustomerId();
@@ -36,6 +44,11 @@ public class BookingResponse {
         resp.cancelReason = booking.getCancelReason();
         resp.createdAt = booking.getCreatedAt();
         resp.updatedAt = booking.getUpdatedAt();
+        if (slot != null) {
+            resp.date = slot.getStartTime().toLocalDate().toString();
+            resp.time = slot.getStartTime().toLocalTime()
+                    + " - " + slot.getEndTime().toLocalTime();
+        }
         return resp;
     }
 
@@ -43,6 +56,8 @@ public class BookingResponse {
     public Long getCustomerId() { return customerId; }
     public Long getSpecialistId() { return specialistId; }
     public Long getTimeSlotId() { return timeSlotId; }
+    public String getDate() { return date; }
+    public String getTime() { return time; }
     public BookingStatus getStatus() { return status; }
     public String getTopic() { return topic; }
     public String getNotes() { return notes; }
