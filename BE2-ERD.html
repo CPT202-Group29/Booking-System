@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>BE2 Booking Module — ERD</title>
-<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/mermaid/10.9.0/mermaid.min.js"></script>
 <style>
   body { font-family: -apple-system, sans-serif; max-width: 900px; margin: 40px auto; }
   h1 { text-align: center; color: #2c3e50; }
@@ -14,7 +14,7 @@
 <body>
 <h1>BE2 Booking Module — ERD</h1>
 
-<div class="mermaid">
+<div class="mermaid" id="mermaid-diagram">
 erDiagram
     time_slots {
         bigint id PK "自增主键"
@@ -65,5 +65,34 @@ erDiagram
   • bookings: <code>customer_id</code>, <code>specialist_id</code>, <code>status</code>, <code>time_slot_id</code>
 </div>
 
+<script>
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    var svg = document.querySelector('.mermaid svg');
+    if (!svg) {
+      document.getElementById('mermaid-diagram').innerHTML =
+        '<pre style="background:#fff3cd;padding:20px;border:2px solid #ffc107;border-radius:8px;font-size:13px;line-height:1.8;">' +
+        '╔══════════════════════════╗     ╔══════════════════════════╗\n' +
+        '║       time_slots        ║     ║        bookings         ║\n' +
+        '╠══════════════════════════╣     ╠══════════════════════════╣\n' +
+        '║ PK  id          BIGINT  ║ 1   ║ PK  id          BIGINT  ║\n' +
+        '║     specialist_id BIGINT║──N→ ║ FK  time_slot_id BIGINT ║\n' +
+        '║     start_time  DATETIME║     ║     customer_id BIGINT  ║──→ BE1\n' +
+        '║     end_time    DATETIME║     ║     specialist_id BIGINT║──→ BE3\n' +
+        '║     is_available BOOLEAN║     ║     status VARCHAR(20) ║\n' +
+        '║     version     INT     ║     ║     topic   VARCHAR    ║\n' +
+        '║     created_at  DATETIME║     ║     notes   VARCHAR    ║\n' +
+        '╚══════════════════════════╝     ║     charge_amount DEC ║\n' +
+        '                                 ║     cancel_reason VAR ║\n' +
+        '  状态机: PENDING → CONFIRMED     ║     created_at DATETIME║\n' +
+        '           → COMPLETED            ║     updated_at DATETIME║\n' +
+        '           ↓        ↓             ╚══════════════════════════╝\n' +
+        '          CANCELLED ←┘            文件位置: BE2-ERD.html\n' +
+        '</pre>' +
+        '<p style="color:#e74c3c;margin-top:10px;">⚠ Mermaid CDN 加载失败，上面是文本版 ERD。请截图发给 BE1。</p>';
+    }
+  }, 3000);
+});
+</script>
 </body>
 </html>
