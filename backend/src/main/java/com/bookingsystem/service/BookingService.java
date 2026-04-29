@@ -127,7 +127,7 @@ public class BookingService {
     }
 
     /** Confirm a booking (admin action): PENDING -> CONFIRMED. */
-    public BookingResponse confirmBooking(Long bookingId, BookingActionRequest request) {
+    public BookingResponse confirmBooking(Long bookingId) {
         Booking booking = bookingRepository.findByIdWithLock(bookingId)
                 .orElseThrow(() -> new BookingException(
                         "Booking not found: " + bookingId, 404));
@@ -141,7 +141,7 @@ public class BookingService {
     }
 
     /** Complete a booking (specialist action): CONFIRMED -> COMPLETED. */
-    public BookingResponse completeBooking(Long bookingId, BookingActionRequest request) {
+    public BookingResponse completeBooking(Long bookingId) {
         Booking booking = bookingRepository.findByIdWithLock(bookingId)
                 .orElseThrow(() -> new BookingException(
                         "Booking not found: " + bookingId, 404));

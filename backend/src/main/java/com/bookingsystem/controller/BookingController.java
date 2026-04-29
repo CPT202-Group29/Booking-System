@@ -63,18 +63,14 @@ public class BookingController {
 
     /** PUT /api/v1/bookings/{id}/confirm - Admin confirms a PENDING booking. */
     @PutMapping("/bookings/{id}/confirm")
-    public ResponseEntity<BookingResponse> confirmBooking(
-            @PathVariable Long id,
-            @Valid @RequestBody BookingActionRequest request) {
-        return ResponseEntity.ok(bookingService.confirmBooking(id, request));
+    public ResponseEntity<BookingResponse> confirmBooking(@PathVariable Long id) {
+        return ResponseEntity.ok(bookingService.confirmBooking(id));
     }
 
     /** PUT /api/v1/bookings/{id}/complete - Specialist marks as COMPLETED. */
     @PutMapping("/bookings/{id}/complete")
-    public ResponseEntity<BookingResponse> completeBooking(
-            @PathVariable Long id,
-            @Valid @RequestBody BookingActionRequest request) {
-        return ResponseEntity.ok(bookingService.completeBooking(id, request));
+    public ResponseEntity<BookingResponse> completeBooking(@PathVariable Long id) {
+        return ResponseEntity.ok(bookingService.completeBooking(id));
     }
 
     /** POST /api/v1/bookings/{id}/cancel - Customer cancels (24h rule). */
@@ -89,9 +85,10 @@ public class BookingController {
     @PostMapping("/bookings/{id}/admin-cancel")
     public ResponseEntity<BookingResponse> adminCancelBooking(
             @PathVariable Long id,
-            @Valid @RequestBody AdminCancelRequest request) {
-        return ResponseEntity.ok(
-                bookingService.adminCancelBooking(id, request.getCancelReason()));
+            @RequestBody(required = false) AdminCancelRequest request) {
+        String reason = (request != null && request.getCancelReason() != null)
+                ? request.getCancelReason() : "Cancelled by admin";
+        return ResponseEntity.ok(bookingService.adminCancelBooking(id, reason));
     }
 
     /** POST /api/v1/bookings/{id}/reschedule - Customer reschedules. */
