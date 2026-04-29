@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>BE2 Booking Module — ERD</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  body { font-family: -apple-system, sans-serif; max-width: 900px; margin: 40px auto; }
+  h1 { text-align: center; color: #2c3e50; }
+  .info { background: #f8f9fa; border-left: 4px solid #4A90D9; padding: 12px 16px; margin: 20px 0; font-size: 14px; line-height: 1.8; }
+  .info code { background: #e8e8e8; padding: 1px 4px; border-radius: 3px; }
+</style>
+</head>
+<body>
+<h1>BE2 Booking Module — ERD</h1>
+
+<div class="mermaid">
+erDiagram
+    time_slots {
+        bigint id PK "自增主键"
+        bigint specialist_id "逻辑FK → BE3"
+        datetime start_time
+        datetime end_time
+        boolean is_available
+        int version "乐观锁"
+        datetime created_at
+    }
+
+    bookings {
+        bigint id PK "自增主键"
+        bigint customer_id "逻辑FK → BE1"
+        bigint specialist_id "逻辑FK → BE3"
+        bigint time_slot_id FK "物理FK → time_slots"
+        varchar status "PENDING|CONFIRMED|CANCELLED|COMPLETED"
+        varchar topic "咨询主题"
+        varchar notes "备注"
+        decimal charge_amount "费用"
+        varchar cancel_reason "取消原因"
+        datetime created_at
+        datetime updated_at
+    }
+
+    time_slots ||--o{ bookings : "time_slot_id (1:N)"
+</mermaid>
+
+<div class="info">
+  <strong>状态机:</strong><br>
+  <code>PENDING → CONFIRMED → COMPLETED</code><br>
+  <code>  │          │</code><br>
+  <code>  └──→ CANCELLED ←──┘</code><br><br>
+
+  <strong>外部依赖:</strong><br>
+  • <code>customer_id</code> — BE1 用户模块提供<br>
+  • <code>specialist_id</code> — BE3 专家管理模块提供<br><br>
+
+  <strong>约束:</strong><br>
+  • <code>end_time &gt; start_time</code> (time_slots)<br>
+  • <code>status IN ('PENDING','CONFIRMED','CANCELLED','COMPLETED')</code> (bookings)<br>
+  • <code>charge_amount &gt;= 0</code> (bookings)<br>
+  • <code>time_slot_id</code> 有数据库外键约束，删时段前须先处理关联 booking<br>
+  • <code>version</code> 字段用 @Version 乐观锁，防并发重复预订<br><br>
+
+  <strong>索引:</strong><br>
+  • time_slots: <code>specialist_id</code>, <code>is_available</code><br>
+  • bookings: <code>customer_id</code>, <code>specialist_id</code>, <code>status</code>, <code>time_slot_id</code>
+</div>
+
+</body>
+</html>
