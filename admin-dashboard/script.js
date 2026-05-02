@@ -1,39 +1,30 @@
 const specialists = [
   {
-    name: "Dr. Wang",
-    expertise: "Academic Support",
+    name: "Dr. Alice Smith",
+    expertise: "Psychology",
     level: "Senior",
-    fee: 200,
+    fee: 150.00,
     status: "Available",
-    contact: "wang@example.com",
-    description: "Provides academic consultation and study planning support."
+    contact: "alice@example.com",
+    description: "Experienced psychologist with 10 years in clinical practice."
   },
   {
-    name: "Prof. Zhang",
+    name: "Dr. Johnson",
     expertise: "Career Advice",
-    level: "Expert",
-    fee: 250,
+    level: "Intermediate",
+    fee: 120.00,
     status: "Available",
-    contact: "zhang@example.com",
-    description: "Specialises in career planning, CV guidance, and interview preparation."
-  },
-  {
-    name: "Dr. Smith",
-    expertise: "Mental Health Support",
-    level: "Senior",
-    fee: 220,
-    status: "Unavailable",
-    contact: "smith@example.com",
-    description: "Provides consultation on stress management and personal wellbeing."
+    contact: "johnson@example.com",
+    description: "Provides career guidance and professional development support."
   },
   {
     name: "Dr. Lee",
-    expertise: "Technical Consulting",
+    expertise: "Academic Support",
     level: "Junior",
-    fee: 150,
+    fee: 90.00,
     status: "Available",
     contact: "lee@example.com",
-    description: "Supports students with technical project planning and software development advice."
+    description: "Supports students with academic planning and study advice."
   }
 ];
 
@@ -95,7 +86,7 @@ function renderSpecialists(status = "All") {
       <td>${specialist.name}</td>
       <td>${specialist.expertise}</td>
       <td>${specialist.level}</td>
-      <td>£${specialist.fee}</td>
+      <td>${Number(specialist.fee).toFixed(2)}</td>
       <td>
         <span class="badge ${specialist.status.toLowerCase()}">
           ${specialist.status}
