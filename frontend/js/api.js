@@ -242,3 +242,79 @@ export async function rescheduleBooking(bookingId, newSlotId) {
     }
     return response.json(); // Success message
 }
+
+// Get current user's bookings using real backend
+export async function getMyBookings() {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    if (!token || !userStr) throw new Error('Not authenticated');
+    const user = JSON.parse(userStr);
+    const userId = user.userId || user.id;        // adapt to your actual field name
+    if (!userId) throw new Error('User ID not found');
+
+    const response = await fetch(`/api/v1/bookings?customerId=${userId}`, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
+    if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || 'Failed to fetch bookings');
+    }
+    return response.json();   // array of booking objects
+}
+
+// Cancel booking (your existing interface, keep as is)
+export async function cancelBooking(bookingId, cancelReason) {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    if (!token || !userStr) throw new Error('Not authenticated');
+    const user = JSON.parse(userStr);
+    const userId = user.userId || user.id;
+
+    const response = await fetch(`/api/bookings/${bookingId}/cancel`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            user_id: userId,
+            cancel_reason: cancelReason
+        })
+    });
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Cancel failed');
+    }
+    return response.json();
+}
+
+// Reschedule booking (your existing interface)
+export async function rescheduleBooking(bookingId, newSlotId) {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    if (!token || !userStr) throw new Error('Not authenticated');
+    const user = JSON.parse(userStr);
+    const userId = user.userId || user.id;
+
+    const response = await fetch(`/api/bookings/${bookingId}/reschedule`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            user_id: userId,
+            new_slot_id: newSlotId
+        })
+    });
+    if (response.status === 409) {
+        throw new Error('Conflict: This time slot has just been taken by another user');
+    }
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Reschedule failed');
+    }
+    return response.json();
+}
