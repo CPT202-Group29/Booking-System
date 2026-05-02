@@ -1,57 +1,57 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>个人资料</title>
+    <title>My Profile</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="container">
-        <h2>个人资料</h2>
+        <h2>My Profile</h2>
         <div id="profileView">
             <div style="text-align:center">
-                <img id="avatarImg" class="avatar-preview" src="" alt="头像">
+                <img id="avatarImg" class="avatar-preview" src="" alt="Avatar">
             </div>
-            <p><strong>姓名：</strong> <span id="displayName"></span></p>
-            <p><strong>邮箱：</strong> <span id="displayEmail"></span> (不可修改)</p>
-            <p><strong>电话：</strong> <span id="displayPhone"></span></p>
-            <button id="editBtn">编辑资料</button>
-            <button id="changePwdBtn">修改密码</button>
-            <button id="deleteAccountBtn" style="background:#dc3545;">删除账户</button>
-            <button id="logoutBtn" style="background:#6c757d;">登出</button>
+            <p><strong>Name:</strong> <span id="displayName"></span></p>
+            <p><strong>Email:</strong> <span id="displayEmail"></span> (read-only)</p>
+            <p><strong>Phone:</strong> <span id="displayPhone"></span></p>
+            <button id="editBtn">Edit Profile</button>
+            <button id="changePwdBtn">Change Password</button>
+            <button id="deleteAccountBtn" style="background:#dc3545;">Delete Account</button>
+            <button id="logoutBtn" style="background:#6c757d;">Logout</button>
         </div>
         <div id="editForm" style="display:none;">
             <div class="form-group">
-                <label>姓名</label>
+                <label>Name</label>
                 <input type="text" id="editName">
             </div>
             <div class="form-group">
-                <label>电话</label>
+                <label>Phone</label>
                 <input type="text" id="editPhone">
             </div>
             <div class="form-group">
-                <label>上传头像</label>
+                <label>Upload Avatar</label>
                 <input type="file" id="avatarFile" accept="image/jpeg,image/png">
             </div>
-            <button id="saveBtn">保存</button>
-            <button id="cancelBtn">取消</button>
+            <button id="saveBtn">Save</button>
+            <button id="cancelBtn">Cancel</button>
         </div>
         <div id="changePwdForm" style="display:none;">
             <div class="form-group">
-                <label>旧密码</label>
+                <label>Old Password</label>
                 <input type="password" id="oldPassword">
             </div>
             <div class="form-group">
-                <label>新密码</label>
+                <label>New Password</label>
                 <input type="password" id="newPassword">
-                <small>至少6位，包含字母和数字</small>
+                <small>At least 6 characters, include letters and numbers</small>
             </div>
             <div class="form-group">
-                <label>确认新密码</label>
+                <label>Confirm New Password</label>
                 <input type="password" id="confirmNewPassword">
             </div>
-            <button id="submitPwdBtn">确认修改</button>
-            <button id="cancelPwdBtn">取消</button>
+            <button id="submitPwdBtn">Confirm Change</button>
+            <button id="cancelPwdBtn">Cancel</button>
         </div>
         <div id="message" class="message"></div>
     </div>
