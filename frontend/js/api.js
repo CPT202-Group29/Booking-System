@@ -172,3 +172,73 @@ export async function deleteAccount(password) {
     saveUsers();
     return { success: true };
 }
+// ---------- Bookings API ----------
+// Get current user's bookings (replace URL with actual backend endpoint)
+export async function getMyBookings() {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Not authenticated');
+    
+    const response = await fetch('/api/bookings/my', {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
+    if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || 'Failed to fetch bookings');
+    }
+    return response.json(); // Expected array of bookings
+}
+
+// Cancel a booking
+export async function cancelBooking(bookingId, cancelReason) {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    if (!token || !userStr) throw new Error('Not authenticated');
+    const user = JSON.parse(userStr);
+
+    const response = await fetch(`/api/bookings/${bookingId}/cancel`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            user_id: user.id,
+            cancel_reason: cancelReason
+        })
+    });
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Cancel failed');
+    }
+    return response.json(); // { message: "..." }
+}
+
+// Reschedule a booking
+export async function rescheduleBooking(bookingId, newSlotId) {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    if (!token || !userStr) throw new Error('Not authenticated');
+    const user = JSON.parse(userStr);
+
+    const response = await fetch(`/api/bookings/${bookingId}/reschedule`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            user_id: user.id,
+            new_slot_id: newSlotId
+        })
+    });
+    if (response.status === 409) {
+        throw new Error('Conflict: This time slot has just been taken by another user');
+    }
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Reschedule failed');
+    }
+    return response.json(); // Success message
+}
