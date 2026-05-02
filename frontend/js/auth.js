@@ -1,55 +1,50 @@
 import { sendVerificationCode, register, login, logout, sendResetCode, resetPassword, setCurrentUser } from './api.js';
 
-// 全局变量：倒计时
 let countdown = 0;
 let countdownInterval = null;
 
-// 通用显示消息
 function showMessage(elementId, text, type) {
     const msgDiv = document.getElementById(elementId);
     msgDiv.innerHTML = `<div class="${type}">${text}</div>`;
     setTimeout(() => { if (msgDiv) msgDiv.innerHTML = ''; }, 5000);
 }
 
-// 注册页面逻辑
+// Registration page
 if (window.location.pathname.includes('register.html')) {
     const sendBtn = document.getElementById('sendCodeBtn');
     const emailInput = document.getElementById('email');
     const pwdInput = document.getElementById('password');
     const pwdHint = document.getElementById('pwdHint');
 
-    // 实时密码强度提示
     pwdInput.addEventListener('input', () => {
         const pwd = pwdInput.value;
         const regex = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/;
-        if (regex.test(pwd)) pwdHint.innerText = '✓ 密码强度合格';
-        else pwdHint.innerText = '✗ 密码需至少6位且包含字母和数字';
+        if (regex.test(pwd)) pwdHint.innerText = '✓ Password strength: good';
+        else pwdHint.innerText = '✗ Password must be at least 6 characters and contain letters & numbers';
     });
 
-    // 发送验证码按钮
     sendBtn.addEventListener('click', async () => {
         const email = emailInput.value.trim();
         if (!email) {
-            showMessage('message', '请先填写邮箱', 'error');
+            showMessage('message', 'Please enter email first', 'error');
             return;
         }
         if (countdown > 0) {
-            showMessage('message', `请等待 ${countdown} 秒后再试`, 'error');
+            showMessage('message', `Please wait ${countdown} seconds`, 'error');
             return;
         }
         try {
             await sendVerificationCode(email);
-            showMessage('message', '验证码已发送（控制台查看）', 'success');
-            // 60秒倒计时
+            showMessage('message', 'Verification code sent (check console)', 'success');
             countdown = 60;
             sendBtn.disabled = true;
             countdownInterval = setInterval(() => {
                 countdown--;
-                sendBtn.innerText = `${countdown}秒后重发`;
+                sendBtn.innerText = `${countdown}s`;
                 if (countdown <= 0) {
                     clearInterval(countdownInterval);
                     sendBtn.disabled = false;
-                    sendBtn.innerText = '发送验证码';
+                    sendBtn.innerText = 'Send Code';
                 }
             }, 1000);
         } catch (err) {
@@ -57,7 +52,6 @@ if (window.location.pathname.includes('register.html')) {
         }
     });
 
-    // 注册提交
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = document.getElementById('name').value.trim();
@@ -67,16 +61,16 @@ if (window.location.pathname.includes('register.html')) {
         const code = document.getElementById('verificationCode').value.trim();
 
         if (!name || !email || !password || !confirm || !code) {
-            showMessage('message', '请填写所有字段', 'error');
+            showMessage('message', 'Please fill all fields', 'error');
             return;
         }
         if (password !== confirm) {
-            showMessage('message', '两次密码不一致', 'error');
+            showMessage('message', 'Passwords do not match', 'error');
             return;
         }
         try {
             await register(name, email, password, code);
-            showMessage('message', '注册成功！正在跳转到登录页...', 'success');
+            showMessage('message', 'Registration successful! Redirecting to login...', 'success');
             setTimeout(() => window.location.href = 'login.html', 1500);
         } catch (err) {
             showMessage('message', err.message, 'error');
@@ -84,9 +78,8 @@ if (window.location.pathname.includes('register.html')) {
     });
 }
 
-// 登录页面逻辑
+// Login page
 else if (window.location.pathname.includes('login.html')) {
-    // 记住密码功能：加载本地存储的邮箱密码
     const savedEmail = localStorage.getItem('rememberedEmail');
     const savedPwd = localStorage.getItem('rememberedPassword');
     if (savedEmail && savedPwd) {
@@ -113,7 +106,7 @@ else if (window.location.pathname.includes('login.html')) {
                 localStorage.removeItem('rememberedEmail');
                 localStorage.removeItem('rememberedPassword');
             }
-            showMessage('message', '登录成功，跳转中...', 'success');
+            showMessage('message', 'Login successful, redirecting...', 'success');
             setTimeout(() => window.location.href = 'profile.html', 1000);
         } catch (err) {
             showMessage('message', err.message, 'error');
@@ -121,7 +114,7 @@ else if (window.location.pathname.includes('login.html')) {
     });
 }
 
-// 忘记密码页面逻辑
+// Forgot password page
 else if (window.location.pathname.includes('forgot-password.html')) {
     let resetCountdown = 0;
     const sendBtn = document.getElementById('sendCodeBtn');
@@ -130,25 +123,25 @@ else if (window.location.pathname.includes('forgot-password.html')) {
     sendBtn.addEventListener('click', async () => {
         const email = emailInput.value.trim();
         if (!email) {
-            showMessage('message', '请输入邮箱', 'error');
+            showMessage('message', 'Please enter email', 'error');
             return;
         }
         if (resetCountdown > 0) {
-            showMessage('message', `请等待 ${resetCountdown} 秒后再试`, 'error');
+            showMessage('message', `Please wait ${resetCountdown} seconds`, 'error');
             return;
         }
         try {
             await sendResetCode(email);
-            showMessage('message', '重置验证码已发送（控制台查看）', 'success');
+            showMessage('message', 'Reset code sent (check console)', 'success');
             resetCountdown = 60;
             sendBtn.disabled = true;
             const interval = setInterval(() => {
                 resetCountdown--;
-                sendBtn.innerText = `${resetCountdown}秒后重发`;
+                sendBtn.innerText = `${resetCountdown}s`;
                 if (resetCountdown <= 0) {
                     clearInterval(interval);
                     sendBtn.disabled = false;
-                    sendBtn.innerText = '发送验证码';
+                    sendBtn.innerText = 'Send Code';
                 }
             }, 1000);
         } catch (err) {
@@ -164,16 +157,16 @@ else if (window.location.pathname.includes('forgot-password.html')) {
         const confirm = document.getElementById('confirmPassword').value;
 
         if (!email || !code || !newPassword || !confirm) {
-            showMessage('message', '请填写所有字段', 'error');
+            showMessage('message', 'Please fill all fields', 'error');
             return;
         }
         if (newPassword !== confirm) {
-            showMessage('message', '两次新密码不一致', 'error');
+            showMessage('message', 'New passwords do not match', 'error');
             return;
         }
         try {
             await resetPassword(email, code, newPassword);
-            showMessage('message', '密码重置成功，请登录', 'success');
+            showMessage('message', 'Password reset successful, please login', 'success');
             setTimeout(() => window.location.href = 'login.html', 1500);
         } catch (err) {
             showMessage('message', err.message, 'error');
