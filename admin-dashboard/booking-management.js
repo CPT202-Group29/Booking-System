@@ -1,6 +1,6 @@
-let bookings = [];
+const API_BASE_URL = "http://localhost:8080/api/v1";
 
-const API_BASE = "http://localhost:8080";
+let bookings = [];
 
 const bookingTableBody = document.getElementById("bookingTableBody");
 const bookingStatusFilter = document.getElementById("bookingStatusFilter");
@@ -11,105 +11,89 @@ const pendingBookings = document.getElementById("pendingBookings");
 const confirmedBookings = document.getElementById("confirmedBookings");
 const completedBookings = document.getElementById("completedBookings");
 
-function formatStatus(status) {
-  if (!status) return "-";
+function normalizeStatus(status) {
+  if (!status) return "";
 
-  const upper = String(status).toUpperCase();
+  const upperStatus = status.toString().toUpperCase();
 
-  if (upper === "PENDING") return "Pending";
-  if (upper === "CONFIRMED") return "Confirmed";
-  if (upper === "COMPLETED") return "Completed";
-  if (upper === "CANCELLED" || upper === "CANCELED") return "Cancelled";
+  if (upperStatus === "PENDING") return "Pending";
+  if (upperStatus === "CONFIRMED") return "Confirmed";
+  if (upperStatus === "CANCELLED") return "Cancelled";
+  if (upperStatus === "COMPLETED") return "Completed";
 
   return status;
 }
 
-function getApiStatus(status) {
-  if (!status || status === "All") return "ALL";
-
-  return String(status).toUpperCase();
+function toBackendStatus(status) {
+  if (status === "Pending") return "PENDING";
+  if (status === "Confirmed") return "CONFIRMED";
+  if (status === "Cancelled") return "CANCELLED";
+  if (status === "Completed") return "COMPLETED";
+  return status.toUpperCase();
 }
 
 function getStatusClass(status) {
-  if (!status) return "";
-
-  return String(status).toLowerCase();
+  return normalizeStatus(status).toLowerCase();
 }
 
-function mapBooking(item) {
+function mapBookingFromBackend(booking) {
   return {
-    id: item.id,
-    customer: item.customerName || item.customer || item.customerId || "-",
-    specialist: item.specialistName || item.specialist || item.specialistId || "-",
-    topic: item.topic || "-",
-    date: item.date || "-",
-    time: item.time || "-",
-    fee: item.chargeAmount || item.fee || 0,
-    status: formatStatus(item.status)
+    id: booking.id,
+    customer: booking.customerName || booking.customer || booking.customerId || "Unknown Customer",
+    specialist: booking.specialistName || booking.specialist || booking.specialistId || "Unknown Specialist",
+    topic: booking.topic || booking.notes || booking.description || "-",
+    date: booking.date || booking.bookingDate || booking.slotDate || "-",
+    time: booking.time || booking.bookingTime || booking.slotTime || "-",
+    fee: booking.fee || booking.price || booking.amount || 0,
+    status: normalizeStatus(booking.status)
   };
 }
 
-async function loadBookings(status = "All") {
+async function loadBookings() {
   try {
-    bookingTableBody.innerHTML = `
-      <tr>
-        <td colspan="9">Loading booking data...</td>
-      </tr>
-    `;
+    const selectedStatus = bookingStatusFilter.value;
 
-    let url = `${API_BASE}/api/v1/bookings`;
-    const apiStatus = getApiStatus(status);
+    let url = `${API_BASE_URL}/bookings`;
 
-    if (apiStatus !== "ALL") {
-      url += `?status=${apiStatus}`;
+    if (selectedStatus !== "All") {
+      url += `?status=${toBackendStatus(selectedStatus)}`;
     }
 
     const response = await fetch(url);
 
     if (!response.ok) {
-      throw new Error("Failed to fetch bookings");
+      throw new Error(`Failed to load bookings. Status: ${response.status}`);
     }
 
     const data = await response.json();
 
-    bookings = data.map(mapBooking);
+    bookings = Array.isArray(data)
+      ? data.map(mapBookingFromBackend)
+      : [];
 
-    renderBookings(status);
+    renderBookings();
     updateStats();
   } catch (error) {
-    console.error(error);
-
-    bookingTableBody.innerHTML = `
-      <tr>
-        <td colspan="9">
-          Failed to load booking data. Please check whether the backend is running.
-        </td>
-      </tr>
-    `;
-
-    bookings = [];
-    updateStats();
+    console.error("Error loading bookings:", error);
+    alert("Failed to load booking data. Please check whether the backend is running.");
   }
 }
 
-function renderBookings(status = "All") {
+function renderBookings() {
   bookingTableBody.innerHTML = "";
 
-  const filteredBookings =
-    status === "All"
-      ? bookings
-      : bookings.filter((booking) => booking.status === status);
-
-  if (filteredBookings.length === 0) {
+  if (bookings.length === 0) {
     bookingTableBody.innerHTML = `
       <tr>
-        <td colspan="9">No booking records found.</td>
+        <td colspan="9" style="text-align: center; color: #6b7280;">
+          No booking records found.
+        </td>
       </tr>
     `;
     return;
   }
 
-  filteredBookings.forEach((booking) => {
+  bookings.forEach((booking) => {
     const row = document.createElement("tr");
 
     row.innerHTML = `
@@ -135,15 +119,15 @@ function renderBookings(status = "All") {
 function renderActionButtons(booking) {
   if (booking.status === "Pending") {
     return `
-      <button class="table-btn confirm-btn" onclick="confirmBooking('${booking.id}')">Confirm</button>
-      <button class="table-btn cancel-btn" onclick="cancelBooking('${booking.id}')">Cancel</button>
+      <button class="table-btn confirm-btn" onclick="confirmBooking(${booking.id})">Confirm</button>
+      <button class="table-btn cancel-btn" onclick="cancelBooking(${booking.id})">Cancel</button>
     `;
   }
 
   if (booking.status === "Confirmed") {
     return `
-      <button class="table-btn complete-btn" onclick="completeBooking('${booking.id}')">Complete</button>
-      <button class="table-btn cancel-btn" onclick="cancelBooking('${booking.id}')">Cancel</button>
+      <button class="table-btn complete-btn" onclick="completeBooking(${booking.id})">Complete</button>
+      <button class="table-btn cancel-btn" onclick="cancelBooking(${booking.id})">Cancel</button>
     `;
   }
 
@@ -160,52 +144,52 @@ function renderActionButtons(booking) {
 
 async function confirmBooking(id) {
   try {
-    const response = await fetch(`${API_BASE}/api/v1/bookings/${id}/confirm`, {
+    const response = await fetch(`${API_BASE_URL}/bookings/${id}/confirm`, {
       method: "PUT"
     });
 
     if (!response.ok) {
-      throw new Error("Failed to confirm booking");
+      throw new Error(`Confirm failed. Status: ${response.status}`);
     }
 
-    await loadBookings(bookingStatusFilter.value);
+    await loadBookings();
   } catch (error) {
-    console.error(error);
-    alert("Failed to confirm booking. Please check the backend.");
-  }
-}
-
-async function cancelBooking(id) {
-  try {
-    const response = await fetch(`${API_BASE}/api/v1/bookings/${id}/admin-cancel`, {
-      method: "POST"
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to cancel booking");
-    }
-
-    await loadBookings(bookingStatusFilter.value);
-  } catch (error) {
-    console.error(error);
-    alert("Failed to cancel booking. Please check the backend.");
+    console.error("Error confirming booking:", error);
+    alert("Failed to confirm booking.");
   }
 }
 
 async function completeBooking(id) {
   try {
-    const response = await fetch(`${API_BASE}/api/v1/bookings/${id}/complete`, {
+    const response = await fetch(`${API_BASE_URL}/bookings/${id}/complete`, {
       method: "PUT"
     });
 
     if (!response.ok) {
-      throw new Error("Failed to complete booking");
+      throw new Error(`Complete failed. Status: ${response.status}`);
     }
 
-    await loadBookings(bookingStatusFilter.value);
+    await loadBookings();
   } catch (error) {
-    console.error(error);
-    alert("Failed to complete booking. Please check the backend.");
+    console.error("Error completing booking:", error);
+    alert("Failed to complete booking.");
+  }
+}
+
+async function cancelBooking(id) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/bookings/${id}/admin-cancel`, {
+      method: "POST"
+    });
+
+    if (!response.ok) {
+      throw new Error(`Cancel failed. Status: ${response.status}`);
+    }
+
+    await loadBookings();
+  } catch (error) {
+    console.error("Error cancelling booking:", error);
+    alert("Failed to cancel booking.");
   }
 }
 
@@ -226,11 +210,11 @@ function updateStats() {
 }
 
 bookingStatusFilter.addEventListener("change", function () {
-  loadBookings(bookingStatusFilter.value);
+  loadBookings();
 });
 
 refreshBtn.addEventListener("click", function () {
-  loadBookings(bookingStatusFilter.value);
+  loadBookings();
 });
 
 loadBookings();
