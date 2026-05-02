@@ -17,22 +17,34 @@ async function loadBookings() {
 
 function renderBookings(bookings) {
     const container = document.getElementById('bookingsList');
-    container.innerHTML = bookings.map(booking => `
-        <div class="booking-card" data-id="${booking.id}">
-            <h3>${booking.expertName || 'Expert'}</h3>
-            <p><strong>Date & Time:</strong> ${booking.date} ${booking.timeSlot || ''}</p>
-            <p><strong>Topic:</strong> ${booking.topic || 'N/A'}</p>
-            <p><strong>Status:</strong> <span class="status-${booking.status.toLowerCase()}">${booking.status}</span></p>
-            <div class="button-group">
-                ${booking.status === 'Confirmed' ? `
-                    <button class="btn-cancel" data-id="${booking.id}">Cancel</button>
-                    <button class="btn-reschedule" data-id="${booking.id}">Reschedule</button>
-                ` : ''}
+    container.innerHTML = bookings.map(booking => {
+        // Determine status class
+        const statusClass = `status-${booking.status.toLowerCase()}`;
+        // Display expert name if available, otherwise show specialistId
+        const expertDisplay = booking.expertName || `Expert ID: ${booking.specialistId}`;
+        // Display time slot description if available, otherwise show timeSlotId
+        const timeDisplay = booking.timeSlotDescription || `Slot ID: ${booking.timeSlotId}`;
+        
+        return `
+            <div class="booking-card" data-id="${booking.id}">
+                <h3>${expertDisplay}</h3>
+                <p><strong>Date & Time:</strong> ${booking.createdAt ? new Date(booking.createdAt).toLocaleString() : 'N/A'} | ${timeDisplay}</p>
+                <p><strong>Topic:</strong> ${booking.topic || 'N/A'}</p>
+                <p><strong>Notes:</strong> ${booking.notes || 'N/A'}</p>
+                <p><strong>Charge:</strong> $${booking.chargeAmount ? booking.chargeAmount.toFixed(2) : '0.00'}</p>
+                <p><strong>Status:</strong> <span class="${statusClass}">${booking.status}</span></p>
+                ${booking.cancelReason ? `<p><strong>Cancel Reason:</strong> ${booking.cancelReason}</p>` : ''}
+                <div class="button-group">
+                    ${booking.status === 'CONFIRMED' ? `
+                        <button class="btn-cancel" data-id="${booking.id}">Cancel</button>
+                        <button class="btn-reschedule" data-id="${booking.id}">Reschedule</button>
+                    ` : ''}
+                </div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 
-    // Attach event listeners
+    // Cancel button handlers
     document.querySelectorAll('.btn-cancel').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const bookingId = parseInt(btn.dataset.id);
@@ -48,12 +60,13 @@ function renderBookings(bookings) {
         });
     });
 
+    // Reschedule button handlers
     document.querySelectorAll('.btn-reschedule').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const bookingId = parseInt(btn.dataset.id);
-            // For simplicity, prompt user to enter new slot ID.
-            // In a real app, you would fetch available slots and let the user choose.
-            const newSlotId = prompt('Please enter the new time slot ID (e.g., 2):');
+            // In a full implementation, you would fetch available slots for this expert.
+            // For now, ask user to input new slot ID.
+            const newSlotId = prompt('Please enter the new time slot ID:');
             if (!newSlotId || isNaN(parseInt(newSlotId))) {
                 alert('Invalid slot ID');
                 return;
