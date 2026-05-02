@@ -1,6 +1,5 @@
 import { fetchProfile, updateProfile, uploadAvatar, changePassword, deleteAccount, logout, setCurrentUser, getCurrentUser } from './api.js';
 
-// 从 localStorage 恢复用户
 const storedUser = localStorage.getItem('user');
 if (storedUser) setCurrentUser(JSON.parse(storedUser));
 
@@ -11,12 +10,12 @@ async function loadProfile() {
         currentProfile = await fetchProfile();
         document.getElementById('displayName').innerText = currentProfile.name;
         document.getElementById('displayEmail').innerText = currentProfile.email;
-        document.getElementById('displayPhone').innerText = currentProfile.phone || '未设置';
+        document.getElementById('displayPhone').innerText = currentProfile.phone || 'Not set';
         const avatarImg = document.getElementById('avatarImg');
         if (currentProfile.avatar) avatarImg.src = currentProfile.avatar;
         else avatarImg.src = 'https://via.placeholder.com/100';
     } catch (err) {
-        showMessage('message', err.message, 'error');
+        showMessage(err.message, 'error');
     }
 }
 
@@ -26,7 +25,6 @@ function showMessage(text, type) {
     setTimeout(() => msgDiv.innerHTML = '', 3000);
 }
 
-// 编辑资料
 document.getElementById('editBtn').addEventListener('click', () => {
     document.getElementById('profileView').style.display = 'none';
     document.getElementById('editForm').style.display = 'block';
@@ -51,13 +49,12 @@ document.getElementById('saveBtn').addEventListener('click', async () => {
         await loadProfile();
         document.getElementById('editForm').style.display = 'none';
         document.getElementById('profileView').style.display = 'block';
-        showMessage('资料更新成功', 'success');
+        showMessage('Profile updated successfully', 'success');
     } catch (err) {
         showMessage(err.message, 'error');
     }
 });
 
-// 修改密码
 document.getElementById('changePwdBtn').addEventListener('click', () => {
     document.getElementById('profileView').style.display = 'none';
     document.getElementById('changePwdForm').style.display = 'block';
@@ -71,16 +68,16 @@ document.getElementById('submitPwdBtn').addEventListener('click', async () => {
     const newPwd = document.getElementById('newPassword').value;
     const confirm = document.getElementById('confirmNewPassword').value;
     if (!oldPwd || !newPwd || !confirm) {
-        showMessage('请填写完整', 'error');
+        showMessage('Please fill all fields', 'error');
         return;
     }
     if (newPwd !== confirm) {
-        showMessage('新密码两次输入不一致', 'error');
+        showMessage('New passwords do not match', 'error');
         return;
     }
     try {
         await changePassword(oldPwd, newPwd);
-        showMessage('密码修改成功，请重新登录', 'success');
+        showMessage('Password changed. Please login again.', 'success');
         setTimeout(async () => {
             await logout();
             localStorage.removeItem('token');
@@ -92,13 +89,12 @@ document.getElementById('submitPwdBtn').addEventListener('click', async () => {
     }
 });
 
-// 删除账户
 document.getElementById('deleteAccountBtn').addEventListener('click', async () => {
-    const pwd = prompt('请输入您的密码以确认删除账户：');
+    const pwd = prompt('Please enter your password to confirm account deletion:');
     if (!pwd) return;
     try {
         await deleteAccount(pwd);
-        showMessage('账户已删除', 'success');
+        showMessage('Account deleted', 'success');
         setTimeout(async () => {
             await logout();
             localStorage.removeItem('token');
@@ -110,7 +106,6 @@ document.getElementById('deleteAccountBtn').addEventListener('click', async () =
     }
 });
 
-// 登出
 document.getElementById('logoutBtn').addEventListener('click', async () => {
     await logout();
     localStorage.removeItem('token');
