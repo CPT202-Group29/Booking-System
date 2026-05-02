@@ -1,27 +1,21 @@
 let expertiseCategories = [
   {
-    expertiseName: "Academic Support",
-    description: "Consultation for study planning, academic progress, and learning difficulties.",
-    status: "Active",
-    usedBy: 3
-  },
-  {
-    expertiseName: "Career Advice",
-    description: "Guidance on career planning, CV improvement, and interview preparation.",
-    status: "Active",
-    usedBy: 2
-  },
-  {
-    expertiseName: "Mental Health Support",
-    description: "Support for stress management, wellbeing, and personal adjustment.",
+    expertiseName: "Psychology",
+    description: "Consultation category for psychological support, counselling, and mental wellbeing.",
     status: "Active",
     usedBy: 1
   },
   {
-    expertiseName: "Technical Consulting",
-    description: "Advice on software projects, technical planning, and implementation issues.",
-    status: "Inactive",
-    usedBy: 0
+    expertiseName: "Career Advice",
+    description: "Consultation category for career guidance and professional development support.",
+    status: "Active",
+    usedBy: 1
+  },
+  {
+    expertiseName: "Academic Support",
+    description: "Consultation category for academic planning, study advice, and learning support.",
+    status: "Active",
+    usedBy: 1
   }
 ];
 
