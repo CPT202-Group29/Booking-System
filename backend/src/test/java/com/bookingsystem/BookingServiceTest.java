@@ -104,23 +104,40 @@ class BookingServiceTest {
     @DisplayName("Confirm pending booking")
     void testConfirmBooking() {
         Booking booking = createBooking();
-        BookingActionRequest req = new BookingActionRequest();
-        req.setUserId(1L);
 
         assertEquals(BookingStatus.CONFIRMED,
-                bookingService.confirmBooking(booking.getId(), req).getStatus());
+                bookingService.confirmBooking(booking.getId()).getStatus());
     }
 
     @Test
     @DisplayName("Complete confirmed booking")
     void testCompleteBooking() {
         Booking booking = createBooking();
-        BookingActionRequest req = new BookingActionRequest();
-        req.setUserId(1L);
-        bookingService.confirmBooking(booking.getId(), req);
+        bookingService.confirmBooking(booking.getId());
 
         assertEquals(BookingStatus.COMPLETED,
-                bookingService.completeBooking(booking.getId(), req).getStatus());
+                bookingService.completeBooking(booking.getId()).getStatus());
+    }
+
+    @Test
+    @DisplayName("Admin cancel booking without ownership check")
+    void testAdminCancelBooking() {
+        Booking booking = createBooking();
+        assertEquals(BookingStatus.CANCELLED,
+                bookingService.adminCancelBooking(booking.getId(), "Admin override").getStatus());
+        assertTrue(timeSlotRepository.findById(slot1Id).orElseThrow().getIsAvailable());
+    }
+
+    @Test
+    @DisplayName("List all bookings with status filter")
+    void testListAllBookings() {
+        createBooking();
+        List<BookingResponse> all = bookingService.listAllBookings(null);
+        assertEquals(1, all.size());
+        List<BookingResponse> pending = bookingService.listAllBookings(BookingStatus.PENDING);
+        assertEquals(1, pending.size());
+        List<BookingResponse> confirmed = bookingService.listAllBookings(BookingStatus.CONFIRMED);
+        assertEquals(0, confirmed.size());
     }
 
     @Test
