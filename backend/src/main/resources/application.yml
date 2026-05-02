@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: booking-system
+  main:
+    banner-mode: off
 
   # Default: H2 in-memory for local dev (no external DB needed)
   # Switch to MySQL with: --spring.profiles.active=mysql
@@ -22,14 +24,18 @@ spring:
     defer-datasource-initialization: true
     hibernate:
       ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
+    show-sql: false
+    open-in-view: false
 
-# --- MySQL profile (Aliyun) ---
-# Activate with: --spring.profiles.active=mysql
-# Or set SPRING_PROFILES_ACTIVE=mysql environment variable
+logging:
+  level:
+    root: INFO
+    com.bookingsystem: DEBUG
+    org.springframework: WARN
+    org.springframework.web: INFO
+    org.hibernate: WARN
+
+# Activate SQL logging: set env LOG_SQL=true
 ---
 spring:
   config:
@@ -45,4 +51,13 @@ spring:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
+    open-in-view: false
+
+logging:
+  level:
+    root: INFO
+    com.bookingsystem: DEBUG
+    org.springframework: WARN
+    org.springframework.web: INFO
+    org.hibernate: WARN
