@@ -1,23 +1,6 @@
-let expertiseCategories = [
-  {
-    expertiseName: "Psychology",
-    description: "Consultation category for psychological support, counselling, and mental wellbeing.",
-    status: "Active",
-    usedBy: 1
-  },
-  {
-    expertiseName: "Career Advice",
-    description: "Consultation category for career guidance and professional development support.",
-    status: "Active",
-    usedBy: 1
-  },
-  {
-    expertiseName: "Academic Support",
-    description: "Consultation category for academic planning, study advice, and learning support.",
-    status: "Active",
-    usedBy: 1
-  }
-];
+let expertiseCategories = [];
+
+const API_BASE_URL = "http://localhost:8080/api/v1/expertise";
 
 const expertiseTableBody = document.getElementById("expertiseTableBody");
 const expertiseForm = document.getElementById("expertiseForm");
@@ -38,6 +21,22 @@ const totalExpertise = document.getElementById("totalExpertise");
 const activeExpertise = document.getElementById("activeExpertise");
 const inactiveExpertise = document.getElementById("inactiveExpertise");
 const usedCategories = document.getElementById("usedCategories");
+
+async function loadExpertise() {
+  try {
+    const response = await fetch(API_BASE_URL);
+
+    if (!response.ok) {
+      throw new Error("Failed to load expertise data.");
+    }
+
+    expertiseCategories = await response.json();
+    refreshView();
+  } catch (error) {
+    console.error(error);
+    alert("Failed to load expertise data from backend.");
+  }
+}
 
 function renderExpertise(status = "All") {
   expertiseTableBody.innerHTML = "";
@@ -84,7 +83,7 @@ function updateStats() {
   ).length;
 
   usedCategories.textContent = expertiseCategories.filter(
-    (category) => category.usedBy > 0
+    (category) => Number(category.usedBy) > 0
   ).length;
 }
 
@@ -104,22 +103,53 @@ function getFormData() {
   };
 }
 
-expertiseForm.addEventListener("submit", function (event) {
+expertiseForm.addEventListener("submit", async function (event) {
   event.preventDefault();
 
   const expertiseData = getFormData();
   const currentEditIndex = editIndex.value;
 
-  if (currentEditIndex === "") {
-    expertiseCategories.push(expertiseData);
-    alert("Expertise category added successfully.");
-  } else {
-    expertiseCategories[currentEditIndex] = expertiseData;
-    alert("Expertise category updated successfully.");
-  }
+  try {
+    let response;
 
-  clearForm();
-  refreshView();
+    if (currentEditIndex === "") {
+      response = await fetch(API_BASE_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(expertiseData)
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to add expertise category.");
+      }
+
+      alert("Expertise category added successfully.");
+    } else {
+      const categoryId = expertiseCategories[currentEditIndex].id;
+
+      response = await fetch(`${API_BASE_URL}/${categoryId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(expertiseData)
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update expertise category.");
+      }
+
+      alert("Expertise category updated successfully.");
+    }
+
+    clearForm();
+    await loadExpertise();
+  } catch (error) {
+    console.error(error);
+    alert(error.message);
+  }
 });
 
 function editExpertise(index) {
@@ -140,11 +170,30 @@ function editExpertise(index) {
   });
 }
 
-function toggleExpertiseStatus(index) {
-  expertiseCategories[index].status =
-    expertiseCategories[index].status === "Active" ? "Inactive" : "Active";
+async function toggleExpertiseStatus(index) {
+  const category = expertiseCategories[index];
+  const newStatus = category.status === "Active" ? "Inactive" : "Active";
 
-  refreshView();
+  try {
+    const response = await fetch(`${API_BASE_URL}/${category.id}/status`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        status: newStatus
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to update expertise status.");
+    }
+
+    await loadExpertise();
+  } catch (error) {
+    console.error(error);
+    alert("Failed to update expertise status.");
+  }
 }
 
 function refreshView() {
@@ -166,4 +215,4 @@ showFormBtn.addEventListener("click", function () {
   });
 });
 
-refreshView();
+loadExpertise();
