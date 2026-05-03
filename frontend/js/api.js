@@ -180,7 +180,7 @@ export async function getMyBookings() {
     const userStr = localStorage.getItem('user');
     if (!token || !userStr) throw new Error('Not authenticated');
     const user = JSON.parse(userStr);
-    const userId = user.userId || user.id;        // adapt to your actual field name
+    const userId = user.userId || user.id;
     if (!userId) throw new Error('User ID not found');
 
     const response = await fetch(`/api/v1/bookings?customerId=${userId}`, {
@@ -192,7 +192,7 @@ export async function getMyBookings() {
         const error = await response.text();
         throw new Error(error || 'Failed to fetch bookings');
     }
-    return response.json();   // array of booking objects
+    return response.json();
 }
 
 // Cancel a booking
