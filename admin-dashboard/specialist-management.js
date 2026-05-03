@@ -1,10 +1,16 @@
-let expertiseCategories = [];
+// ===============================
+// Specialist Management - A2 Admin
+// Backend API: http://localhost:8080/api/v1/specialists
+// ===============================
 
-const API_BASE_URL = "http://localhost:8080/api/v1/expertise";
+let specialists = [];
 
-const expertiseTableBody = document.getElementById("expertiseTableBody");
-const expertiseForm = document.getElementById("expertiseForm");
-const expertiseStatusFilter = document.getElementById("expertiseStatusFilter");
+const SPECIALIST_API_URL = "http://localhost:8080/api/v1/specialists";
+
+// Table and form elements
+const specialistTableBody = document.getElementById("specialistTableBody");
+const specialistForm = document.getElementById("specialistForm");
+const specialistStatusFilter = document.getElementById("specialistStatusFilter");
 
 const formTitle = document.getElementById("formTitle");
 const submitBtn = document.getElementById("submitBtn");
@@ -12,157 +18,225 @@ const resetBtn = document.getElementById("resetBtn");
 const showFormBtn = document.getElementById("showFormBtn");
 
 const editIndex = document.getElementById("editIndex");
-const expertiseNameInput = document.getElementById("expertiseName");
+
+const nameInput = document.getElementById("name");
+const expertiseInput = document.getElementById("expertise");
+const levelInput = document.getElementById("level");
+const feeInput = document.getElementById("fee");
 const statusInput = document.getElementById("status");
-const usedByInput = document.getElementById("usedBy");
+const contactInput = document.getElementById("contact");
 const descriptionInput = document.getElementById("description");
 
-const totalExpertise = document.getElementById("totalExpertise");
-const activeExpertise = document.getElementById("activeExpertise");
-const inactiveExpertise = document.getElementById("inactiveExpertise");
-const usedCategories = document.getElementById("usedCategories");
+// Statistics elements
+const totalSpecialists = document.getElementById("totalSpecialists");
+const availableSpecialists = document.getElementById("availableSpecialists");
+const unavailableSpecialists = document.getElementById("unavailableSpecialists");
 
-async function loadExpertise() {
+
+// ===============================
+// 1. Load specialists from backend
+// ===============================
+
+async function loadSpecialists() {
   try {
-    const response = await fetch(API_BASE_URL);
+    const response = await fetch(SPECIALIST_API_URL);
 
     if (!response.ok) {
-      throw new Error("Failed to load expertise data.");
+      throw new Error("Failed to load specialist data.");
     }
 
-    expertiseCategories = await response.json();
+    specialists = await response.json();
     refreshView();
   } catch (error) {
     console.error(error);
-    alert("Failed to load expertise data from backend.");
+    alert("Failed to load specialists from backend. Please check whether the backend is running on http://localhost:8080.");
   }
 }
 
-function renderExpertise(status = "All") {
-  expertiseTableBody.innerHTML = "";
 
-  const filteredCategories =
+// ===============================
+// 2. Render specialist table
+// ===============================
+
+function renderSpecialists(status = "All") {
+  specialistTableBody.innerHTML = "";
+
+  const filteredSpecialists =
     status === "All"
-      ? expertiseCategories
-      : expertiseCategories.filter((category) => category.status === status);
+      ? specialists
+      : specialists.filter((specialist) => specialist.statusText === status);
 
-  filteredCategories.forEach((category) => {
-    const realIndex = expertiseCategories.indexOf(category);
+  filteredSpecialists.forEach((specialist) => {
+    const realIndex = specialists.indexOf(specialist);
     const row = document.createElement("tr");
 
+    const statusText = specialist.statusText || getStatusText(specialist.status);
+
     row.innerHTML = `
-      <td>${category.expertiseName}</td>
-      <td class="description-cell">${category.description}</td>
+      <td>${specialist.name || ""}</td>
+      <td>${specialist.expertise || ""}</td>
+      <td>${specialist.level || ""}</td>
+      <td>${specialist.fee || ""}</td>
       <td>
-        <span class="badge ${category.status.toLowerCase()}">
-          ${category.status}
+        <span class="badge ${statusText.toLowerCase()}">
+          ${statusText}
         </span>
       </td>
-      <td>${category.usedBy}</td>
+      <td>${specialist.contact || ""}</td>
+      <td class="description-cell">${specialist.description || ""}</td>
       <td>
-        <button class="table-btn edit-btn" onclick="editExpertise(${realIndex})">Edit</button>
-        <button class="table-btn disable-btn" onclick="toggleExpertiseStatus(${realIndex})">
-          ${category.status === "Active" ? "Set Inactive" : "Set Active"}
+        <button class="table-btn edit-btn" onclick="editSpecialist(${realIndex})">
+          Edit
+        </button>
+        <button class="table-btn disable-btn" onclick="toggleSpecialistStatus(${realIndex})">
+          ${Number(specialist.status) === 1 ? "Set Unavailable" : "Set Available"}
         </button>
       </td>
     `;
 
-    expertiseTableBody.appendChild(row);
+    specialistTableBody.appendChild(row);
   });
 }
 
+
+// ===============================
+// 3. Update dashboard statistics
+// ===============================
+
 function updateStats() {
-  totalExpertise.textContent = expertiseCategories.length;
+  if (totalSpecialists) {
+    totalSpecialists.textContent = specialists.length;
+  }
 
-  activeExpertise.textContent = expertiseCategories.filter(
-    (category) => category.status === "Active"
-  ).length;
+  if (availableSpecialists) {
+    availableSpecialists.textContent = specialists.filter(
+      (specialist) => Number(specialist.status) === 1
+    ).length;
+  }
 
-  inactiveExpertise.textContent = expertiseCategories.filter(
-    (category) => category.status === "Inactive"
-  ).length;
-
-  usedCategories.textContent = expertiseCategories.filter(
-    (category) => Number(category.usedBy) > 0
-  ).length;
+  if (unavailableSpecialists) {
+    unavailableSpecialists.textContent = specialists.filter(
+      (specialist) => Number(specialist.status) === 0
+    ).length;
+  }
 }
+
+
+// ===============================
+// 4. Helper: convert status number to text
+// ===============================
+
+function getStatusText(status) {
+  return Number(status) === 1 ? "Available" : "Unavailable";
+}
+
+
+// ===============================
+// 5. Clear form
+// ===============================
 
 function clearForm() {
-  expertiseForm.reset();
+  specialistForm.reset();
   editIndex.value = "";
-  formTitle.textContent = "Add Expertise Category";
-  submitBtn.textContent = "Save Expertise";
+
+  formTitle.textContent = "Add Specialist";
+  submitBtn.textContent = "Save Specialist";
 }
 
-function getFormData() {
+
+// ===============================
+// 6. Get form data
+// Important: Specialist status must be number 1 or 0
+// ===============================
+
+function getSpecialistFormData() {
   return {
-    expertiseName: expertiseNameInput.value.trim(),
-    description: descriptionInput.value.trim(),
-    status: statusInput.value,
-    usedBy: Number(usedByInput.value)
+    name: nameInput.value.trim(),
+    expertise: expertiseInput.value.trim(),
+    level: levelInput.value.trim(),
+    fee: Number(feeInput.value),
+    status: Number(statusInput.value),
+    contact: contactInput.value.trim(),
+    description: descriptionInput.value.trim()
   };
 }
 
-expertiseForm.addEventListener("submit", async function (event) {
+
+// ===============================
+// 7. Add or update specialist
+// POST: add specialist
+// PUT: update specialist
+// ===============================
+
+specialistForm.addEventListener("submit", async function (event) {
   event.preventDefault();
 
-  const expertiseData = getFormData();
+  const specialistData = getSpecialistFormData();
   const currentEditIndex = editIndex.value;
 
   try {
     let response;
 
     if (currentEditIndex === "") {
-      response = await fetch(API_BASE_URL, {
+      response = await fetch(SPECIALIST_API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(expertiseData)
+        body: JSON.stringify(specialistData)
       });
 
       if (!response.ok) {
-        throw new Error("Failed to add expertise category.");
+        throw new Error("Failed to add specialist.");
       }
 
-      alert("Expertise category added successfully.");
+      alert("Specialist added successfully.");
     } else {
-      const categoryId = expertiseCategories[currentEditIndex].id;
+      const specialistId = specialists[currentEditIndex].id;
 
-      response = await fetch(`${API_BASE_URL}/${categoryId}`, {
+      response = await fetch(`${SPECIALIST_API_URL}/${specialistId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(expertiseData)
+        body: JSON.stringify(specialistData)
       });
 
       if (!response.ok) {
-        throw new Error("Failed to update expertise category.");
+        throw new Error("Failed to update specialist.");
       }
 
-      alert("Expertise category updated successfully.");
+      alert("Specialist updated successfully.");
     }
 
     clearForm();
-    await loadExpertise();
+    await loadSpecialists();
   } catch (error) {
     console.error(error);
     alert(error.message);
   }
 });
 
-function editExpertise(index) {
-  const category = expertiseCategories[index];
+
+// ===============================
+// 8. Edit specialist
+// ===============================
+
+function editSpecialist(index) {
+  const specialist = specialists[index];
 
   editIndex.value = index;
-  expertiseNameInput.value = category.expertiseName;
-  descriptionInput.value = category.description;
-  statusInput.value = category.status;
-  usedByInput.value = category.usedBy;
 
-  formTitle.textContent = "Edit Expertise Category";
-  submitBtn.textContent = "Update Expertise";
+  nameInput.value = specialist.name || "";
+  expertiseInput.value = specialist.expertise || "";
+  levelInput.value = specialist.level || "";
+  feeInput.value = specialist.fee || "";
+  statusInput.value = Number(specialist.status);
+  contactInput.value = specialist.contact || "";
+  descriptionInput.value = specialist.description || "";
+
+  formTitle.textContent = "Edit Specialist";
+  submitBtn.textContent = "Update Specialist";
 
   window.scrollTo({
     top: 0,
@@ -170,38 +244,52 @@ function editExpertise(index) {
   });
 }
 
-async function toggleExpertiseStatus(index) {
-  const category = expertiseCategories[index];
-  const newStatus = category.status === "Active" ? "Inactive" : "Active";
+
+// ===============================
+// 9. Toggle specialist status
+// Important: B3 said PATCH body should directly send number 1 or 0
+// ===============================
+
+async function toggleSpecialistStatus(index) {
+  const specialist = specialists[index];
+  const newStatus = Number(specialist.status) === 1 ? 0 : 1;
 
   try {
-    const response = await fetch(`${API_BASE_URL}/${category.id}/status`, {
+    const response = await fetch(`${SPECIALIST_API_URL}/${specialist.id}/status`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        status: newStatus
-      })
+      body: JSON.stringify(newStatus)
     });
 
     if (!response.ok) {
-      throw new Error("Failed to update expertise status.");
+      throw new Error("Failed to update specialist status.");
     }
 
-    await loadExpertise();
+    await loadSpecialists();
   } catch (error) {
     console.error(error);
-    alert("Failed to update expertise status.");
+    alert("Failed to update specialist status.");
   }
 }
 
+
+// ===============================
+// 10. Refresh table and statistics
+// ===============================
+
 function refreshView() {
-  renderExpertise(expertiseStatusFilter.value);
+  renderSpecialists(specialistStatusFilter.value);
   updateStats();
 }
 
-expertiseStatusFilter.addEventListener("change", function () {
+
+// ===============================
+// 11. Event listeners
+// ===============================
+
+specialistStatusFilter.addEventListener("change", function () {
   refreshView();
 });
 
@@ -209,10 +297,16 @@ resetBtn.addEventListener("click", clearForm);
 
 showFormBtn.addEventListener("click", function () {
   clearForm();
+
   window.scrollTo({
     top: 0,
     behavior: "smooth"
   });
 });
 
-loadExpertise();
+
+// ===============================
+// 12. Initial load
+// ===============================
+
+loadSpecialists();
