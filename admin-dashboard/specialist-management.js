@@ -10,7 +10,7 @@ const SPECIALIST_API_URL = "http://localhost:8080/api/v1/specialists";
 // Table and form elements
 const specialistTableBody = document.getElementById("specialistTableBody");
 const specialistForm = document.getElementById("specialistForm");
-const specialistStatusFilter = document.getElementById("specialistStatusFilter");
+const statusFilter = document.getElementById("specialistStatusFilter");
 
 const formTitle = document.getElementById("formTitle");
 const submitBtn = document.getElementById("submitBtn");
