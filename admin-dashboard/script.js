@@ -1,26 +1,18 @@
 // ===============================
 // A2 Admin Dashboard
-// Integrated with B1, B2, B3 APIs
+// Integrated with B2 booking API and B3 specialist API
 // ===============================
 
-// B3 APIs
 const SPECIALIST_API_URL = "http://localhost:8080/api/v1/specialists";
-const EXPERTISE_API_URL = "http://localhost:8080/api/v1/expertise";
-
-// B2 API
 const BOOKING_API_URL = "http://localhost:8080/api/v1/bookings";
 
-// B1 API
-const CUSTOMER_API_URL = "http://localhost:8080/api/customers";
-
 let specialists = [];
-let expertiseCategories = [];
 let bookings = [];
-let customers = [];
 
-// ===============================
-// Helper: safe DOM update
-// ===============================
+const statusFilter = document.getElementById("statusFilter");
+const refreshBtn = document.getElementById("refreshBtn");
+const specialistTableBody = document.getElementById("specialistTableBody");
+const bookingTableBody = document.getElementById("bookingTableBody");
 
 function setText(id, value) {
   const element = document.getElementById(id);
@@ -44,9 +36,25 @@ function getAuthHeaders() {
   };
 }
 
-// ===============================
-// 1. Load Specialist Data - B3
-// ===============================
+function getStatusText(status) {
+  if (status === "Available" || status === "Unavailable") {
+    return status;
+  }
+
+  return Number(status) === 1 ? "Available" : "Unavailable";
+}
+
+function normalizeBookingStatus(status) {
+  return String(status || "").toUpperCase();
+}
+
+function getBookingDate(booking) {
+  return booking.date || booking.bookingDate || booking.appointmentDate || booking.startDate || "";
+}
+
+function getBookingTime(booking) {
+  return booking.time || booking.bookingTime || booking.appointmentTime || booking.startTime || "";
+}
 
 async function loadSpecialists() {
   try {
@@ -61,115 +69,66 @@ async function loadSpecialists() {
 
     specialists = await response.json();
     updateSpecialistStats();
-    renderSpecialistSummaryTable();
+    renderSpecialistTable(statusFilter.value);
   } catch (error) {
     console.error("Specialist API Error:", error);
+    specialistTableBody.innerHTML = `
+      <tr>
+        <td colspan="7">Failed to load specialist data. Please check the backend.</td>
+      </tr>
+    `;
   }
 }
 
 function updateSpecialistStats() {
   const total = specialists.length;
 
-  const available = specialists.filter(
-    (specialist) => Number(specialist.status) === 1 || specialist.statusText === "Available"
-  ).length;
-
-  const unavailable = specialists.filter(
-    (specialist) => Number(specialist.status) === 0 || specialist.statusText === "Unavailable"
-  ).length;
+  const available = specialists.filter((specialist) => {
+    const statusText = specialist.statusText || getStatusText(specialist.status);
+    return statusText === "Available";
+  }).length;
 
   setText("totalSpecialists", total);
   setText("availableSpecialists", available);
-  setText("unavailableSpecialists", unavailable);
 }
 
-function renderSpecialistSummaryTable() {
-  const tableBody = document.getElementById("specialistSummaryTableBody");
+function renderSpecialistTable(status = "All") {
+  specialistTableBody.innerHTML = "";
 
-  if (!tableBody) return;
+  const filteredSpecialists =
+    status === "All"
+      ? specialists
+      : specialists.filter((specialist) => {
+          const statusText = specialist.statusText || getStatusText(specialist.status);
+          return statusText === status;
+        });
 
-  tableBody.innerHTML = "";
+  if (filteredSpecialists.length === 0) {
+    specialistTableBody.innerHTML = `
+      <tr>
+        <td colspan="7">No specialist records found.</td>
+      </tr>
+    `;
+    return;
+  }
 
-  specialists.slice(0, 5).forEach((specialist) => {
-    const statusText =
-      specialist.statusText ||
-      (Number(specialist.status) === 1 ? "Available" : "Unavailable");
-
+  filteredSpecialists.slice(0, 6).forEach((specialist) => {
+    const statusText = specialist.statusText || getStatusText(specialist.status);
     const row = document.createElement("tr");
 
     row.innerHTML = `
       <td>${specialist.name || ""}</td>
       <td>${specialist.expertise || ""}</td>
       <td>${specialist.level || ""}</td>
-      <td>${statusText}</td>
+      <td>${specialist.fee ?? ""}</td>
+      <td><span class="badge ${statusText.toLowerCase()}">${statusText}</span></td>
+      <td>${specialist.contact || ""}</td>
+      <td class="description-cell">${specialist.description || ""}</td>
     `;
 
-    tableBody.appendChild(row);
+    specialistTableBody.appendChild(row);
   });
 }
-
-// ===============================
-// 2. Load Expertise Data - B3
-// ===============================
-
-async function loadExpertise() {
-  try {
-    const response = await fetch(EXPERTISE_API_URL, {
-      method: "GET",
-      headers: getAuthHeaders()
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to load expertise.");
-    }
-
-    expertiseCategories = await response.json();
-    updateExpertiseStats();
-    renderExpertiseSummaryTable();
-  } catch (error) {
-    console.error("Expertise API Error:", error);
-  }
-}
-
-function updateExpertiseStats() {
-  const total = expertiseCategories.length;
-
-  const active = expertiseCategories.filter(
-    (category) => category.status === "Active"
-  ).length;
-
-  const inactive = expertiseCategories.filter(
-    (category) => category.status === "Inactive"
-  ).length;
-
-  setText("totalExpertise", total);
-  setText("activeExpertise", active);
-  setText("inactiveExpertise", inactive);
-}
-
-function renderExpertiseSummaryTable() {
-  const tableBody = document.getElementById("expertiseSummaryTableBody");
-
-  if (!tableBody) return;
-
-  tableBody.innerHTML = "";
-
-  expertiseCategories.slice(0, 5).forEach((category) => {
-    const row = document.createElement("tr");
-
-    row.innerHTML = `
-      <td>${category.expertiseName || ""}</td>
-      <td>${category.status || ""}</td>
-      <td>${category.usedBy ?? ""}</td>
-    `;
-
-    tableBody.appendChild(row);
-  });
-}
-
-// ===============================
-// 3. Load Booking Data - B2
-// ===============================
 
 async function loadBookings() {
   try {
@@ -184,9 +143,14 @@ async function loadBookings() {
 
     bookings = await response.json();
     updateBookingStats();
-    renderBookingSummaryTable();
+    renderBookingTable();
   } catch (error) {
     console.error("Booking API Error:", error);
+    bookingTableBody.innerHTML = `
+      <tr>
+        <td colspan="6">Failed to load booking data. Please check the backend.</td>
+      </tr>
+    `;
   }
 }
 
@@ -194,130 +158,72 @@ function updateBookingStats() {
   const total = bookings.length;
 
   const pending = bookings.filter(
-    (booking) => booking.status === "PENDING"
+    (booking) => normalizeBookingStatus(booking.status) === "PENDING"
   ).length;
 
   const confirmed = bookings.filter(
-    (booking) => booking.status === "CONFIRMED"
+    (booking) => normalizeBookingStatus(booking.status) === "CONFIRMED"
   ).length;
 
   const completed = bookings.filter(
-    (booking) => booking.status === "COMPLETED"
+    (booking) => normalizeBookingStatus(booking.status) === "COMPLETED"
   ).length;
 
-  const cancelled = bookings.filter(
-    (booking) =>
-      booking.status === "CANCELLED" ||
-      booking.status === "CANCELED"
-  ).length;
+  const cancelled = bookings.filter((booking) => {
+    const status = normalizeBookingStatus(booking.status);
+    return status === "CANCELLED" || status === "CANCELED";
+  }).length;
 
   setText("totalBookings", total);
   setText("pendingBookings", pending);
-  setText("confirmedBookings", confirmed);
-  setText("completedBookings", completed);
-  setText("cancelledBookings", cancelled);
+  setText("summaryPendingBookings", pending);
+  setText("summaryConfirmedBookings", confirmed);
+  setText("summaryCompletedBookings", completed);
+  setText("summaryCancelledBookings", cancelled);
 }
 
-function renderBookingSummaryTable() {
-  const tableBody = document.getElementById("bookingSummaryTableBody");
+function renderBookingTable() {
+  bookingTableBody.innerHTML = "";
 
-  if (!tableBody) return;
-
-  tableBody.innerHTML = "";
-
-  bookings.slice(0, 5).forEach((booking) => {
-    const row = document.createElement("tr");
-
-    row.innerHTML = `
-      <td>${booking.id || ""}</td>
-      <td>${booking.customerId || booking.customerName || ""}</td>
-      <td>${booking.specialistId || booking.specialistName || ""}</td>
-      <td>${booking.status || ""}</td>
+  if (bookings.length === 0) {
+    bookingTableBody.innerHTML = `
+      <tr>
+        <td colspan="6">No booking records found.</td>
+      </tr>
     `;
-
-    tableBody.appendChild(row);
-  });
-}
-
-// ===============================
-// 4. Load Customer Data - B1
-// ===============================
-
-async function loadCustomers() {
-  try {
-    const response = await fetch(CUSTOMER_API_URL, {
-      method: "GET",
-      headers: getAuthHeaders()
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to load customers.");
-    }
-
-    customers = await response.json();
-    updateCustomerStats();
-    renderCustomerSummaryTable();
-  } catch (error) {
-    console.error("Customer API Error:", error);
+    return;
   }
-}
 
-function updateCustomerStats() {
-  const total = customers.length;
-
-  setText("totalCustomers", total);
-}
-
-function renderCustomerSummaryTable() {
-  const tableBody = document.getElementById("customerSummaryTableBody");
-
-  if (!tableBody) return;
-
-  tableBody.innerHTML = "";
-
-  customers.slice(0, 5).forEach((customer) => {
+  bookings.slice(0, 6).forEach((booking) => {
+    const status = normalizeBookingStatus(booking.status);
     const row = document.createElement("tr");
 
     row.innerHTML = `
-      <td>${customer.id || ""}</td>
-      <td>${customer.name || ""}</td>
-      <td>${customer.phone || ""}</td>
-      <td>${customer.gender || ""}</td>
-      <td>${customer.age || ""}</td>
-      <td>${customer.address || ""}</td>
+      <td>${booking.id || booking.bookingId || ""}</td>
+      <td>${booking.customerName || booking.customerId || ""}</td>
+      <td>${booking.specialistName || booking.specialistId || ""}</td>
+      <td>${getBookingDate(booking)}</td>
+      <td>${getBookingTime(booking)}</td>
+      <td>${status}</td>
     `;
 
-    tableBody.appendChild(row);
+    bookingTableBody.appendChild(row);
   });
 }
-
-// ===============================
-// 5. Load all dashboard data
-// ===============================
 
 async function loadDashboardData() {
   await Promise.all([
     loadSpecialists(),
-    loadExpertise(),
-    loadBookings(),
-    loadCustomers()
+    loadBookings()
   ]);
 }
 
-// ===============================
-// 6. Refresh button if exists
-// ===============================
+statusFilter.addEventListener("change", function () {
+  renderSpecialistTable(statusFilter.value);
+});
 
-const refreshDashboardBtn = document.getElementById("refreshDashboardBtn");
-
-if (refreshDashboardBtn) {
-  refreshDashboardBtn.addEventListener("click", function () {
-    loadDashboardData();
-  });
-}
-
-// ===============================
-// 7. Initial load
-// ===============================
+refreshBtn.addEventListener("click", function () {
+  loadDashboardData();
+});
 
 loadDashboardData();
