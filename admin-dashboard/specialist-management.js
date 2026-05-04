@@ -7,10 +7,9 @@ let specialists = [];
 
 const SPECIALIST_API_URL = "http://localhost:8080/api/v1/specialists";
 
-// Table and form elements
 const specialistTableBody = document.getElementById("specialistTableBody");
 const specialistForm = document.getElementById("specialistForm");
-const statusFilter = document.getElementById("specialistStatusFilter");
+const specialistStatusFilter = document.getElementById("statusFilter");
 
 const formTitle = document.getElementById("formTitle");
 const submitBtn = document.getElementById("submitBtn");
@@ -27,127 +26,51 @@ const statusInput = document.getElementById("status");
 const contactInput = document.getElementById("contact");
 const descriptionInput = document.getElementById("description");
 
-// Statistics elements
 const totalSpecialists = document.getElementById("totalSpecialists");
 const availableSpecialists = document.getElementById("availableSpecialists");
 const unavailableSpecialists = document.getElementById("unavailableSpecialists");
 
+function getAuthHeaders() {
+  const token = localStorage.getItem("token");
 
-// ===============================
-// 1. Load specialists from backend
-// ===============================
-
-async function loadSpecialists() {
-  try {
-    const response = await fetch(SPECIALIST_API_URL);
-
-    if (!response.ok) {
-      throw new Error("Failed to load specialist data.");
-    }
-
-    specialists = await response.json();
-    refreshView();
-  } catch (error) {
-    console.error(error);
-    alert("Failed to load specialists from backend. Please check whether the backend is running on http://localhost:8080.");
+  if (token) {
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    };
   }
+
+  return {
+    "Content-Type": "application/json"
+  };
 }
-
-
-// ===============================
-// 2. Render specialist table
-// ===============================
-
-function renderSpecialists(status = "All") {
-  specialistTableBody.innerHTML = "";
-
-  const filteredSpecialists =
-    status === "All"
-      ? specialists
-      : specialists.filter((specialist) => specialist.statusText === status);
-
-  filteredSpecialists.forEach((specialist) => {
-    const realIndex = specialists.indexOf(specialist);
-    const row = document.createElement("tr");
-
-    const statusText = specialist.statusText || getStatusText(specialist.status);
-
-    row.innerHTML = `
-      <td>${specialist.name || ""}</td>
-      <td>${specialist.expertise || ""}</td>
-      <td>${specialist.level || ""}</td>
-      <td>${specialist.fee || ""}</td>
-      <td>
-        <span class="badge ${statusText.toLowerCase()}">
-          ${statusText}
-        </span>
-      </td>
-      <td>${specialist.contact || ""}</td>
-      <td class="description-cell">${specialist.description || ""}</td>
-      <td>
-        <button class="table-btn edit-btn" onclick="editSpecialist(${realIndex})">
-          Edit
-        </button>
-        <button class="table-btn disable-btn" onclick="toggleSpecialistStatus(${realIndex})">
-          ${Number(specialist.status) === 1 ? "Set Unavailable" : "Set Available"}
-        </button>
-      </td>
-    `;
-
-    specialistTableBody.appendChild(row);
-  });
-}
-
-
-// ===============================
-// 3. Update dashboard statistics
-// ===============================
-
-function updateStats() {
-  if (totalSpecialists) {
-    totalSpecialists.textContent = specialists.length;
-  }
-
-  if (availableSpecialists) {
-    availableSpecialists.textContent = specialists.filter(
-      (specialist) => Number(specialist.status) === 1
-    ).length;
-  }
-
-  if (unavailableSpecialists) {
-    unavailableSpecialists.textContent = specialists.filter(
-      (specialist) => Number(specialist.status) === 0
-    ).length;
-  }
-}
-
-
-// ===============================
-// 4. Helper: convert status number to text
-// ===============================
 
 function getStatusText(status) {
+  if (status === "Available" || status === "Unavailable") {
+    return status;
+  }
+
   return Number(status) === 1 ? "Available" : "Unavailable";
 }
 
+function getStatusNumber(status) {
+  if (status === "Available") return 1;
+  if (status === "Unavailable") return 0;
+  return Number(status) === 1 ? 1 : 0;
+}
 
-// ===============================
-// 5. Clear form
-// ===============================
+function getSpecialistId(specialist) {
+  return specialist.id || specialist.specialistId;
+}
 
 function clearForm() {
   specialistForm.reset();
   editIndex.value = "";
+  statusInput.value = "1";
 
   formTitle.textContent = "Add Specialist";
   submitBtn.textContent = "Save Specialist";
 }
-
-
-// ===============================
-// 6. Get form data
-// Important: Specialist status must be number 1 or 0
-// ===============================
 
 function getSpecialistFormData() {
   return {
@@ -161,12 +84,96 @@ function getSpecialistFormData() {
   };
 }
 
+async function loadSpecialists() {
+  try {
+    const response = await fetch(SPECIALIST_API_URL, {
+      method: "GET",
+      headers: getAuthHeaders()
+    });
 
-// ===============================
-// 7. Add or update specialist
-// POST: add specialist
-// PUT: update specialist
-// ===============================
+    if (!response.ok) {
+      throw new Error("Failed to load specialist data.");
+    }
+
+    specialists = await response.json();
+    refreshView();
+  } catch (error) {
+    console.error("Specialist API Error:", error);
+    alert("Failed to load specialists from backend. Please check whether the backend is running on http://localhost:8080.");
+  }
+}
+
+function renderSpecialists(status = "All") {
+  specialistTableBody.innerHTML = "";
+
+  const filteredSpecialists =
+    status === "All"
+      ? specialists
+      : specialists.filter((specialist) => {
+          const statusText = specialist.statusText || getStatusText(specialist.status);
+          return statusText === status;
+        });
+
+  if (filteredSpecialists.length === 0) {
+    specialistTableBody.innerHTML = `
+      <tr>
+        <td colspan="8">No specialist records found.</td>
+      </tr>
+    `;
+    return;
+  }
+
+  filteredSpecialists.forEach((specialist) => {
+    const realIndex = specialists.indexOf(specialist);
+    const statusText = specialist.statusText || getStatusText(specialist.status);
+    const statusNumber = getStatusNumber(specialist.status);
+
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+      <td>${specialist.name || ""}</td>
+      <td>${specialist.expertise || ""}</td>
+      <td>${specialist.level || ""}</td>
+      <td>${specialist.fee ?? ""}</td>
+      <td>
+        <span class="badge ${statusText.toLowerCase()}">
+          ${statusText}
+        </span>
+      </td>
+      <td>${specialist.contact || ""}</td>
+      <td class="description-cell">${specialist.description || ""}</td>
+      <td>
+        <button class="table-btn edit-btn" onclick="editSpecialist(${realIndex})">
+          Edit
+        </button>
+        <button class="table-btn disable-btn" onclick="toggleSpecialistStatus(${realIndex})">
+          ${statusNumber === 1 ? "Set Unavailable" : "Set Available"}
+        </button>
+      </td>
+    `;
+
+    specialistTableBody.appendChild(row);
+  });
+}
+
+function updateStats() {
+  totalSpecialists.textContent = specialists.length;
+
+  availableSpecialists.textContent = specialists.filter((specialist) => {
+    const statusText = specialist.statusText || getStatusText(specialist.status);
+    return statusText === "Available";
+  }).length;
+
+  unavailableSpecialists.textContent = specialists.filter((specialist) => {
+    const statusText = specialist.statusText || getStatusText(specialist.status);
+    return statusText === "Unavailable";
+  }).length;
+}
+
+function refreshView() {
+  renderSpecialists(specialistStatusFilter.value);
+  updateStats();
+}
 
 specialistForm.addEventListener("submit", async function (event) {
   event.preventDefault();
@@ -180,9 +187,7 @@ specialistForm.addEventListener("submit", async function (event) {
     if (currentEditIndex === "") {
       response = await fetch(SPECIALIST_API_URL, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(specialistData)
       });
 
@@ -192,13 +197,11 @@ specialistForm.addEventListener("submit", async function (event) {
 
       alert("Specialist added successfully.");
     } else {
-      const specialistId = specialists[currentEditIndex].id;
+      const specialistId = getSpecialistId(specialists[currentEditIndex]);
 
       response = await fetch(`${SPECIALIST_API_URL}/${specialistId}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(specialistData)
       });
 
@@ -212,15 +215,10 @@ specialistForm.addEventListener("submit", async function (event) {
     clearForm();
     await loadSpecialists();
   } catch (error) {
-    console.error(error);
+    console.error("Save Specialist Error:", error);
     alert(error.message);
   }
 });
-
-
-// ===============================
-// 8. Edit specialist
-// ===============================
 
 function editSpecialist(index) {
   const specialist = specialists[index];
@@ -230,8 +228,8 @@ function editSpecialist(index) {
   nameInput.value = specialist.name || "";
   expertiseInput.value = specialist.expertise || "";
   levelInput.value = specialist.level || "";
-  feeInput.value = specialist.fee || "";
-  statusInput.value = Number(specialist.status);
+  feeInput.value = specialist.fee ?? "";
+  statusInput.value = String(getStatusNumber(specialist.status));
   contactInput.value = specialist.contact || "";
   descriptionInput.value = specialist.description || "";
 
@@ -244,22 +242,16 @@ function editSpecialist(index) {
   });
 }
 
-
-// ===============================
-// 9. Toggle specialist status
-// Important: B3 said PATCH body should directly send number 1 or 0
-// ===============================
-
 async function toggleSpecialistStatus(index) {
   const specialist = specialists[index];
-  const newStatus = Number(specialist.status) === 1 ? 0 : 1;
+  const specialistId = getSpecialistId(specialist);
+  const currentStatus = getStatusNumber(specialist.status);
+  const newStatus = currentStatus === 1 ? 0 : 1;
 
   try {
-    const response = await fetch(`${SPECIALIST_API_URL}/${specialist.id}/status`, {
+    const response = await fetch(`${SPECIALIST_API_URL}/${specialistId}/status`, {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(newStatus)
     });
 
@@ -269,44 +261,20 @@ async function toggleSpecialistStatus(index) {
 
     await loadSpecialists();
   } catch (error) {
-    console.error(error);
+    console.error("Update Specialist Status Error:", error);
     alert("Failed to update specialist status.");
   }
 }
 
-
-// ===============================
-// 10. Refresh table and statistics
-// ===============================
-
-function refreshView() {
-  renderSpecialists(specialistStatusFilter.value);
-  updateStats();
-}
-
-
-// ===============================
-// 11. Event listeners
-// ===============================
-
-specialistStatusFilter.addEventListener("change", function () {
-  refreshView();
-});
-
+specialistStatusFilter.addEventListener("change", refreshView);
 resetBtn.addEventListener("click", clearForm);
 
 showFormBtn.addEventListener("click", function () {
   clearForm();
-
   window.scrollTo({
     top: 0,
     behavior: "smooth"
   });
 });
-
-
-// ===============================
-// 12. Initial load
-// ===============================
 
 loadSpecialists();
