@@ -1,173 +1,68 @@
-import { sendVerificationCode, register, login, logout, sendResetCode, resetPassword, setCurrentUser } from './api.js';
+import { register, login } from './api.js';
 
-let countdown = 0;
-let countdownInterval = null;
+const isRegister = window.location.pathname.includes('register.html');
+const isForgot = window.location.pathname.includes('forgot-password.html');
 
-function showMessage(elementId, text, type) {
-    const msgDiv = document.getElementById(elementId);
-    msgDiv.innerHTML = `<div class="${type}">${text}</div>`;
-    setTimeout(() => { if (msgDiv) msgDiv.innerHTML = ''; }, 5000);
+function showMessage(divId, text, type) {
+    const div = document.getElementById(divId);
+    div.innerHTML = `<div class="${type}">${text}</div>`;
+    setTimeout(() => div.innerHTML = '', 5000);
 }
 
-// Registration page
-if (window.location.pathname.includes('register.html')) {
-    const sendBtn = document.getElementById('sendCodeBtn');
-    const emailInput = document.getElementById('email');
+if (isRegister) {
+    const form = document.getElementById('registerForm');
     const pwdInput = document.getElementById('password');
-    const pwdHint = document.getElementById('pwdHint');
-
+    const hint = document.getElementById('pwdHint');
     pwdInput.addEventListener('input', () => {
-        const pwd = pwdInput.value;
-        const regex = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/;
-        if (regex.test(pwd)) pwdHint.innerText = '✓ Password strength: good';
-        else pwdHint.innerText = '✗ Password must be at least 6 characters and contain letters & numbers';
+        const val = pwdInput.value;
+        hint.innerText = val.length >= 6 ? 'Strong enough' : 'Minimum 6 characters';
     });
-
-    sendBtn.addEventListener('click', async () => {
-        const email = emailInput.value.trim();
-        if (!email) {
-            showMessage('message', 'Please enter email first', 'error');
-            return;
-        }
-        if (countdown > 0) {
-            showMessage('message', `Please wait ${countdown} seconds`, 'error');
-            return;
-        }
-        try {
-            await sendVerificationCode(email);
-            showMessage('message', 'Verification code sent (check console)', 'success');
-            countdown = 60;
-            sendBtn.disabled = true;
-            countdownInterval = setInterval(() => {
-                countdown--;
-                sendBtn.innerText = `${countdown}s`;
-                if (countdown <= 0) {
-                    clearInterval(countdownInterval);
-                    sendBtn.disabled = false;
-                    sendBtn.innerText = 'Send Code';
-                }
-            }, 1000);
-        } catch (err) {
-            showMessage('message', err.message, 'error');
-        }
-    });
-
-    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const name = document.getElementById('name').value.trim();
-        const email = emailInput.value.trim();
-        const password = pwdInput.value;
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
         const confirm = document.getElementById('confirmPassword').value;
-        const code = document.getElementById('verificationCode').value.trim();
-
-        if (!name || !email || !password || !confirm || !code) {
-            showMessage('message', 'Please fill all fields', 'error');
-            return;
-        }
         if (password !== confirm) {
             showMessage('message', 'Passwords do not match', 'error');
             return;
         }
         try {
-            await register(name, email, password, code);
+            await register(username, password);
             showMessage('message', 'Registration successful! Redirecting to login...', 'success');
-            setTimeout(() => window.location.href = 'login.html', 1500);
+            setTimeout(() => location.href = 'login.html', 1500);
         } catch (err) {
             showMessage('message', err.message, 'error');
         }
     });
-}
-
-// Login page
-else if (window.location.pathname.includes('login.html')) {
-    const savedEmail = localStorage.getItem('rememberedEmail');
-    const savedPwd = localStorage.getItem('rememberedPassword');
-    if (savedEmail && savedPwd) {
-        document.getElementById('email').value = savedEmail;
-        document.getElementById('password').value = savedPwd;
-        document.getElementById('rememberMe').checked = true;
-    }
-
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value;
-        const remember = document.getElementById('rememberMe').checked;
-
-        try {
-            const { token, user } = await login(email, password);
-            localStorage.setItem('token', token);
-            localStorage.setItem('user', JSON.stringify(user));
-            setCurrentUser(user);
-            if (remember) {
-                localStorage.setItem('rememberedEmail', email);
-                localStorage.setItem('rememberedPassword', password);
-            } else {
-                localStorage.removeItem('rememberedEmail');
-                localStorage.removeItem('rememberedPassword');
-            }
-            showMessage('message', 'Login successful, redirecting...', 'success');
-            setTimeout(() => window.location.href = 'profile.html', 1000);
-        } catch (err) {
-            showMessage('message', err.message, 'error');
-        }
-    });
-}
-
-// Forgot password page
-else if (window.location.pathname.includes('forgot-password.html')) {
-    let resetCountdown = 0;
-    const sendBtn = document.getElementById('sendCodeBtn');
-    const emailInput = document.getElementById('email');
-
-    sendBtn.addEventListener('click', async () => {
-        const email = emailInput.value.trim();
-        if (!email) {
-            showMessage('message', 'Please enter email', 'error');
-            return;
-        }
-        if (resetCountdown > 0) {
-            showMessage('message', `Please wait ${resetCountdown} seconds`, 'error');
-            return;
-        }
-        try {
-            await sendResetCode(email);
-            showMessage('message', 'Reset code sent (check console)', 'success');
-            resetCountdown = 60;
-            sendBtn.disabled = true;
-            const interval = setInterval(() => {
-                resetCountdown--;
-                sendBtn.innerText = `${resetCountdown}s`;
-                if (resetCountdown <= 0) {
-                    clearInterval(interval);
-                    sendBtn.disabled = false;
-                    sendBtn.innerText = 'Send Code';
-                }
-            }, 1000);
-        } catch (err) {
-            showMessage('message', err.message, 'error');
-        }
-    });
-
+} else if (isForgot) {
+    // Simplified: just allow password reset (no email, uses username)
+    // In real app, you would have verification code, but for demo, we just update password? 
+    // Actually no backend endpoint for password reset. We'll skip.
     document.getElementById('forgotForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = emailInput.value.trim();
-        const code = document.getElementById('verificationCode').value.trim();
-        const newPassword = document.getElementById('newPassword').value;
-        const confirm = document.getElementById('confirmPassword').value;
-
-        if (!email || !code || !newPassword || !confirm) {
-            showMessage('message', 'Please fill all fields', 'error');
-            return;
-        }
-        if (newPassword !== confirm) {
-            showMessage('message', 'New passwords do not match', 'error');
-            return;
-        }
+        showMessage('message', 'Password reset feature not implemented by backend yet.', 'error');
+    });
+} else {
+    // Login page
+    const savedUser = localStorage.getItem('rememberedUsername');
+    if (savedUser) {
+        document.getElementById('username').value = savedUser;
+        document.getElementById('rememberMe').checked = true;
+    }
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const remember = document.getElementById('rememberMe').checked;
         try {
-            await resetPassword(email, code, newPassword);
-            showMessage('message', 'Password reset successful, please login', 'success');
-            setTimeout(() => window.location.href = 'login.html', 1500);
+            const { customerId, username: uname, role } = await login(username, password);
+            localStorage.setItem('customerId', customerId);
+            localStorage.setItem('username', uname);
+            localStorage.setItem('role', role);
+            if (remember) localStorage.setItem('rememberedUsername', username);
+            else localStorage.removeItem('rememberedUsername');
+            showMessage('message', 'Login successful', 'success');
+            setTimeout(() => location.href = 'index.html', 1000);
         } catch (err) {
             showMessage('message', err.message, 'error');
         }
