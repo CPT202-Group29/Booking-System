@@ -2,9 +2,15 @@ package com.cpt202.booking_system.controller;
 
 import com.cpt202.booking_system.entity.Specialist;
 import com.cpt202.booking_system.repository.SpecialistRepository;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/specialists")
@@ -13,39 +19,45 @@ public class SpecialistController {
     @Autowired
     private SpecialistRepository specialistRepository;
 
-    // 获取所有专家（支持根据条件动态筛选）
     @GetMapping
-    public List<Specialist> getAllSpecialists(
+    public ResponseEntity<List<Specialist>> getAllSpecialists(
             @RequestParam(required = false) String expertise,
             @RequestParam(required = false) String level,
             @RequestParam(required = false) Integer status) {
 
-        // 创建一个“探测器”对象，把前端传来的搜索条件塞进去
         Specialist probe = new Specialist();
         probe.setExpertise(expertise);
         probe.setLevel(level);
         probe.setStatus(status);
 
-        // 使用 Spring 提供的高级魔法：按例查询 (Query by Example)
-        // 它会自动忽略没有填写的条件，只查有匹配项的数据！
-        org.springframework.data.domain.Example<Specialist> example = org.springframework.data.domain.Example.of(probe);
-        
-        return specialistRepository.findAll(example);
+        Example<Specialist> example = Example.of(probe);
+        return ResponseEntity.ok(specialistRepository.findAll(example));
     }
 
     @GetMapping("/{id}")
-    public Specialist getSpecialistById(@PathVariable Integer id) {
-        return specialistRepository.findById(id).orElse(null);
+    public ResponseEntity<?> getSpecialistById(@PathVariable Integer id) {
+        Specialist specialist = specialistRepository.findById(id).orElse(null);
+        if (specialist == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Specialist not found: " + id));
+        }
+        return ResponseEntity.ok(specialist);
     }
 
     @PostMapping
-    public Specialist createSpecialist(@RequestBody Specialist specialist) {
-        return specialistRepository.save(specialist);
+    public ResponseEntity<Specialist> createSpecialist(@Valid @RequestBody Specialist specialist) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(specialistRepository.save(specialist));
     }
 
     @PutMapping("/{id}")
-    public Specialist updateSpecialist(@PathVariable Integer id, @RequestBody Specialist specialistDetails) {
-        Specialist specialist = specialistRepository.findById(id).orElseThrow();
+    public ResponseEntity<?> updateSpecialist(@PathVariable Integer id,
+                                              @Valid @RequestBody Specialist specialistDetails) {
+        Specialist specialist = specialistRepository.findById(id).orElse(null);
+        if (specialist == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Specialist not found: " + id));
+        }
         specialist.setName(specialistDetails.getName());
         specialist.setExpertise(specialistDetails.getExpertise());
         specialist.setLevel(specialistDetails.getLevel());
@@ -53,13 +65,19 @@ public class SpecialistController {
         specialist.setContact(specialistDetails.getContact());
         specialist.setDescription(specialistDetails.getDescription());
         specialist.setStatus(specialistDetails.getStatus());
-        return specialistRepository.save(specialist);
+        return ResponseEntity.ok(specialistRepository.save(specialist));
     }
 
     @PatchMapping("/{id}/status")
-    public Specialist updateStatus(@PathVariable Integer id, @RequestBody Integer status) {
-        Specialist specialist = specialistRepository.findById(id).orElseThrow();
-        specialist.setStatus(status);
-        return specialistRepository.save(specialist);
+    public ResponseEntity<?> updateStatus(@PathVariable Integer id, @RequestBody Map<String, Object> body) {
+        Specialist specialist = specialistRepository.findById(id).orElse(null);
+        if (specialist == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Specialist not found: " + id));
+        }
+        if (body.containsKey("status")) {
+            specialist.setStatus(((Number) body.get("status")).intValue());
+        }
+        return ResponseEntity.ok(specialistRepository.save(specialist));
     }
 }
