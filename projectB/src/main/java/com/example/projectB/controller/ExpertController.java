@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/experts")
+@RequestMapping("/api/v1/experts")
 public class ExpertController {
 
     @Autowired

@@ -2,41 +2,66 @@ package com.example.projectB.controller;
 
 import com.example.projectB.entity.User;
 import com.example.projectB.repository.UserRepository;
+import com.example.projectB.util.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/v1/auth")
 public class AuthController {
 
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
+
     @PostMapping("/register")
-public String register(@RequestBody User user) {
-    User existingUser = userRepository.findByUsername(user.getUsername()).orElse(null);
+    public ResponseEntity<?> register(@RequestBody User user) {
+        if (userRepository.existsByUsername(user.getUsername())) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Username already exists"));
+        }
+        // Default role: ROLE_CUSTOMER
+        if (user.getRole() == null || user.getRole().isBlank()) {
+            user.setRole("ROLE_CUSTOMER");
+        }
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        userRepository.save(user);
 
-    if (existingUser != null) {
-        return "Username already exists";
+        String token = jwtTokenUtil.generateToken(user.getUsername());
+        return ResponseEntity.ok(Map.of(
+                "message", "Register successful",
+                "token", token,
+                "role", user.getRole(),
+                "userId", user.getId()
+        ));
     }
-
-    userRepository.save(user);
-    return "Register successful";
-}
 
     @PostMapping("/login")
-public String login(@RequestBody User user) {
+    public ResponseEntity<?> login(@RequestBody User user) {
+        User existingUser = userRepository.findByUsername(user.getUsername()).orElse(null);
 
-    User existingUser = userRepository.findByUsername(user.getUsername()).orElse(null);
+        if (existingUser == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid username or password"));
+        }
 
-    if (existingUser == null) {
-        return "User not found";
+        if (!passwordEncoder.matches(user.getPassword(), existingUser.getPassword())) {
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid username or password"));
+        }
+
+        String token = jwtTokenUtil.generateToken(existingUser.getUsername());
+        return ResponseEntity.ok(Map.of(
+                "message", "Login successful",
+                "token", token,
+                "role", existingUser.getRole(),
+                "userId", existingUser.getId()
+        ));
     }
-
-    if (!existingUser.getPassword().equals(user.getPassword())) {
-        return "Incorrect password";
-    }
-
-    return "Login successful. Role: " + existingUser.getRole();
-}
 }
