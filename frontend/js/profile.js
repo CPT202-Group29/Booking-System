@@ -1,35 +1,27 @@
-import { fetchProfile, updateProfile, uploadAvatar, changePassword, deleteAccount, logout, setCurrentUser, getCurrentUser } from './api.js';
+import { getCustomer, updateCustomer } from './api.js';
 
-const storedUser = localStorage.getItem('user');
-if (storedUser) setCurrentUser(JSON.parse(storedUser));
+const customerId = localStorage.getItem('customerId');
+if (!customerId) location.href = 'login.html';
 
-let currentProfile = null;
+let profile = null;
 
 async function loadProfile() {
     try {
-        currentProfile = await fetchProfile();
-        document.getElementById('displayName').innerText = currentProfile.name;
-        document.getElementById('displayEmail').innerText = currentProfile.email;
-        document.getElementById('displayPhone').innerText = currentProfile.phone || 'Not set';
-        const avatarImg = document.getElementById('avatarImg');
-        if (currentProfile.avatar) avatarImg.src = currentProfile.avatar;
-        else avatarImg.src = 'https://via.placeholder.com/100';
+        profile = await getCustomer(customerId);
+        document.getElementById('displayName').innerText = profile.name || 'N/A';
+        document.getElementById('displayPhone').innerText = profile.phone || 'N/A';
+        document.getElementById('displayUsername').innerText = localStorage.getItem('username') || '';
+        document.getElementById('displayRole').innerText = localStorage.getItem('role') || '';
     } catch (err) {
-        showMessage(err.message, 'error');
+        document.getElementById('profileView').innerHTML = '<p>Error loading profile</p>';
     }
-}
-
-function showMessage(text, type) {
-    const msgDiv = document.getElementById('message');
-    msgDiv.innerHTML = `<div class="${type}">${text}</div>`;
-    setTimeout(() => msgDiv.innerHTML = '', 3000);
 }
 
 document.getElementById('editBtn').addEventListener('click', () => {
     document.getElementById('profileView').style.display = 'none';
     document.getElementById('editForm').style.display = 'block';
-    document.getElementById('editName').value = currentProfile.name;
-    document.getElementById('editPhone').value = currentProfile.phone || '';
+    document.getElementById('editName').value = profile.name || '';
+    document.getElementById('editPhone').value = profile.phone || '';
 });
 document.getElementById('cancelBtn').addEventListener('click', () => {
     document.getElementById('editForm').style.display = 'none';
@@ -38,79 +30,28 @@ document.getElementById('cancelBtn').addEventListener('click', () => {
 document.getElementById('saveBtn').addEventListener('click', async () => {
     const name = document.getElementById('editName').value.trim();
     const phone = document.getElementById('editPhone').value.trim();
-    const avatarFile = document.getElementById('avatarFile').files[0];
     try {
-        if (name || phone) {
-            await updateProfile(name, phone);
-        }
-        if (avatarFile) {
-            await uploadAvatar(avatarFile);
-        }
+        await updateCustomer(customerId, name, phone);
         await loadProfile();
         document.getElementById('editForm').style.display = 'none';
         document.getElementById('profileView').style.display = 'block';
-        showMessage('Profile updated successfully', 'success');
+        document.getElementById('message').innerHTML = '<div class="success">Profile updated</div>';
+        setTimeout(() => document.getElementById('message').innerHTML = '', 2000);
     } catch (err) {
-        showMessage(err.message, 'error');
+        document.getElementById('message').innerHTML = `<div class="error">${err.message}</div>`;
     }
 });
 
+// Placeholders for missing backend features
 document.getElementById('changePwdBtn').addEventListener('click', () => {
-    document.getElementById('profileView').style.display = 'none';
-    document.getElementById('changePwdForm').style.display = 'block';
+    alert('Change password feature will be available soon (backend missing).');
 });
-document.getElementById('cancelPwdBtn').addEventListener('click', () => {
-    document.getElementById('changePwdForm').style.display = 'none';
-    document.getElementById('profileView').style.display = 'block';
+document.getElementById('deleteAccountBtn').addEventListener('click', () => {
+    alert('Delete account feature will be available soon (backend missing).');
 });
-document.getElementById('submitPwdBtn').addEventListener('click', async () => {
-    const oldPwd = document.getElementById('oldPassword').value;
-    const newPwd = document.getElementById('newPassword').value;
-    const confirm = document.getElementById('confirmNewPassword').value;
-    if (!oldPwd || !newPwd || !confirm) {
-        showMessage('Please fill all fields', 'error');
-        return;
-    }
-    if (newPwd !== confirm) {
-        showMessage('New passwords do not match', 'error');
-        return;
-    }
-    try {
-        await changePassword(oldPwd, newPwd);
-        showMessage('Password changed. Please login again.', 'success');
-        setTimeout(async () => {
-            await logout();
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            window.location.href = 'login.html';
-        }, 1500);
-    } catch (err) {
-        showMessage(err.message, 'error');
-    }
-});
-
-document.getElementById('deleteAccountBtn').addEventListener('click', async () => {
-    const pwd = prompt('Please enter your password to confirm account deletion:');
-    if (!pwd) return;
-    try {
-        await deleteAccount(pwd);
-        showMessage('Account deleted', 'success');
-        setTimeout(async () => {
-            await logout();
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            window.location.href = 'login.html';
-        }, 1500);
-    } catch (err) {
-        showMessage(err.message, 'error');
-    }
-});
-
-document.getElementById('logoutBtn').addEventListener('click', async () => {
-    await logout();
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = 'login.html';
+document.getElementById('logoutBtn').addEventListener('click', () => {
+    localStorage.clear();
+    location.href = 'login.html';
 });
 
 loadProfile();
