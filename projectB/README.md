@@ -9,7 +9,18 @@ erDiagram
         BIGINT id PK "Auto-increment Primary Key"
         VARCHAR username "Username (Unique)"
         VARCHAR password "Encrypted Password"
-        VARCHAR role "User Role (e.g., ROLE_ADMIN, ROLE_CUSTOMER)"
+        VARCHAR role "User Role (e.g., ROLE_ADMIN, ROLE_CUSTOMER, ROLE_SPECIALIST)"
+    }
+
+    CUSTOMERS {
+        BIGINT id PK "Auto-increment Primary Key"
+        VARCHAR name "Customer Name"
+        VARCHAR phone "Phone Number"
+        VARCHAR gender "Gender"
+        INT age "Age"
+        VARCHAR address "Home Address"
+        VARCHAR avatarUrl "Avatar Image Path"
+        BIGINT user_id FK "Foreign Key linking to USERS.id"
     }
 
     EXPERTS {
@@ -20,3 +31,5 @@ erDiagram
         DOUBLE fee "Consultation Fee"
         VARCHAR status "Working Status (e.g., ACTIVE, INACTIVE)"
     }
+
+    USERS ||--o| CUSTOMERS : "has customer profile"

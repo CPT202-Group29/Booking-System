@@ -1,6 +1,8 @@
 package com.example.projectB.controller;
 
+import com.example.projectB.entity.Customer;
 import com.example.projectB.entity.User;
+import com.example.projectB.repository.CustomerRepository;
 import com.example.projectB.repository.UserRepository;
 import com.example.projectB.util.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -16,6 +19,10 @@ public class AuthController {
 
     @Autowired
     private UserRepository userRepository;
+
+    
+    @Autowired
+    private CustomerRepository customerRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -63,5 +70,40 @@ public class AuthController {
                 "role", existingUser.getRole(),
                 "userId", existingUser.getId()
         ));
+    }
+
+    
+    @PutMapping("/user/{userId}/password")
+    public ResponseEntity<?> updatePassword(@PathVariable Long userId, @RequestBody Map<String, String> request) {
+        String newPassword = request.get("newPassword");
+        if (newPassword == null || newPassword.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "New password is required"));
+        }
+
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(user);
+            return ResponseEntity.ok(Map.of("message", "Password updated successfully!"));
+        }
+        return ResponseEntity.badRequest().body(Map.of("error", "User not found"));
+    }
+
+    
+    @DeleteMapping("/user/{userId}")
+    public ResponseEntity<?> deleteAccount(@PathVariable Long userId) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isPresent()) {
+        
+            Optional<Customer> customerOpt = customerRepository.findByUserId(userId);
+            customerOpt.ifPresent(customer -> customerRepository.delete(customer));
+            
+            
+            userRepository.deleteById(userId);
+            return ResponseEntity.ok(Map.of("message", "Account deleted successfully!"));
+        }
+        return ResponseEntity.badRequest().body(Map.of("error", "User not found"));
     }
 }
