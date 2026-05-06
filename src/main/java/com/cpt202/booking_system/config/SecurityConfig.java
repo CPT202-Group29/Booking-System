@@ -56,9 +56,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/api/v1/customers/**").authenticated()
-                .requestMatchers("/api/v1/experts/create", "/api/v1/experts/update/**", "/api/v1/experts/delete/**").hasAuthority("ROLE_ADMIN")
                 .requestMatchers("/api/v1/bookings/**").permitAll()
-                .requestMatchers("/api/v1/slots/**").permitAll()
+                .requestMatchers("/api/v1/timeslots/**").permitAll()
                 .requestMatchers("/api/v1/specialists/**").permitAll()
                 .requestMatchers("/api/v1/expertise/**").permitAll()
                 .requestMatchers("/api/v1/health").permitAll()

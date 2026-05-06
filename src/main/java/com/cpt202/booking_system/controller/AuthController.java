@@ -41,6 +41,10 @@ public class AuthController {
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
+        // Auto create customer profile
+        Customer customer = new Customer();
+        customer.setUser(user);
+        customerRepository.save(customer);
 
         String token = jwtTokenUtil.generateToken(user.getUsername());
         return ResponseEntity.ok(Map.of(

@@ -3,11 +3,6 @@ package com.cpt202.booking_system.model;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-/**
- * Represents an available time slot for a specialist.
- * Uses optimistic locking (version field) to prevent
- * concurrent double-booking scenarios.
- */
 @Entity
 @Table(name = "time_slots", indexes = {
     @Index(name = "idx_slot_specialist", columnList = "specialist_id"),
@@ -34,8 +29,6 @@ public class TimeSlot {
     @Version
     @Column(name = "version")
     private Integer version;
-
-    // --- Getters and Setters ---
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
