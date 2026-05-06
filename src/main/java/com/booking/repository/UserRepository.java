@@ -1,6 +1,6 @@
-package com.example.projectB.repository;
+package com.booking.repository;
 
-import com.example.projectB.entity.User;
+import com.booking.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

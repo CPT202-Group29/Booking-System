@@ -1,4 +1,4 @@
-package com.example.projectB.util;
+package com.booking.util;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

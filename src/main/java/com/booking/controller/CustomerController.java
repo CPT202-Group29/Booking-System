@@ -1,7 +1,7 @@
-package com.example.projectB.controller;
+package com.booking.controller;
 
-import com.example.projectB.entity.Customer;
-import com.example.projectB.repository.CustomerRepository;
+import com.booking.entity.Customer;
+import com.booking.repository.CustomerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

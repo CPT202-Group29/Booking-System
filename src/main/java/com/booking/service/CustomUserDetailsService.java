@@ -1,7 +1,7 @@
-package com.example.projectB.service;
+package com.booking.service;
 
-import com.example.projectB.entity.User;
-import com.example.projectB.repository.UserRepository;
+import com.booking.entity.User;
+import com.booking.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

@@ -1,10 +1,10 @@
-package com.example.projectB.controller;
+package com.booking.controller;
 
-import com.example.projectB.entity.Customer;
-import com.example.projectB.entity.User;
-import com.example.projectB.repository.CustomerRepository;
-import com.example.projectB.repository.UserRepository;
-import com.example.projectB.util.JwtTokenUtil;
+import com.booking.entity.Customer;
+import com.booking.entity.User;
+import com.booking.repository.CustomerRepository;
+import com.booking.repository.UserRepository;
+import com.booking.util.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;

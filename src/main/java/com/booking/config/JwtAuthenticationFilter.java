@@ -1,6 +1,6 @@
-package com.example.projectB.config;
+package com.booking.config;
 
-import com.example.projectB.util.JwtTokenUtil;
+import com.booking.util.JwtTokenUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
