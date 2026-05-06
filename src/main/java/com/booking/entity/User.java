@@ -1,7 +1,10 @@
-package com.booking.entity;
+package com.example.projectB.entity;
 
-import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "users")
@@ -9,56 +12,44 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer userId;
+    private Long id;
 
-    @Column(nullable = false, length = 100)
     private String username;
-
-    @Column(nullable = false, unique = true, length = 120)
-    private String email;
-
-    @Column(nullable = false, length = 255)
-    private String passwordHash;
-
-    @Column(nullable = false, length = 20)
+    private String password;
     private String role;
 
-    @Column(length = 20)
-    private String phone;
+    public User() {
+    }
 
-    @Column(columnDefinition = "TEXT")
-    private String avatar;
+    public Long getId() {
+        return id;
+    }
 
-    @Column(nullable = false)
-    private Integer failedAttempts = 0;
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    private LocalDateTime lockedUntil;
+    public String getUsername() {
+        return username;
+    }
 
-    // Getters and Setters
-    public Integer getUserId() { return userId; }
-    public void setUserId(Integer userId) { this.userId = userId; }
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
+    public String getPassword() {
+        return password;
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
-    public String getPasswordHash() { return passwordHash; }
-    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public String getRole() {
+        return role;
+    }
 
-    public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
-
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
-
-    public String getAvatar() { return avatar; }
-    public void setAvatar(String avatar) { this.avatar = avatar; }
-
-    public Integer getFailedAttempts() { return failedAttempts; }
-    public void setFailedAttempts(Integer failedAttempts) { this.failedAttempts = failedAttempts; }
-
-    public LocalDateTime getLockedUntil() { return lockedUntil; }
-    public void setLockedUntil(LocalDateTime lockedUntil) { this.lockedUntil = lockedUntil; }
+    public void setRole(String role) {
+        this.role = role;
+    }
 }
