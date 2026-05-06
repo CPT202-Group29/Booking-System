@@ -1,7 +1,6 @@
 import { register, login } from './api.js';
 
 const isRegister = window.location.pathname.includes('register.html');
-const isForgot = window.location.pathname.includes('forgot-password.html');
 
 function showMessage(divId, text, type) {
     const div = document.getElementById(divId);
@@ -11,12 +10,6 @@ function showMessage(divId, text, type) {
 
 if (isRegister) {
     const form = document.getElementById('registerForm');
-    const pwdInput = document.getElementById('password');
-    const hint = document.getElementById('pwdHint');
-    pwdInput.addEventListener('input', () => {
-        const val = pwdInput.value;
-        hint.innerText = val.length >= 6 ? 'Strong enough' : 'Minimum 6 characters';
-    });
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = document.getElementById('username').value.trim();
@@ -26,21 +19,21 @@ if (isRegister) {
             showMessage('message', 'Passwords do not match', 'error');
             return;
         }
+        if (password.length < 6) {
+            showMessage('message', 'Password must be at least 6 characters', 'error');
+            return;
+        }
         try {
-            await register(username, password);
-            showMessage('message', 'Registration successful! Redirecting to login...', 'success');
-            setTimeout(() => location.href = 'login.html', 1500);
+            const data = await register(username, password);
+            // data: { message, token, role, userId }
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('userId', data.userId);
+            localStorage.setItem('role', data.role);
+            showMessage('message', 'Registration successful! Redirecting...', 'success');
+            setTimeout(() => location.href = 'profile.html', 1500);
         } catch (err) {
             showMessage('message', err.message, 'error');
         }
-    });
-} else if (isForgot) {
-    // Simplified: just allow password reset (no email, uses username)
-    // In real app, you would have verification code, but for demo, we just update password? 
-    // Actually no backend endpoint for password reset. We'll skip.
-    document.getElementById('forgotForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        showMessage('message', 'Password reset feature not implemented by backend yet.', 'error');
     });
 } else {
     // Login page
@@ -49,20 +42,21 @@ if (isRegister) {
         document.getElementById('username').value = savedUser;
         document.getElementById('rememberMe').checked = true;
     }
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    const form = document.getElementById('loginForm');
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value;
         const remember = document.getElementById('rememberMe').checked;
         try {
-            const { customerId, username: uname, role } = await login(username, password);
-            localStorage.setItem('customerId', customerId);
-            localStorage.setItem('username', uname);
-            localStorage.setItem('role', role);
+            const data = await login(username, password);
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('userId', data.userId);
+            localStorage.setItem('role', data.role);
             if (remember) localStorage.setItem('rememberedUsername', username);
             else localStorage.removeItem('rememberedUsername');
             showMessage('message', 'Login successful', 'success');
-            setTimeout(() => location.href = 'index.html', 1000);
+            setTimeout(() => location.href = 'profile.html', 1000);
         } catch (err) {
             showMessage('message', err.message, 'error');
         }
