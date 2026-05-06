@@ -23,13 +23,6 @@ erDiagram
         BIGINT user_id FK "Foreign Key linking to USERS.id"
     }
 
-    EXPERTS {
-        BIGINT id PK "Auto-increment Primary Key"
-        VARCHAR name "Expert Name"
-        VARCHAR expertise "Area of Expertise"
-        VARCHAR level "Expert Level (e.g., Senior, Junior)"
-        DOUBLE fee "Consultation Fee"
-        VARCHAR status "Working Status (e.g., ACTIVE, INACTIVE)"
-    }
+    
 
     USERS ||--o| CUSTOMERS : "has customer profile"
