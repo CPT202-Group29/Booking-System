@@ -9,6 +9,7 @@
     <div class="container">
         <h2>My Profile</h2>
         <div id="profileView">
+            <img id="avatarImg" src="" alt="Avatar" style="width:100px; border-radius:50%;">
             <p><strong>Name:</strong> <span id="displayName"></span></p>
             <p><strong>Phone:</strong> <span id="displayPhone"></span></p>
             <p><strong>Username:</strong> <span id="displayUsername"></span></p>
@@ -27,8 +28,20 @@
                 <label>Phone</label>
                 <input type="text" id="editPhone">
             </div>
+            <div class="form-group">
+                <label>Avatar</label>
+                <input type="file" id="avatarFile" accept="image/jpeg,image/png">
+            </div>
             <button id="saveBtn">Save</button>
             <button id="cancelBtn">Cancel</button>
+        </div>
+        <div id="changePwdForm" style="display:none;">
+            <div class="form-group">
+                <label>New Password</label>
+                <input type="password" id="newPassword" required>
+            </div>
+            <button id="submitPwdBtn">Update Password</button>
+            <button id="cancelPwdBtn">Cancel</button>
         </div>
         <div id="message" class="message"></div>
         <div class="nav-links">
