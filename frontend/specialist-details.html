@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Specialist Details</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .expert-card { border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 8px; box-sizing: border-box; }
+        button { background: #007bff; color: white; border: none; padding: 10px; cursor: pointer; width: 100%; }
+        .error { color: red; }
+        .success { color: green; }
+        .back-btn { display: inline-block; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Specialist Details</h2>
+        <div id="expertInfo">Loading...</div>
+        <form id="bookingForm" style="display:none;">
+            <div class="form-group">
+                <label>Date</label>
+                <input type="date" id="date" required>
+            </div>
+            <div class="form-group">
+                <label>Time Slot</label>
+                <select id="timeSlot" required>
+                    <option value="">Select date first</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Topic</label>
+                <textarea id="topic" rows="3" required></textarea>
+            </div>
+            <button type="submit">Book Appointment</button>
+        </form>
+        <div id="message"></div>
+        <a href="specialist-list.html" class="back-btn">← Back to Specialists</a>
+    </div>
+    <script type="module">
+        import { getExpertById, getAvailableSlots, createBooking } from './js/api.js';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const expertId = urlParams.get('id');
+        if (!expertId) {
+            document.getElementById('expertInfo').innerHTML = '<p class="error">No specialist specified.</p>';
+            throw new Error('Missing expert id');
+        }
+
+        let expert = null;
+
+        async function loadExpert() {
+            try {
+                expert = await getExpertById(expertId);
+                document.getElementById('expertInfo').innerHTML = `
+                    <div class="expert-card">
+                        <h3>${expert.name}</h3>
+                        <p><strong>Expertise:</strong> ${expert.expertise}</p>
+                        <p><strong>Level:</strong> ${expert.level}</p>
+                        <p><strong>Fee:</strong> $${expert.fee}/hour</p>
+                        <p><strong>Status:</strong> ${expert.status}</p>
+                        <p><strong>Contact:</strong> ${expert.email}</p>
+                        <p><strong>Description:</strong> ${expert.description || 'N/A'}</p>
+                    </div>
+                `;
+                document.getElementById('bookingForm').style.display = 'block';
+            } catch (err) {
+                document.getElementById('expertInfo').innerHTML = `<p class="error">Failed to load expert: ${err.message}</p>`;
+            }
+        }
+
+        const dateInput = document.getElementById('date');
+        const timeSlotSelect = document.getElementById('timeSlot');
+        dateInput.min = new Date().toISOString().split('T')[0];
+
+        dateInput.addEventListener('change', async () => {
+            const date = dateInput.value;
+            if (!date) return;
+            try {
+                const slots = await getAvailableSlots(expertId, date);
+                timeSlotSelect.innerHTML = '<option value="">Select time slot</option>';
+                slots.forEach(slot => {
+                    const option = document.createElement('option');
+                    option.value = slot.id;
+                    option.textContent = slot.display;
+                    timeSlotSelect.appendChild(option);
+                });
+            } catch (err) {
+                timeSlotSelect.innerHTML = '<option>Failed to load slots</option>';
+            }
+        });
+
+        document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const customerId = localStorage.getItem('customerId');
+            if (!customerId) {
+                alert('Please login first');
+                window.location.href = 'login.html';
+                return;
+            }
+            const date = dateInput.value;
+            const timeSlotId = timeSlotSelect.value;
+            const topic = document.getElementById('topic').value.trim();
+            if (!date || !timeSlotId || !topic) {
+                alert('Please fill all fields');
+                return;
+            }
+            try {
+                await createBooking(parseInt(customerId), parseInt(expertId), parseInt(timeSlotId), topic);
+                document.getElementById('message').innerHTML = '<div class="success">Booking created! Status: PENDING</div>';
+                setTimeout(() => window.location.href = 'my-bookings.html', 1500);
+            } catch (err) {
+                document.getElementById('message').innerHTML = `<div class="error">${err.message}</div>`;
+            }
+        });
+
+        loadExpert();
+    </script>
+</body>
+</html>
