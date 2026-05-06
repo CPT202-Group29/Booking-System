@@ -1,4 +1,4 @@
-import { register, login } from './api.js';
+import { register, login, getCustomerByUserId } from './api.js';
 
 const isRegister = window.location.pathname.includes('register.html');
 
@@ -25,10 +25,12 @@ if (isRegister) {
         }
         try {
             const data = await register(username, password);
-            // data: { message, token, role, userId }
             localStorage.setItem('token', data.token);
             localStorage.setItem('userId', data.userId);
             localStorage.setItem('role', data.role);
+            // Fetch customerId using userId
+            const customer = await getCustomerByUserId(data.userId);
+            localStorage.setItem('customerId', customer.id);
             showMessage('message', 'Registration successful! Redirecting...', 'success');
             setTimeout(() => location.href = 'profile.html', 1500);
         } catch (err) {
@@ -55,6 +57,8 @@ if (isRegister) {
             localStorage.setItem('role', data.role);
             if (remember) localStorage.setItem('rememberedUsername', username);
             else localStorage.removeItem('rememberedUsername');
+            const customer = await getCustomerByUserId(data.userId);
+            localStorage.setItem('customerId', customer.id);
             showMessage('message', 'Login successful', 'success');
             setTimeout(() => location.href = 'profile.html', 1000);
         } catch (err) {
