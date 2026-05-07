@@ -1,8 +1,6 @@
 package com.booking.controller;
 
-import com.booking.entity.Customer;
 import com.booking.entity.User;
-import com.booking.repository.CustomerRepository;
 import com.booking.repository.UserRepository;
 import com.booking.util.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,15 +12,11 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/v1/auth")
+@RequestMapping("/api/auth")
 public class AuthController {
 
     @Autowired
     private UserRepository userRepository;
-
-    
-    @Autowired
-    private CustomerRepository customerRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -31,79 +25,49 @@ public class AuthController {
     private JwtTokenUtil jwtTokenUtil;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody User user) {
-        if (userRepository.existsByUsername(user.getUsername())) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Username already exists"));
+    public ResponseEntity<?> register(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String password = request.get("password");
+        String name = request.get("name");
+        if (email == null || password == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Email and password required"));
         }
-        // Default role: ROLE_CUSTOMER
-        if (user.getRole() == null || user.getRole().isBlank()) {
-            user.setRole("ROLE_CUSTOMER");
+        if (userRepository.existsByEmail(email)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Email already registered"));
         }
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        User user = new User();
+        user.setUsername(name != null ? name : email);
+        user.setEmail(email);
+        user.setPasswordHash(passwordEncoder.encode(password));
+        user.setRole("CUSTOMER");
+        user.setFailedAttempts(0);
+        user.setLockedUntil(null);
         userRepository.save(user);
-
-        String token = jwtTokenUtil.generateToken(user.getUsername());
-        return ResponseEntity.ok(Map.of(
-                "message", "Register successful",
-                "token", token,
-                "role", user.getRole(),
-                "userId", user.getId()
-        ));
+        String token = jwtTokenUtil.generateToken(user.getEmail());
+        return ResponseEntity.ok(Map.of("token", token, "message", "Registration successful"));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody User user) {
-        User existingUser = userRepository.findByUsername(user.getUsername()).orElse(null);
-
-        if (existingUser == null) {
-            return ResponseEntity.status(401).body(Map.of("error", "Invalid username or password"));
+    public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String password = request.get("password");
+        if (email == null || password == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Email and password required"));
         }
-
-        if (!passwordEncoder.matches(user.getPassword(), existingUser.getPassword())) {
-            return ResponseEntity.status(401).body(Map.of("error", "Invalid username or password"));
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid email or password"));
         }
-
-        String token = jwtTokenUtil.generateToken(existingUser.getUsername());
-        return ResponseEntity.ok(Map.of(
-                "message", "Login successful",
-                "token", token,
-                "role", existingUser.getRole(),
-                "userId", existingUser.getId()
-        ));
+        User user = optionalUser.get();
+        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid email or password"));
+        }
+        String token = jwtTokenUtil.generateToken(user.getEmail());
+        return ResponseEntity.ok(Map.of("token", token, "message", "Login successful"));
     }
 
-    
-    @PutMapping("/user/{userId}/password")
-    public ResponseEntity<?> updatePassword(@PathVariable Long userId, @RequestBody Map<String, String> request) {
-        String newPassword = request.get("newPassword");
-        if (newPassword == null || newPassword.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "New password is required"));
-        }
-
-        Optional<User> userOpt = userRepository.findById(userId);
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            
-            user.setPassword(passwordEncoder.encode(newPassword));
-            userRepository.save(user);
-            return ResponseEntity.ok(Map.of("message", "Password updated successfully!"));
-        }
-        return ResponseEntity.badRequest().body(Map.of("error", "User not found"));
-    }
-
-    
-    @DeleteMapping("/user/{userId}")
-    public ResponseEntity<?> deleteAccount(@PathVariable Long userId) {
-        Optional<User> userOpt = userRepository.findById(userId);
-        if (userOpt.isPresent()) {
-        
-            Optional<Customer> customerOpt = customerRepository.findByUserId(userId);
-            customerOpt.ifPresent(customer -> customerRepository.delete(customer));
-            
-            
-            userRepository.deleteById(userId);
-            return ResponseEntity.ok(Map.of("message", "Account deleted successfully!"));
-        }
-        return ResponseEntity.badRequest().body(Map.of("error", "User not found"));
+    @GetMapping("/test")
+    public String test() {
+        return "Auth backend is running!";
     }
 }
