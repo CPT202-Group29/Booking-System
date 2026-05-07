@@ -9,13 +9,13 @@ import jakarta.validation.constraints.NotNull;
 public class CancelRequest {
 
     @NotNull(message = "Customer ID is required")
-    private Long customerId;
+    private Integer customerId;   // 改为 Integer，与 User.userId 和 Booking.customerId 类型一致
 
     @NotBlank(message = "Cancel reason is required")
     private String cancelReason;
 
-    public Long getCustomerId() { return customerId; }
-    public void setCustomerId(Long customerId) { this.customerId = customerId; }
+    public Integer getCustomerId() { return customerId; }
+    public void setCustomerId(Integer customerId) { this.customerId = customerId; }
 
     public String getCancelReason() { return cancelReason; }
     public void setCancelReason(String cancelReason) { this.cancelReason = cancelReason; }
