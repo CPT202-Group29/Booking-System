@@ -11,7 +11,7 @@ function showMessage(divId, text, type) {
     }, 5000);
 }
 
-// ---------- Registration ----------
+// Registration
 if (isRegister) {
     const form = document.getElementById('registerForm');
     if (form) {
@@ -36,7 +36,6 @@ if (isRegister) {
                 localStorage.setItem('userId', data.userId);
                 localStorage.setItem('role', data.role);
 
-                // Fetch customerId using userId
                 const customer = await getCustomerByUserId(data.userId);
                 localStorage.setItem('customerId', customer.id);
 
@@ -49,8 +48,8 @@ if (isRegister) {
             }
         });
     }
-} 
-// ---------- Login ----------
+}
+// Login
 else {
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
@@ -80,7 +79,6 @@ else {
                     localStorage.removeItem('rememberedUsername');
                 }
 
-                // Fetch customerId using userId
                 const customer = await getCustomerByUserId(data.userId);
                 localStorage.setItem('customerId', customer.id);
 
