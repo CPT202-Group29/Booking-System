@@ -54,13 +54,7 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                    "/api/auth/register",
-                    "/api/auth/login",
-                    "/api/auth/test",
-                    "/api/auth/change-password",
-                    "/api/v1/**"
-                ).permitAll()
+                .requestMatchers("/api/auth/**", "/api/v1/**").permitAll() // 放行所有认证和业务接口
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
