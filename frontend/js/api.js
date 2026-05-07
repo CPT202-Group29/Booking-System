@@ -1,4 +1,4 @@
-const API_BASE = 'const API_BASE = 'http://47.111.224.168:8080';
+const API_BASE = 'http://47.111.224.168:8080';
 
 function getToken() {
     return localStorage.getItem('token');
