@@ -1,12 +1,10 @@
 const API_BASE = 'http://localhost:8080';          // B1 / B2
 const EXPERT_API_BASE = 'http://localhost:8082';   // BE3 specialist service
 
-// Helper to get token
 function getToken() {
     return localStorage.getItem('token');
 }
 
-// Helper for fetch with Authorization header
 async function authFetch(url, options = {}) {
     const token = getToken();
     const headers = {
@@ -25,7 +23,6 @@ async function authFetch(url, options = {}) {
         throw new Error(text || `HTTP ${res.status}`);
     }
 
-    // For 204 No Content, return null
     if (res.status === 204) return null;
 
     const contentType = res.headers.get('content-type');
