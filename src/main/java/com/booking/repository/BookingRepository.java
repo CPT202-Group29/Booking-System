@@ -12,19 +12,14 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Repository for booking data access.
- * Uses pessimistic locking for concurrency-safe booking operations.
- */
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
-    /** Find booking with pessimistic lock for safe status transitions. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT b FROM Booking b WHERE b.id = :id")
     Optional<Booking> findByIdWithLock(@Param("id") Long id);
 
-    List<Booking> findByCustomerIdOrderByCreatedAtDesc(Long customerId);
+    List<Booking> findByCustomerIdOrderByCreatedAtDesc(Integer customerId);   // 改为 Integer
 
     List<Booking> findBySpecialistIdOrderByCreatedAtDesc(Long specialistId);
 
