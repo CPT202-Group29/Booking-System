@@ -4,10 +4,6 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/**
- * Core booking entity representing an appointment between
- * a customer and a specialist at a specific time slot.
- */
 @Entity
 @Table(name = "bookings", indexes = {
     @Index(name = "idx_booking_customer", columnList = "customer_id"),
@@ -22,7 +18,7 @@ public class Booking {
     private Long id;
 
     @Column(name = "customer_id", nullable = false)
-    private Long customerId;
+    private Integer customerId;   // 修改为 Integer，与 User.userId 类型一致
 
     @Column(name = "specialist_id", nullable = false)
     private Long specialistId;
@@ -64,33 +60,28 @@ public class Booking {
         updatedAt = LocalDateTime.now();
     }
 
-    /** Check if booking can be cancelled based on current status. */
     public boolean canCancel() {
         return status == BookingStatus.PENDING || status == BookingStatus.CONFIRMED;
     }
 
-    /** Check if booking can be rescheduled based on current status. */
     public boolean canReschedule() {
         return status == BookingStatus.PENDING || status == BookingStatus.CONFIRMED;
     }
 
-    /** Check if booking can be confirmed (admin action). */
     public boolean canConfirm() {
         return status == BookingStatus.PENDING;
     }
 
-    /** Check if booking can be marked complete. */
     public boolean canComplete() {
         return status == BookingStatus.CONFIRMED;
     }
 
-    // --- Getters and Setters ---
-
+    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public Long getCustomerId() { return customerId; }
-    public void setCustomerId(Long customerId) { this.customerId = customerId; }
+    public Integer getCustomerId() { return customerId; }
+    public void setCustomerId(Integer customerId) { this.customerId = customerId; }
 
     public Long getSpecialistId() { return specialistId; }
     public void setSpecialistId(Long specialistId) { this.specialistId = specialistId; }
