@@ -9,14 +9,14 @@ import jakarta.validation.constraints.Positive;
 public class RescheduleRequest {
 
     @NotNull(message = "Customer ID is required")
-    private Long customerId;
+    private Integer customerId;   // 改为 Integer
 
     @NotNull(message = "New time slot ID is required")
     @Positive(message = "Time slot ID must be positive")
     private Long newTimeSlotId;
 
-    public Long getCustomerId() { return customerId; }
-    public void setCustomerId(Long customerId) { this.customerId = customerId; }
+    public Integer getCustomerId() { return customerId; }
+    public void setCustomerId(Integer customerId) { this.customerId = customerId; }
 
     public Long getNewTimeSlotId() { return newTimeSlotId; }
     public void setNewTimeSlotId(Long newTimeSlotId) { this.newTimeSlotId = newTimeSlotId; }
