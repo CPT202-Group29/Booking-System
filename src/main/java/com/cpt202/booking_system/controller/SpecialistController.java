@@ -1,7 +1,7 @@
-package com.cpt202.booking_system.controller;
+package com.booking.controller;
 
-import com.cpt202.booking_system.entity.Specialist;
-import com.cpt202.booking_system.repository.SpecialistRepository;
+import com.booking.entity.Specialist;
+import com.booking.repository.SpecialistRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
