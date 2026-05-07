@@ -20,7 +20,6 @@ async function authFetch(url, options = {}) {
         const text = await res.text();
         throw new Error(text || `HTTP ${res.status}`);
     }
-    // For 204 No Content, return null
     if (res.status === 204) return null;
     const contentType = res.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
@@ -57,9 +56,9 @@ export async function updateCustomer(customerId, name, phone) {
 }
 
 export async function uploadAvatar(customerId, file) {
+    const token = getToken();
     const formData = new FormData();
     formData.append('file', file);
-    const token = getToken();
     const res = await fetch(`${API_BASE}/api/v1/customers/${customerId}/avatar`, {
         method: 'POST',
         headers: {
