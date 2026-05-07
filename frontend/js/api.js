@@ -37,7 +37,6 @@ export async function logout() {
     return { success: true };
 }
 
-// Verification code — for now just returns success; backend will handle actual sending
 export async function sendVerificationCode(email) {
     console.log(`Verification code requested for ${email} (bypassed)`);
     return { success: true, message: 'Verification code sent' };
@@ -61,14 +60,13 @@ export async function resetPassword(email, verificationCode, newPassword) {
     return response.json();
 }
 
-// ========== Profile APIs (Mock for now — backend not ready) ==========
+// ========== Profile APIs (Mock for now) ==========
 let currentUser = null;
 export function setCurrentUser(user) { currentUser = user; }
 export function getCurrentUser() { return currentUser; }
 
 export async function fetchProfile() {
     if (!currentUser) throw new Error('Not logged in');
-    // Mock
     return { id: 1, name: currentUser.name || 'User', email: currentUser.email, phone: '', avatar: '' };
 }
 export async function updateProfile(name, phone) {
@@ -86,7 +84,7 @@ export async function deleteAccount(password) {
     return { success: true };
 }
 
-// ========== Bookings APIs (Keep existing — not touched) ==========
+// ========== Bookings APIs (keep as is) ==========
 export async function getMyBookings() {
     const token = localStorage.getItem('token');
     if (!token) throw new Error('Not authenticated');
