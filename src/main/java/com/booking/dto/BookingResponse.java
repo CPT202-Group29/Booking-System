@@ -14,7 +14,7 @@ import java.time.LocalTime;
 public class BookingResponse {
 
     private Long id;
-    private Long customerId;
+    private Integer customerId;   // 改为 Integer，与 Booking.customerId 类型一致
     private Long specialistId;
     private Long timeSlotId;
     private String date;
@@ -34,7 +34,7 @@ public class BookingResponse {
     public static BookingResponse fromEntity(Booking booking, TimeSlot slot) {
         BookingResponse resp = new BookingResponse();
         resp.id = booking.getId();
-        resp.customerId = booking.getCustomerId();
+        resp.customerId = booking.getCustomerId();      // Booking.getCustomerId() 现在返回 Integer
         resp.specialistId = booking.getSpecialistId();
         resp.timeSlotId = booking.getTimeSlotId();
         resp.status = booking.getStatus();
@@ -53,7 +53,7 @@ public class BookingResponse {
     }
 
     public Long getId() { return id; }
-    public Long getCustomerId() { return customerId; }
+    public Integer getCustomerId() { return customerId; }   // 返回类型改为 Integer
     public Long getSpecialistId() { return specialistId; }
     public Long getTimeSlotId() { return timeSlotId; }
     public String getDate() { return date; }
