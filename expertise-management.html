@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Expertise Management</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <h2>Booking Admin</h2>
+      <nav>
+        <a href="index.html">Dashboard</a>
+        <a href="specialist-management.html">Specialists</a>
+        <a href="booking-management.html">Bookings</a>
+        <a class="active" href="expertise-management.html">Expertise</a>
+        <a href="#">Reports</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="page-header">
+        <div>
+          <h1>Expertise Management</h1>
+          <p>Manage consultation expertise categories used by specialist records and search filters.</p>
+        </div>
+        <button class="primary-btn" id="showFormBtn">Add Expertise</button>
+      </header>
+
+      <section class="stats-grid">
+        <div class="stat-card">
+          <p>Total Expertise Categories</p>
+          <h2 id="totalExpertise">0</h2>
+        </div>
+
+        <div class="stat-card">
+          <p>Active Categories</p>
+          <h2 id="activeExpertise">0</h2>
+        </div>
+
+        <div class="stat-card">
+          <p>Inactive Categories</p>
+          <h2 id="inactiveExpertise">0</h2>
+        </div>
+
+        <div class="stat-card">
+          <p>Used by Specialists</p>
+          <h2 id="usedCategories">0</h2>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2 id="formTitle">Add Expertise Category</h2>
+            <p class="panel-subtitle">
+              Expertise categories are shared by the admin page, specialist records, and customer search/filter.
+            </p>
+          </div>
+        </div>
+
+        <form id="expertiseForm" class="specialist-form">
+          <input type="hidden" id="editIndex" value="" />
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="expertiseName">Expertise Name</label>
+              <input
+                type="text"
+                id="expertiseName"
+                placeholder="e.g. Academic Support"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="status">Status</label>
+              <select id="status" required>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="usedBy">Used by Specialists</label>
+              <input
+                type="number"
+                id="usedBy"
+                placeholder="e.g. 3"
+                min="0"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="description">Description</label>
+            <textarea
+              id="description"
+              rows="4"
+              placeholder="Briefly describe this expertise category."
+              required
+            ></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="primary-btn" id="submitBtn">Save Expertise</button>
+            <button type="button" class="secondary-btn" id="resetBtn">Clear Form</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Expertise Category Records</h2>
+            <p class="panel-subtitle">
+              Admin can maintain master data for specialist expertise categories.
+            </p>
+          </div>
+
+          <select id="expertiseStatusFilter">
+            <option value="All">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Expertise Name</th>
+              <th>Description</th>
+              <th>Status</th>
+              <th>Used by Specialists</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="expertiseTableBody"></tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+
+  <script src="expertise-management.js"></script>
+</body>
+</html>
