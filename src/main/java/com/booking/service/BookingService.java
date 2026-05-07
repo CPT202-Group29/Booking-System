@@ -19,14 +19,6 @@ import java.util.Map;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Core booking service implementing the full booking workflow.
- *
- * Concurrency strategy:
- * - Pessimistic locking (SELECT FOR UPDATE) on time slot during booking creation
- * - Pessimistic locking on booking record during status transitions
- * - Optimistic locking (version column) on TimeSlot as fallback
- */
 @Service
 @Transactional
 public class BookingService {
@@ -45,10 +37,6 @@ public class BookingService {
         this.chargeService = chargeService;
     }
 
-    /**
-     * Create a new booking with double-booking prevention.
-     * Locks the time slot pessimistically to prevent concurrent bookings.
-     */
     public BookingResponse createBooking(BookingRequest request) {
         TimeSlot slot = timeSlotRepository.findByIdWithLock(request.getTimeSlotId())
                 .orElseThrow(() -> new BookingException(
@@ -89,7 +77,6 @@ public class BookingService {
         return toResponse(saved);
     }
 
-    /** Customer creates a booking request (status: PENDING). */
     public BookingResponse requestBooking(BookingRequest request) {
         TimeSlot slot = timeSlotRepository.findById(request.getTimeSlotId())
                 .orElseThrow(() -> new BookingException(
@@ -101,7 +88,6 @@ public class BookingService {
         return createBooking(request);
     }
 
-    /** Get booking by ID. */
     @Transactional(readOnly = true)
     public BookingResponse getBooking(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
@@ -112,13 +98,12 @@ public class BookingService {
 
     /** List bookings for a customer. */
     @Transactional(readOnly = true)
-    public List<BookingResponse> getCustomerBookings(Long customerId) {
+    public List<BookingResponse> getCustomerBookings(Integer customerId) {   // 改为 Integer
         List<Booking> bookings = bookingRepository
                 .findByCustomerIdOrderByCreatedAtDesc(customerId);
         return toResponseList(bookings);
     }
 
-    /** List bookings for a specialist. */
     @Transactional(readOnly = true)
     public List<BookingResponse> getSpecialistBookings(Long specialistId) {
         List<Booking> bookings = bookingRepository
@@ -126,7 +111,6 @@ public class BookingService {
         return toResponseList(bookings);
     }
 
-    /** Confirm a booking (admin action): PENDING -> CONFIRMED. */
     public BookingResponse confirmBooking(Long bookingId) {
         Booking booking = bookingRepository.findByIdWithLock(bookingId)
                 .orElseThrow(() -> new BookingException(
@@ -140,7 +124,6 @@ public class BookingService {
         return toResponse(bookingRepository.save(booking));
     }
 
-    /** Complete a booking (specialist action): CONFIRMED -> COMPLETED. */
     public BookingResponse completeBooking(Long bookingId) {
         Booking booking = bookingRepository.findByIdWithLock(bookingId)
                 .orElseThrow(() -> new BookingException(
@@ -154,10 +137,6 @@ public class BookingService {
         return toResponse(bookingRepository.save(booking));
     }
 
-    /**
-     * Cancel a booking with 24-hour rule enforcement.
-     * Only the booking owner can cancel. Releases the time slot after cancellation.
-     */
     public BookingResponse cancelBooking(Long bookingId, CancelRequest request) {
         Booking booking = bookingRepository.findByIdWithLock(bookingId)
                 .orElseThrow(() -> new BookingException(
@@ -174,7 +153,6 @@ public class BookingService {
                     + booking.getStatus() + " state", 400);
         }
 
-        // 24-hour rule
         TimeSlot slot = timeSlotRepository.findById(booking.getTimeSlotId())
                 .orElseThrow(() -> new BookingException("Time slot not found", 404));
         long hoursUntil = LocalDateTime.now().until(slot.getStartTime(), ChronoUnit.HOURS);
@@ -188,7 +166,6 @@ public class BookingService {
         booking.setCancelReason(request.getCancelReason());
         Booking saved = bookingRepository.save(booking);
 
-        // Release the time slot
         slot.setIsAvailable(true);
         try {
             timeSlotRepository.save(slot);
@@ -199,16 +176,11 @@ public class BookingService {
         return toResponse(saved);
     }
 
-    /**
-     * Reschedule a booking to a new time slot with full validation.
-     * Cancels old booking, releases old slot, creates new booking at new slot.
-     */
     public BookingResponse rescheduleBooking(Long bookingId, RescheduleRequest request) {
         Booking existing = bookingRepository.findByIdWithLock(bookingId)
                 .orElseThrow(() -> new BookingException(
                         "Booking not found: " + bookingId, 404));
 
-        // Ownership check
         if (!existing.getCustomerId().equals(request.getCustomerId())) {
             throw new BookingException(
                     "Customer " + request.getCustomerId()
@@ -220,7 +192,6 @@ public class BookingService {
                     + existing.getStatus() + " state", 400);
         }
 
-        // 24-hour rule on original booking
         TimeSlot oldSlot = timeSlotRepository.findById(existing.getTimeSlotId())
                 .orElseThrow(() -> new BookingException("Original time slot not found", 404));
         long hoursUntil = LocalDateTime.now().until(oldSlot.getStartTime(), ChronoUnit.HOURS);
@@ -230,7 +201,6 @@ public class BookingService {
                     + " hours. " + hoursUntil + "h remaining.", 400);
         }
 
-        // Lock and validate new slot
         TimeSlot newSlot = timeSlotRepository.findByIdWithLock(request.getNewTimeSlotId())
                 .orElseThrow(() -> new BookingException(
                         "New time slot not found: " + request.getNewTimeSlotId(), 404));
@@ -243,18 +213,15 @@ public class BookingService {
                     "New time slot does not belong to the same specialist", 400);
         }
 
-        // Cancel old booking
         existing.setStatus(BookingStatus.CANCELLED);
         existing.setCancelReason("Rescheduled to time slot " + request.getNewTimeSlotId());
         bookingRepository.save(existing);
 
-        // Swap slots
         oldSlot.setIsAvailable(true);
         newSlot.setIsAvailable(false);
         timeSlotRepository.save(oldSlot);
         timeSlotRepository.save(newSlot);
 
-        // Create new booking
         Booking newBooking = new Booking();
         newBooking.setCustomerId(existing.getCustomerId());
         newBooking.setSpecialistId(existing.getSpecialistId());
@@ -268,7 +235,6 @@ public class BookingService {
         return toResponse(bookingRepository.save(newBooking));
     }
 
-    /** Get available slots for a specialist within a date range. */
     @Transactional(readOnly = true)
     public List<TimeSlot> getAvailableSlots(
             Long specialistId, LocalDateTime from, LocalDateTime to) {
@@ -276,11 +242,6 @@ public class BookingService {
                 specialistId, from, to);
     }
 
-    /**
-     * Get frontend-friendly availability for a specialist.
-     * Groups available slots by date with human-readable time ranges.
-     * Default: next 7 days.
-     */
     @Transactional(readOnly = true)
     public AvailabilityResponse getSpecialistAvailability(
             Long specialistId, LocalDateTime from, LocalDateTime to) {
@@ -295,7 +256,6 @@ public class BookingService {
             response.setNextAvailableSlot(slots.get(0).getStartTime().toString());
         }
 
-        // Group slots by date
         Map<String, List<TimeSlot>> grouped = slots.stream()
                 .collect(Collectors.groupingBy(
                         s -> s.getStartTime().toLocalDate().toString(),
@@ -325,9 +285,6 @@ public class BookingService {
         return response;
     }
 
-    // ==================== Admin booking management ====================
-
-    /** List all bookings, optionally filtered by status. */
     @Transactional(readOnly = true)
     public List<BookingResponse> listAllBookings(BookingStatus status) {
         List<Booking> bookings = (status != null)
@@ -336,10 +293,6 @@ public class BookingService {
         return toResponseList(bookings);
     }
 
-    /**
-     * Admin cancels a booking. Skips ownership check and 24-hour rule.
-     * Applicable to PENDING or CONFIRMED bookings.
-     */
     public BookingResponse adminCancelBooking(Long bookingId, String cancelReason) {
         Booking booking = bookingRepository.findByIdWithLock(bookingId)
                 .orElseThrow(() -> new BookingException(
@@ -355,7 +308,6 @@ public class BookingService {
         booking.setCancelReason(cancelReason);
         Booking saved = bookingRepository.save(booking);
 
-        // Release the time slot
         TimeSlot slot = timeSlotRepository.findById(booking.getTimeSlotId())
                 .orElseThrow(() -> new BookingException("Time slot not found", 404));
         slot.setIsAvailable(true);
@@ -367,8 +319,6 @@ public class BookingService {
 
         return toResponse(saved);
     }
-
-    // ==================== Response enrichment helpers ====================
 
     private BookingResponse toResponse(Booking booking) {
         TimeSlot slot = timeSlotRepository.findById(booking.getTimeSlotId()).orElse(null);
