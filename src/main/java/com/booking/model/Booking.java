@@ -18,7 +18,7 @@ public class Booking {
     private Long id;
 
     @Column(name = "customer_id", nullable = false)
-    private Integer customerId;   // 修改为 Integer，与 User.userId 类型一致
+    private Integer customerId; 
 
     @Column(name = "specialist_id", nullable = false)
     private Long specialistId;
