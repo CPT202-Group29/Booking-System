@@ -1,20 +1,16 @@
-const API_BASE = 'http://localhost:8080';   // change to deployed URL
+const API_BASE = 'http://localhost:8080';
 
-// Helper to get token
 function getToken() {
     return localStorage.getItem('token');
 }
 
-// Helper for fetch with Authorization header
 async function authFetch(url, options = {}) {
     const token = getToken();
     const headers = {
         'Content-Type': 'application/json',
         ...options.headers
     };
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-    }
+    if (token) headers['Authorization'] = `Bearer ${token}`;
     const res = await fetch(url, { ...options, headers });
     if (!res.ok) {
         const text = await res.text();
@@ -22,13 +18,10 @@ async function authFetch(url, options = {}) {
     }
     if (res.status === 204) return null;
     const contentType = res.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-        return res.json();
-    }
+    if (contentType?.includes('application/json')) return res.json();
     return res.text();
 }
 
-// ---------- Authentication (B1) ----------
 export async function register(username, password, role = 'ROLE_CUSTOMER') {
     return authFetch(`${API_BASE}/api/v1/auth/register`, {
         method: 'POST',
@@ -43,7 +36,6 @@ export async function login(username, password) {
     });
 }
 
-// ---------- Customer (B1) ----------
 export async function getCustomerByUserId(userId) {
     return authFetch(`${API_BASE}/api/v1/customers/by-user/${userId}`);
 }
@@ -61,16 +53,13 @@ export async function uploadAvatar(customerId, file) {
     formData.append('file', file);
     const res = await fetch(`${API_BASE}/api/v1/customers/${customerId}/avatar`, {
         method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Authorization': `Bearer ${token}` },
         body: formData
     });
     if (!res.ok) throw new Error('Upload failed');
     return res.json();
 }
 
-// ---------- Account Security (B1) ----------
 export async function updatePassword(userId, newPassword) {
     return authFetch(`${API_BASE}/api/v1/auth/user/${userId}/password`, {
         method: 'PUT',
@@ -84,7 +73,6 @@ export async function deleteAccount(userId) {
     });
 }
 
-// ---------- Experts (B1) ----------
 export async function getExperts() {
     return authFetch(`${API_BASE}/experts/list`);
 }
@@ -93,18 +81,15 @@ export async function getExpertById(id) {
     return authFetch(`${API_BASE}/experts/${id}`);
 }
 
-// ---------- Availability (B2) ----------
 export async function getAvailableSlots(specialistId, date) {
     const from = `${date}T00:00:00`;
     const to = `${date}T23:59:59`;
-    const url = `${API_BASE}/api/v1/specialists/${specialistId}/availability?from=${from}&to=${to}`;
-    const data = await authFetch(url);
+    const data = await authFetch(`${API_BASE}/api/v1/specialists/${specialistId}/availability?from=${from}&to=${to}`);
     const day = data.byDay?.find(d => d.date === date);
     if (!day) return [];
     return day.slots.map(s => ({ id: s.slotId, display: s.time }));
 }
 
-// ---------- Bookings (B2) ----------
 export async function createBooking(customerId, specialistId, timeSlotId, topic, notes = '') {
     return authFetch(`${API_BASE}/api/v1/bookings`, {
         method: 'POST',
