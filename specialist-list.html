@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -79,6 +79,18 @@
     .view-btn:hover {
       background: #1d4ed8;
     }
+
+    .error-message {
+      color: red;
+      margin-top: 20px;
+      font-size: 15px;
+    }
+
+    .loading {
+      color: #666;
+      font-size: 16px;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
@@ -86,34 +98,74 @@
     <h1>Specialist List</h1>
     <p class="subtitle">Browse available specialists and view their basic information.</p>
 
-    <div class="card-grid">
-      <div class="specialist-card">
-        <div class="specialist-name">Dr. Alice Smith</div>
-        <div class="info-row"><span class="label">Expertise:</span> Psychology</div>
-        <div class="info-row"><span class="label">Level:</span> Senior</div>
-        <div class="info-row"><span class="label">Fee:</span> 150.00</div>
-        <div class="info-row"><span class="label">Status:</span> <span class="status">Available</span></div>
-        <a href="specialist-details.html" class="view-btn">View Details</a>
-      </div>
-
-      <div class="specialist-card">
-        <div class="specialist-name">Dr. Johnson</div>
-        <div class="info-row"><span class="label">Expertise:</span> Career Advice</div>
-        <div class="info-row"><span class="label">Level:</span> Intermediate</div>
-        <div class="info-row"><span class="label">Fee:</span> 120.00</div>
-        <div class="info-row"><span class="label">Status:</span> <span class="status">Available</span></div>
-        <a href="specialist-details.html" class="view-btn">View Details</a>
-      </div>
-
-      <div class="specialist-card">
-        <div class="specialist-name">Dr. Lee</div>
-        <div class="info-row"><span class="label">Expertise:</span> Academic Support</div>
-        <div class="info-row"><span class="label">Level:</span> Junior</div>
-        <div class="info-row"><span class="label">Fee:</span> 90.00</div>
-        <div class="info-row"><span class="label">Status:</span> <span class="status">Available</span></div>
-        <a href="specialist-details.html" class="view-btn">View Details</a>
-      </div>
-    </div>
+    <div id="loadingMessage" class="loading">Loading specialists...</div>
+    <div class="card-grid" id="cardGrid"></div>
+    <p id="errorMessage" class="error-message"></p>
   </div>
+
+  <script type="module">
+    import { getExperts } from './js/api.js';
+
+    const cardGrid = document.getElementById('cardGrid');
+    const loadingMessage = document.getElementById('loadingMessage');
+    const errorMessage = document.getElementById('errorMessage');
+
+    function mapStatus(statusValue) {
+      if (
+        statusValue === 1 ||
+        statusValue === '1' ||
+        statusValue === 'Available' ||
+        statusValue === 'ACTIVE' ||
+        statusValue === 'Active'
+      ) {
+        return 'Available';
+      }
+      return 'Unavailable';
+    }
+
+    function getContactText(expert) {
+      return expert.contact || expert.email || 'N/A';
+    }
+
+    function renderExperts(experts) {
+      cardGrid.innerHTML = '';
+
+      experts.forEach(expert => {
+        const card = document.createElement('div');
+        card.className = 'specialist-card';
+
+        card.innerHTML = `
+          <div class="specialist-name">${expert.name ?? 'N/A'}</div>
+          <div class="info-row"><span class="label">Expertise:</span> ${expert.expertise ?? 'N/A'}</div>
+          <div class="info-row"><span class="label">Level:</span> ${expert.level ?? 'N/A'}</div>
+          <div class="info-row"><span class="label">Fee:</span> ${expert.fee ?? 'N/A'}</div>
+          <div class="info-row"><span class="label">Status:</span> <span class="status">${mapStatus(expert.status)}</span></div>
+          <div class="info-row"><span class="label">Contact:</span> ${getContactText(expert)}</div>
+          <a href="specialist-details.html?id=${expert.id}" class="view-btn">View Details</a>
+        `;
+
+        cardGrid.appendChild(card);
+      });
+    }
+
+    async function loadExperts() {
+      try {
+        const experts = await getExperts();
+        loadingMessage.style.display = 'none';
+
+        if (!experts || experts.length === 0) {
+          errorMessage.textContent = 'No specialists found.';
+          return;
+        }
+
+        renderExperts(experts);
+      } catch (error) {
+        loadingMessage.style.display = 'none';
+        errorMessage.textContent = `Failed to load specialists: ${error.message}`;
+      }
+    }
+
+    loadExperts();
+  </script>
 </body>
 </html>
