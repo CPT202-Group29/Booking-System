@@ -11,7 +11,7 @@ public class BookingRequest {
 
     @NotNull(message = "Customer ID is required")
     @Positive(message = "Customer ID must be positive")
-    private Long customerId;
+    private Integer customerId;  
 
     @NotNull(message = "Specialist ID is required")
     @Positive(message = "Specialist ID must be positive")
@@ -26,8 +26,8 @@ public class BookingRequest {
 
     private String notes;
 
-    public Long getCustomerId() { return customerId; }
-    public void setCustomerId(Long customerId) { this.customerId = customerId; }
+    public Integer getCustomerId() { return customerId; }
+    public void setCustomerId(Integer customerId) { this.customerId = customerId; }
 
     public Long getSpecialistId() { return specialistId; }
     public void setSpecialistId(Long specialistId) { this.specialistId = specialistId; }
