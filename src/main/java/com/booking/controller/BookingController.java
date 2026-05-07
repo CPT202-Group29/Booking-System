@@ -1,70 +1,114 @@
-package com.booking.config;
+package com.booking.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import com.booking.dto.*;
+import com.booking.model.BookingStatus;
+import com.booking.model.TimeSlot;
+import com.booking.service.BookingService;
+import jakarta.validation.Valid;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
-@Configuration
-@EnableWebSecurity
-public class SecurityConfig {
+@RestController
+@RequestMapping("/api/v1")
+public class BookingController {
 
-    @Autowired
-    private JwtAuthenticationFilter jwtRequestFilter;
+    private final BookingService bookingService;
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public BookingController(BookingService bookingService) {
+        this.bookingService = bookingService;
     }
 
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
+    @PostMapping("/bookings")
+    public ResponseEntity<BookingResponse> requestBooking(
+            @Valid @RequestBody BookingRequest request) {
+        BookingResponse response = bookingService.requestBooking(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("*"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
+    @GetMapping("/bookings/{id}")
+    public ResponseEntity<BookingResponse> getBooking(@PathVariable Long id) {
+        return ResponseEntity.ok(bookingService.getBooking(id));
     }
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                    "/api/auth/register",
-                    "/api/auth/login",
-                    "/api/auth/test",
-                    "/api/v1/**"                // ← 新增：放行所有 B2 预约接口
-                ).permitAll()
-                .anyRequest().authenticated()
-            )
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+    @GetMapping("/bookings")
+    public ResponseEntity<List<BookingResponse>> listBookings(
+            @RequestParam(required = false) Integer customerId,
+            @RequestParam(required = false) Long specialistId,
+            @RequestParam(required = false) BookingStatus status) {
+        if (customerId != null) {
+            return ResponseEntity.ok(bookingService.getCustomerBookings(customerId));
+        } else if (specialistId != null) {
+            return ResponseEntity.ok(bookingService.getSpecialistBookings(specialistId));
+        }
+        return ResponseEntity.ok(bookingService.listAllBookings(status));
+    }
 
-        return http.build();
+    @PutMapping("/bookings/{id}/confirm")
+    public ResponseEntity<BookingResponse> confirmBooking(@PathVariable Long id) {
+        return ResponseEntity.ok(bookingService.confirmBooking(id));
+    }
+
+    @PutMapping("/bookings/{id}/complete")
+    public ResponseEntity<BookingResponse> completeBooking(@PathVariable Long id) {
+        return ResponseEntity.ok(bookingService.completeBooking(id));
+    }
+
+    @PostMapping("/bookings/{id}/cancel")
+    public ResponseEntity<BookingResponse> cancelBooking(
+            @PathVariable Long id,
+            @Valid @RequestBody CancelRequest request) {
+        return ResponseEntity.ok(bookingService.cancelBooking(id, request));
+    }
+
+    @PostMapping("/bookings/{id}/admin-cancel")
+    public ResponseEntity<BookingResponse> adminCancelBooking(
+            @PathVariable Long id,
+            @RequestBody(required = false) AdminCancelRequest request) {
+        String reason = (request != null && request.getCancelReason() != null)
+                ? request.getCancelReason() : "Cancelled by admin";
+        return ResponseEntity.ok(bookingService.adminCancelBooking(id, reason));
+    }
+
+    @PostMapping("/bookings/{id}/reschedule")
+    public ResponseEntity<BookingResponse> rescheduleBooking(
+            @PathVariable Long id,
+            @Valid @RequestBody RescheduleRequest request) {
+        return ResponseEntity.ok(bookingService.rescheduleBooking(id, request));
+    }
+
+    @GetMapping("/slots")
+    public ResponseEntity<List<TimeSlot>> getAvailableSlots(
+            @RequestParam Long specialistId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
+        return ResponseEntity.ok(
+                bookingService.getAvailableSlots(specialistId, from, to));
+    }
+
+    @GetMapping("/specialists/{id}/availability")
+    public ResponseEntity<AvailabilityResponse> getAvailability(
+            @PathVariable Long id,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
+        LocalDateTime f = (from != null) ? from : LocalDateTime.now();
+        LocalDateTime t = (to != null) ? to : LocalDateTime.now().plusDays(7);
+        return ResponseEntity.ok(
+                bookingService.getSpecialistAvailability(id, f, t));
+    }
+
+    @GetMapping("/health")
+    public ResponseEntity<Map<String, String>> health() {
+        return ResponseEntity.ok(Map.of(
+                "status", "UP",
+                "service", "BE2-Booking",
+                "timestamp", LocalDateTime.now().toString()));
     }
 }
