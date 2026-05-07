@@ -8,13 +8,13 @@ let customer = null;
 async function loadProfile() {
     try {
         const data = await getCustomerByUserId(userId);
-        customer = data;  // contains id, name, phone, avatarUrl, etc.
+        customer = data;
         document.getElementById('displayName').innerText = customer.name || '';
         document.getElementById('displayPhone').innerText = customer.phone || '';
         document.getElementById('displayUsername').innerText = localStorage.getItem('username') || '';
         document.getElementById('displayRole').innerText = localStorage.getItem('role') || '';
         const avatarImg = document.getElementById('avatarImg');
-        if (customer.avatarUrl) avatarImg.src = API_BASE + customer.avatarUrl;
+        if (customer.avatarUrl) avatarImg.src = customer.avatarUrl;
         else avatarImg.src = 'https://via.placeholder.com/100';
     } catch (err) {
         document.getElementById('profileView').innerHTML = '<p>Failed to load profile</p>';
@@ -28,25 +28,23 @@ function showMessage(text, type) {
 }
 
 // Edit mode
-document.getElementById('editBtn').addEventListener('click', () => {
+document.getElementById('editBtn')?.addEventListener('click', () => {
     document.getElementById('profileView').style.display = 'none';
     document.getElementById('editForm').style.display = 'block';
     document.getElementById('editName').value = customer.name || '';
     document.getElementById('editPhone').value = customer.phone || '';
 });
-document.getElementById('cancelBtn').addEventListener('click', () => {
+document.getElementById('cancelBtn')?.addEventListener('click', () => {
     document.getElementById('editForm').style.display = 'none';
     document.getElementById('profileView').style.display = 'block';
 });
-document.getElementById('saveBtn').addEventListener('click', async () => {
+document.getElementById('saveBtn')?.addEventListener('click', async () => {
     const name = document.getElementById('editName').value.trim();
     const phone = document.getElementById('editPhone').value.trim();
     const file = document.getElementById('avatarFile').files[0];
     try {
         await updateCustomer(customer.id, name, phone);
-        if (file) {
-            await uploadAvatar(customer.id, file);
-        }
+        if (file) await uploadAvatar(customer.id, file);
         await loadProfile();
         document.getElementById('editForm').style.display = 'none';
         document.getElementById('profileView').style.display = 'block';
@@ -57,15 +55,15 @@ document.getElementById('saveBtn').addEventListener('click', async () => {
 });
 
 // Change password
-document.getElementById('changePwdBtn').addEventListener('click', () => {
+document.getElementById('changePwdBtn')?.addEventListener('click', () => {
     document.getElementById('profileView').style.display = 'none';
     document.getElementById('changePwdForm').style.display = 'block';
 });
-document.getElementById('cancelPwdBtn').addEventListener('click', () => {
+document.getElementById('cancelPwdBtn')?.addEventListener('click', () => {
     document.getElementById('changePwdForm').style.display = 'none';
     document.getElementById('profileView').style.display = 'block';
 });
-document.getElementById('submitPwdBtn').addEventListener('click', async () => {
+document.getElementById('submitPwdBtn')?.addEventListener('click', async () => {
     const newPassword = document.getElementById('newPassword').value;
     if (!newPassword || newPassword.length < 6) {
         showMessage('Password must be at least 6 characters', 'error');
@@ -84,7 +82,7 @@ document.getElementById('submitPwdBtn').addEventListener('click', async () => {
 });
 
 // Delete account
-document.getElementById('deleteAccountBtn').addEventListener('click', async () => {
+document.getElementById('deleteAccountBtn')?.addEventListener('click', async () => {
     if (!confirm('Are you sure you want to delete your account? This action is permanent.')) return;
     try {
         await deleteAccount(userId);
@@ -99,7 +97,7 @@ document.getElementById('deleteAccountBtn').addEventListener('click', async () =
 });
 
 // Logout
-document.getElementById('logoutBtn').addEventListener('click', () => {
+document.getElementById('logoutBtn')?.addEventListener('click', () => {
     localStorage.clear();
     location.href = 'login.html';
 });
