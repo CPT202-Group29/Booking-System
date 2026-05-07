@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Specialist Details</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f6f8fb;
+            margin: 0;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        h1 {
+            margin-bottom: 12px;
+            color: #222;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 24px;
+            font-size: 16px;
+        }
+
+        .expert-card {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 24px;
+            background: #fff;
+        }
+
+        .expert-card h3 {
+            margin-top: 0;
+            margin-bottom: 16px;
+            color: #222;
+        }
+
+        .expert-card p {
+            margin-bottom: 10px;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .section-title {
+            margin-top: 32px;
+            margin-bottom: 16px;
+            font-size: 22px;
+            font-weight: bold;
+            color: #222;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+            color: #444;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px;
+            cursor: pointer;
+            width: 100%;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .error {
+            color: red;
+            margin-top: 12px;
+        }
+
+        .success {
+            color: green;
+            margin-top: 12px;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-top: 28px;
+            padding: 10px 18px;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+        }
+
+        .back-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .loading {
+            color: #666;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Specialist Details</h1>
+        <p class="subtitle">View detailed information about the selected specialist.</p>
+
+        <div id="expertInfo" class="loading">Loading...</div>
+
+        <div class="section-title">Book Appointment</div>
+
+        <form id="bookingForm" style="display:none;">
+            <div class="form-group">
+                <label for="date">Date</label>
+                <input type="date" id="date" required>
+            </div>
+
+            <div class="form-group">
+                <label for="timeSlot">Time Slot</label>
+                <select id="timeSlot" required>
+                    <option value="">Select date first</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="topic">Topic</label>
+                <textarea id="topic" rows="3" required></textarea>
+            </div>
+
+            <button type="submit">Book Appointment</button>
+        </form>
+
+        <div id="message"></div>
+
+        <a href="specialist-list.html" class="back-btn">← Back to Specialists</a>
+    </div>
+
+    <script type="module">
+        import { getExpertById, getAvailableSlots, createBooking } from './js/api.js';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const expertId = urlParams.get('id');
+
+        const expertInfo = document.getElementById('expertInfo');
+        const bookingForm = document.getElementById('bookingForm');
+        const dateInput = document.getElementById('date');
+        const timeSlotSelect = document.getElementById('timeSlot');
+        const topicInput = document.getElementById('topic');
+        const messageBox = document.getElementById('message');
+
+        if (!expertId) {
+            expertInfo.innerHTML = '<p class="error">No specialist specified.</p>';
+            throw new Error('Missing expert id');
+        }
+
+        function getContactText(expert) {
+            return expert.contact || expert.email || 'N/A';
+        }
+
+        function getStatusText(status) {
+            if (
+                status === 1 ||
+                status === '1' ||
+                status === 'Available' ||
+                status === 'ACTIVE' ||
+                status === 'Active'
+            ) {
+                return 'Available';
+            }
+            return 'Unavailable';
+        }
+
+        async function loadExpert() {
+            try {
+                const expert = await getExpertById(expertId);
+
+                expertInfo.innerHTML = `
+                    <div class="expert-card">
+                        <h3>${expert.name ?? 'N/A'}</h3>
+                        <p><strong>Expertise:</strong> ${expert.expertise ?? 'N/A'}</p>
+                        <p><strong>Level:</strong> ${expert.level ?? 'N/A'}</p>
+                        <p><strong>Fee:</strong> ${expert.fee ?? 'N/A'}</p>
+                        <p><strong>Status:</strong> ${getStatusText(expert.status)}</p>
+                        <p><strong>Contact:</strong> ${getContactText(expert)}</p>
+                        <p><strong>Description:</strong> ${expert.description || 'N/A'}</p>
+                    </div>
+                `;
+
+                bookingForm.style.display = 'block';
+            } catch (err) {
+                expertInfo.innerHTML = `<p class="error">Failed to load specialist: ${err.message}</p>`;
+            }
+        }
+
+        dateInput.min = new Date().toISOString().split('T')[0];
+
+        dateInput.addEventListener('change', async () => {
+            const date = dateInput.value;
+            if (!date) return;
+
+            try {
+                const slots = await getAvailableSlots(expertId, date);
+                timeSlotSelect.innerHTML = '<option value="">Select time slot</option>';
+
+                if (!slots || slots.length === 0) {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'No available slots';
+                    timeSlotSelect.appendChild(option);
+                    return;
+                }
+
+                slots.forEach(slot => {
+                    const option = document.createElement('option');
+                    option.value = slot.id;
+                    option.textContent = slot.display;
+                    timeSlotSelect.appendChild(option);
+                });
+            } catch (err) {
+                timeSlotSelect.innerHTML = '<option value="">Failed to load slots</option>';
+            }
+        });
+
+        bookingForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const customerId = localStorage.getItem('customerId');
+            if (!customerId) {
+                alert('Please login first');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const date = dateInput.value;
+            const timeSlotId = timeSlotSelect.value;
+            const topic = topicInput.value.trim();
+
+            if (!date || !timeSlotId || !topic) {
+                alert('Please fill all fields');
+                return;
+            }
+
+            try {
+                await createBooking(
+                    parseInt(customerId),
+                    parseInt(expertId),
+                    parseInt(timeSlotId),
+                    topic
+                );
+
+                messageBox.innerHTML = '<div class="success">Booking created! Status: PENDING</div>';
+                setTimeout(() => {
+                    window.location.href = 'my-bookings.html';
+                }, 1500);
+            } catch (err) {
+                messageBox.innerHTML = `<div class="error">${err.message}</div>`;
+            }
+        });
+
+        loadExpert();
+    </script>
+</body>
+</html>
