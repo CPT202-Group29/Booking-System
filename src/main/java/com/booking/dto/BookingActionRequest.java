@@ -10,8 +10,8 @@ public class BookingActionRequest {
 
     @NotNull(message = "User ID is required")
     @Positive
-    private Long userId;
+    private Integer userId;   // 改为 Integer，与 User.userId 类型一致
 
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
+    public Integer getUserId() { return userId; }
+    public void setUserId(Integer userId) { this.userId = userId; }
 }
