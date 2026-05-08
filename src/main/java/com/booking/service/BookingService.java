@@ -13,6 +13,7 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -196,8 +197,13 @@ public class BookingService {
             throw new BookingException("Slot release failed due to concurrent update.", 409, e);
         }
 
+        BookingResponse response = toResponse(saved);
+        // 计算退款并存入响应
+        long hoursUntilStart = LocalDateTime.now().until(slot.getStartTime(), ChronoUnit.HOURS);
+        response.setRefundAmount(chargeService.calculateRefund(hoursUntilStart));
+
         logStatusChange(bookingId, previousStatus, BookingStatus.CANCELLED.name(), "CUSTOMER", request.getCancelReason());
-        return toResponse(saved);
+        return response;
     }
 
     public BookingResponse rescheduleBooking(Long bookingId, RescheduleRequest request) {
@@ -346,8 +352,13 @@ public class BookingService {
             throw new BookingException("Slot release failed due to concurrent update.", 409, e);
         }
 
+        BookingResponse response = toResponse(saved);
+        // 计算退款并存入响应
+        long hoursUntilStart = LocalDateTime.now().until(slot.getStartTime(), ChronoUnit.HOURS);
+        response.setRefundAmount(chargeService.calculateRefund(hoursUntilStart));
+
         logStatusChange(bookingId, previousStatus, BookingStatus.CANCELLED.name(), "ADMIN", cancelReason);
-        return toResponse(saved);
+        return response;
     }
 
     @Transactional(readOnly = true)
