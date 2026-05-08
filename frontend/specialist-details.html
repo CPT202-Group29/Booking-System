@@ -2,80 +2,89 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Specialist Details</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>Specialist Details - Expert Booking System</title>
     <style>
-        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
-        .expert-card { border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; display: flex; min-height: 100vh; }
+        
+        .sidebar {
+            width: 240px; background: #1e293b; color: white; padding: 20px 0;
+            display: flex; flex-direction: column;
+        }
+        .sidebar h2 { color: white; text-align: center; margin-bottom: 30px; font-size: 1.2rem; border-bottom: 1px solid #334155; padding-bottom: 15px; }
+        .sidebar nav { display: flex; flex-direction: column; }
+        .sidebar nav a {
+            color: #cbd5e1; text-decoration: none; padding: 12px 20px;
+            font-size: 0.95rem; transition: background 0.2s;
+        }
+        .sidebar nav a:hover, .sidebar nav a.active { background: #334155; color: white; border-left: 3px solid #3b82f6; }
+        
+        .main {
+            flex: 1; background: #f1f5f9; padding: 30px;
+        }
+        .container {
+            max-width: 800px; margin: 0 auto; background: white; padding: 25px;
+            border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .expert-card { border: 1px solid #e5e7eb; padding: 20px; border-radius: 8px; margin-bottom: 20px; background: #f9fafb; }
         .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, select, textarea { width: 100%; padding: 8px; box-sizing: border-box; }
-        button { background: #007bff; color: white; border: none; padding: 10px; cursor: pointer; width: 100%; }
-        .error { color: red; }
-        .success { color: green; }
-        .back-btn { display: inline-block; margin-top: 20px; }
-        .fee-info { background: #e8f5e9; padding: 10px; border-radius: 4px; margin: 10px 0; font-weight: bold; }
-
-        /* 模态框样式 */
+        label { display: block; margin-bottom: 5px; font-weight: 600; color: #374151; }
+        input, select, textarea {
+            width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.95rem;
+        }
+        button {
+            background: #3b82f6; color: white; border: none; padding: 10px 16px;
+            border-radius: 6px; cursor: pointer; width: 100%; font-size: 1rem; font-weight: 600;
+        }
+        button:hover { background: #2563eb; }
+        .fee-info { background: #e8f5e9; padding: 10px; border-radius: 6px; margin: 10px 0; font-weight: bold; }
+        .error { color: #dc2626; }
+        .success { color: #059669; }
+        .back-btn { display: inline-block; margin-top: 15px; color: #3b82f6; text-decoration: none; }
+        
+        /* 模态框 */
         .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
+            display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index:1000;
         }
         .modal-content {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            max-width: 450px;
-            width: 90%;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            background: white; padding: 25px; border-radius: 12px; max-width: 450px; width: 90%;
         }
-        .modal-content h3 { margin-top: 0; }
-        .modal-content table { width: 100%; margin: 15px 0; border-collapse: collapse; }
-        .modal-content table td { padding: 8px 0; border-bottom: 1px solid #eee; }
-        .modal-content table td:first-child { font-weight: bold; width: 40%; }
-        .modal-actions { display: flex; gap: 10px; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
         .modal-actions button { flex: 1; }
-        .btn-confirm { background: #28a745; }
-        .btn-cancel { background: #6c757d; }
+        .btn-confirm { background: #059669; }
+        .btn-cancel { background: #6b7280; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Specialist Details</h2>
-        <div id="expertInfo">Loading...</div>
-        <form id="bookingForm" style="display:none;">
-            <div class="fee-info" id="feeDisplay">Calculating fee...</div>
-            <div class="form-group">
-                <label>Date</label>
-                <input type="date" id="date" required>
-            </div>
-            <div class="form-group">
-                <label>Time Slot</label>
-                <select id="timeSlot" required>
-                    <option value="">Select date first</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Topic (required)</label>
-                <textarea id="topic" rows="2" required></textarea>
-            </div>
-            <div class="form-group">
-                <label>Notes (optional)</label>
-                <textarea id="notes" rows="3" placeholder="Any specific concerns..."></textarea>
-            </div>
-            <button type="submit">Book Appointment</button>
-        </form>
-        <div id="message"></div>
-        <a href="specialist-list.html" class="back-btn">← Back to Specialists</a>
-    </div>
+    <aside class="sidebar">
+        <h2>Expert Booking</h2>
+        <nav>
+            <a href="profile.html">My Profile</a>
+            <a href="specialist-list.html" class="active">Find a Specialist</a>
+            <a href="my-bookings.html">My Bookings</a>
+            <a href="#" onclick="localStorage.clear();location.href='login.html'" style="margin-top:auto;border-top:1px solid #334155;padding-top:15px;margin-top:20px;">Logout</a>
+        </nav>
+    </aside>
 
-    <!-- 确认摘要模态框 -->
+    <main class="main">
+        <div class="container">
+            <h2 style="margin-top:0;">Specialist Details</h2>
+            <div id="expertInfo">Loading...</div>
+            <form id="bookingForm" style="display:none;">
+                <div class="fee-info" id="feeDisplay">Calculating fee...</div>
+                <div class="form-group"><label>Date</label><input type="date" id="date" required></div>
+                <div class="form-group"><label>Time Slot</label><select id="timeSlot" required><option value="">Select date first</option></select></div>
+                <div class="form-group"><label>Topic (required)</label><textarea id="topic" rows="2" required></textarea></div>
+                <div class="form-group"><label>Notes (optional)</label><textarea id="notes" rows="2" placeholder="Any specific concerns..."></textarea></div>
+                <button type="submit">Book Appointment</button>
+            </form>
+            <div id="message"></div>
+            <a href="specialist-list.html" class="back-btn">← Back to Specialists</a>
+        </div>
+    </main>
+
+    <!-- 确认模态框 -->
     <div class="modal-overlay" id="confirmModal">
         <div class="modal-content">
             <h3>📋 Booking Summary</h3>
@@ -94,6 +103,10 @@
         </div>
     </div>
 
+    <script type="module" src="js/api.js">
+        // 直接在下方内联脚本，避免模块路径问题
+    </script>
+    <!-- 内联脚本，因为之前的模块导入路径可能有问题，这里直接复制 specialist-details 的脚本内容 -->
     <script type="module">
         import { getSpecialistById, getAvailableSlots, createBooking, getBookingFee } from './js/api.js';
 
@@ -105,7 +118,7 @@
         }
 
         let expert = null;
-        let currentFee = null; // 存储当前预估费用
+        let currentFee = null;
 
         async function loadExpert() {
             try {
@@ -123,10 +136,8 @@
                     </div>
                 `;
                 document.getElementById('bookingForm').style.display = 'block';
-
-                // 获取并显示预估费用
                 currentFee = await getBookingFee(expertId);
-                document.getElementById('feeDisplay').innerHTML = `Consultation Fee: <strong>$${currentFee}</strong> (based on specialist level)`;
+                document.getElementById('feeDisplay').innerHTML = `Consultation Fee: <strong>$${currentFee}</strong>`;
             } catch (err) {
                 document.getElementById('expertInfo').innerHTML = `<p class="error">Failed to load expert: ${err.message}</p>`;
             }
@@ -145,9 +156,9 @@
                 slots.forEach(slot => {
                     const option = document.createElement('option');
                     option.value = slot.id;
-                    const startTime = slot.startTime ? new Date(slot.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
-                    const endTime = slot.endTime ? new Date(slot.endTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
-                    option.textContent = `${startTime} - ${endTime}`;
+                    const start = slot.startTime ? new Date(slot.startTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
+                    const end = slot.endTime ? new Date(slot.endTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
+                    option.textContent = `${start} - ${end}`;
                     timeSlotSelect.appendChild(option);
                 });
             } catch (err) {
@@ -155,30 +166,21 @@
             }
         });
 
-        // 提交事件改为弹出确认摘要
         document.getElementById('bookingForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const timeSlotId = timeSlotSelect.value;
             const topic = document.getElementById('topic').value.trim();
             const notes = document.getElementById('notes').value.trim();
-            if (!timeSlotId || !topic) {
-                alert('Please fill all required fields');
-                return;
-            }
-
-            // 填充摘要信息
+            if (!timeSlotId || !topic) { alert('Please fill all required fields'); return; }
             document.getElementById('summarySpecialist').textContent = expert.name;
             document.getElementById('summaryDate').textContent = dateInput.value;
             document.getElementById('summaryTime').textContent = timeSlotSelect.options[timeSlotSelect.selectedIndex].textContent;
             document.getElementById('summaryFee').textContent = '$' + currentFee;
             document.getElementById('summaryTopic').textContent = topic;
             document.getElementById('summaryNotes').textContent = notes || '-';
-
-            // 显示模态框
             document.getElementById('confirmModal').style.display = 'flex';
         });
 
-        // 确认按钮：真正提交预约
         document.getElementById('confirmSubmitBtn').addEventListener('click', async () => {
             document.getElementById('confirmModal').style.display = 'none';
             const timeSlotId = timeSlotSelect.value;
@@ -193,7 +195,6 @@
             }
         });
 
-        // 取消按钮：关闭模态框
         document.getElementById('cancelSubmitBtn').addEventListener('click', () => {
             document.getElementById('confirmModal').style.display = 'none';
         });
