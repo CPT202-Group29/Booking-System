@@ -1,94 +1,175 @@
-import { register, login, getCustomerByUserId } from './api.js';
+import { sendVerificationCode, register, login, logout, sendResetCode, resetPassword, setCurrentUser } from './api.js';
 
-const isRegister = window.location.pathname.includes('register.html');
+let countdown = 0;
+let countdownInterval = null;
 
-function showMessage(divId, text, type) {
-    const div = document.getElementById(divId);
-    if (!div) return;
-    div.innerHTML = `<div class="${type}">${text}</div>`;
-    setTimeout(() => {
-        if (div) div.innerHTML = '';
-    }, 5000);
+function showMessage(elementId, text, type) {
+    const msgDiv = document.getElementById(elementId);
+    msgDiv.innerHTML = `<div class="${type}">${text}</div>`;
+    setTimeout(() => { if (msgDiv) msgDiv.innerHTML = ''; }, 5000);
 }
 
-// Registration
-if (isRegister) {
-    const form = document.getElementById('registerForm');
-    if (form) {
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
-            const confirm = document.getElementById('confirmPassword').value;
+// Registration page
+if (window.location.pathname.includes('register.html')) {
+    const sendBtn = document.getElementById('sendCodeBtn');
+    const emailInput = document.getElementById('email');
+    const pwdInput = document.getElementById('password');
+    const pwdHint = document.getElementById('pwdHint');
 
-            if (password !== confirm) {
-                showMessage('message', 'Passwords do not match', 'error');
-                return;
-            }
-            if (password.length < 6) {
-                showMessage('message', 'Password must be at least 6 characters', 'error');
-                return;
-            }
+    pwdInput.addEventListener('input', () => {
+        const pwd = pwdInput.value;
+        const regex = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/;
+        if (regex.test(pwd)) pwdHint.innerText = '✓ Password strength: good';
+        else pwdHint.innerText = '✗ Password must be at least 6 characters and contain letters & numbers';
+    });
 
-            try {
-                const data = await register(username, password);
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('userId', data.userId);
-                localStorage.setItem('role', data.role);
-
-                const customer = await getCustomerByUserId(data.userId);
-                localStorage.setItem('customerId', customer.id);
-
-                showMessage('message', 'Registration successful! Redirecting...', 'success');
-                setTimeout(() => {
-                    window.location.href = 'profile.html';
-                }, 1500);
-            } catch (err) {
-                showMessage('message', err.message, 'error');
-            }
-        });
-    }
-}
-// Login
-else {
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        const savedUser = localStorage.getItem('rememberedUsername');
-        if (savedUser) {
-            const usernameInput = document.getElementById('username');
-            const rememberCheckbox = document.getElementById('rememberMe');
-            if (usernameInput) usernameInput.value = savedUser;
-            if (rememberCheckbox) rememberCheckbox.checked = true;
+    sendBtn.addEventListener('click', async () => {
+        const email = emailInput.value.trim();
+        if (!email) {
+            showMessage('message', 'Please enter email first', 'error');
+            return;
         }
-
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
-            const remember = document.getElementById('rememberMe')?.checked || false;
-
-            try {
-                const data = await login(username, password);
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('userId', data.userId);
-                localStorage.setItem('role', data.role);
-
-                if (remember) {
-                    localStorage.setItem('rememberedUsername', username);
-                } else {
-                    localStorage.removeItem('rememberedUsername');
+        if (countdown > 0) {
+            showMessage('message', `Please wait ${countdown} seconds`, 'error');
+            return;
+        }
+        try {
+            await sendVerificationCode(email);
+            showMessage('message', 'Verification code sent (check console)', 'success');
+            countdown = 60;
+            sendBtn.disabled = true;
+            countdownInterval = setInterval(() => {
+                countdown--;
+                sendBtn.innerText = `${countdown}s`;
+                if (countdown <= 0) {
+                    clearInterval(countdownInterval);
+                    sendBtn.disabled = false;
+                    sendBtn.innerText = 'Send Code';
                 }
+            }, 1000);
+        } catch (err) {
+            showMessage('message', err.message, 'error');
+        }
+    });
 
-                const customer = await getCustomerByUserId(data.userId);
-                localStorage.setItem('customerId', customer.id);
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('name').value.trim();
+        const email = emailInput.value.trim();
+        const password = pwdInput.value;
+        const confirm = document.getElementById('confirmPassword').value;
+        const code = document.getElementById('verificationCode').value.trim();
 
-                showMessage('message', 'Login successful', 'success');
-                setTimeout(() => {
-                    window.location.href = 'profile.html';
-                }, 1000);
-            } catch (err) {
-                showMessage('message', err.message, 'error');
-            }
-        });
+        if (!name || !email || !password || !confirm || !code) {
+            showMessage('message', 'Please fill all fields', 'error');
+            return;
+        }
+        if (password !== confirm) {
+            showMessage('message', 'Passwords do not match', 'error');
+            return;
+        }
+        try {
+            await register(name, email, password, code);
+            showMessage('message', 'Registration successful! Redirecting to login...', 'success');
+            setTimeout(() => window.location.href = 'login.html', 1500);
+        } catch (err) {
+            showMessage('message', err.message, 'error');
+        }
+    });
+}
+
+// Login page
+else if (window.location.pathname.includes('login.html')) {
+    const savedEmail = localStorage.getItem('rememberedEmail');
+    const savedPwd = localStorage.getItem('rememberedPassword');
+    if (savedEmail && savedPwd) {
+        document.getElementById('email').value = savedEmail;
+        document.getElementById('password').value = savedPwd;
+        document.getElementById('rememberMe').checked = true;
     }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const remember = document.getElementById('rememberMe').checked;
+
+        try {
+            const { token, user } = await login(email, password);
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(user));
+            setCurrentUser(user);
+            if (remember) {
+                localStorage.setItem('rememberedEmail', email);
+                localStorage.setItem('rememberedPassword', password);
+            } else {
+                localStorage.removeItem('rememberedEmail');
+                localStorage.removeItem('rememberedPassword');
+            }
+            showMessage('message', 'Login successful, redirecting...', 'success');
+            setTimeout(() => window.location.href = 'profile.html', 1000);
+        } catch (err) {
+            showMessage('message', err.message, 'error');
+        }
+    });
+}
+
+// Forgot password page
+else if (window.location.pathname.includes('forgot-password.html')) {
+    let resetCountdown = 0;
+    const sendBtn = document.getElementById('sendCodeBtn');
+    const emailInput = document.getElementById('email');
+
+    sendBtn.addEventListener('click', async () => {
+        const email = emailInput.value.trim();
+        if (!email) {
+            showMessage('message', 'Please enter email', 'error');
+            return;
+        }
+        if (resetCountdown > 0) {
+            showMessage('message', `Please wait ${resetCountdown} seconds`, 'error');
+            return;
+        }
+        try {
+            await sendResetCode(email);
+            showMessage('message', 'Reset code sent (check console)', 'success');
+            resetCountdown = 60;
+            sendBtn.disabled = true;
+            const interval = setInterval(() => {
+                resetCountdown--;
+                sendBtn.innerText = `${resetCountdown}s`;
+                if (resetCountdown <= 0) {
+                    clearInterval(interval);
+                    sendBtn.disabled = false;
+                    sendBtn.innerText = 'Send Code';
+                }
+            }, 1000);
+        } catch (err) {
+            showMessage('message', err.message, 'error');
+        }
+    });
+
+    document.getElementById('forgotForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = emailInput.value.trim();
+        const code = document.getElementById('verificationCode').value.trim();
+        const newPassword = document.getElementById('newPassword').value;
+        const confirm = document.getElementById('confirmPassword').value;
+
+        if (!email || !code || !newPassword || !confirm) {
+            showMessage('message', 'Please fill all fields', 'error');
+            return;
+        }
+        if (newPassword !== confirm) {
+            showMessage('message', 'New passwords do not match', 'error');
+            return;
+        }
+        try {
+            await resetPassword(email, code, newPassword);
+            showMessage('message', 'Password reset successful, please login', 'success');
+            setTimeout(() => window.location.href = 'login.html', 1500);
+        } catch (err) {
+            showMessage('message', err.message, 'error');
+        }
+    });
 }
