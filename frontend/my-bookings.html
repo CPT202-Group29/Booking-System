@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Bookings</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
@@ -16,7 +17,9 @@
             padding: 15px;
             border-radius: 8px;
             background: #fafafa;
+            cursor: pointer;
         }
+        .booking-card:hover { background: #f0f0f0; }
         .btn-cancel {
             background: #d9534f;
             color: white;
@@ -34,7 +37,41 @@
             cursor: pointer;
             border-radius: 4px;
         }
-        /* 改期模态框 */
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tabs button {
+            padding: 8px 16px;
+            border: none;
+            background: #eee;
+            cursor: pointer;
+            border-radius: 4px 4px 0 0;
+        }
+        .tabs button.active {
+            background: #007bff;
+            color: white;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+        .pagination button {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .pagination button.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        /* 详情模态框 */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -55,14 +92,24 @@
             overflow-y: auto;
         }
         .modal-content h3 { margin-top:0; }
-        .modal-actions { margin-top: 15px; text-align: right; }
-        .modal-actions button { margin-left: 10px; }
+        .modal-close {
+            float: right;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>My Bookings</h2>
+        <div class="tabs">
+            <button id="tabUpcoming" class="active">Upcoming</button>
+            <button id="tabHistory">History</button>
+        </div>
         <div id="bookingsList">Loading...</div>
+        <div class="pagination" id="pagination"></div>
         <div class="nav-links">
             <a href="specialist-list.html">Find a Specialist</a> |
             <a href="profile.html">My Profile</a> |
@@ -70,15 +117,12 @@
         </div>
     </div>
 
-    <!-- 改期模态框 -->
-    <div class="modal-overlay" id="rescheduleModal">
+    <!-- 详情模态框 -->
+    <div class="modal-overlay" id="detailModal">
         <div class="modal-content">
-            <h3>Select New Time Slot</h3>
-            <div id="rescheduleSlotList">Loading available slots...</div>
-            <div class="modal-actions">
-                <button onclick="document.getElementById('rescheduleModal').style.display='none'">Cancel</button>
-                <button id="confirmRescheduleBtn" class="btn-reschedule">Confirm Reschedule</button>
-            </div>
+            <button class="modal-close" onclick="document.getElementById('detailModal').style.display='none'">&times;</button>
+            <h3>Booking Detail</h3>
+            <div id="detailContent"></div>
         </div>
     </div>
 
