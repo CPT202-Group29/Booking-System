@@ -32,8 +32,12 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Topic</label>
-                <textarea id="topic" rows="3" required></textarea>
+                <label>Topic (required)</label>
+                <textarea id="topic" rows="2" required></textarea>
+            </div>
+            <div class="form-group">
+                <label>Notes (optional)</label>
+                <textarea id="notes" rows="3" placeholder="Any specific concerns..."></textarea>
             </div>
             <button type="submit">Book Appointment</button>
         </form>
@@ -100,12 +104,13 @@
             e.preventDefault();
             const timeSlotId = timeSlotSelect.value;
             const topic = document.getElementById('topic').value.trim();
+            const notes = document.getElementById('notes').value.trim();
             if (!timeSlotId || !topic) {
-                alert('Please fill all fields');
+                alert('Please fill all required fields');
                 return;
             }
             try {
-                await createBooking(parseInt(expertId), parseInt(timeSlotId), topic);
+                await createBooking(parseInt(expertId), parseInt(timeSlotId), topic, notes);
                 document.getElementById('message').innerHTML = '<div class="success">Booking created! Status: PENDING</div>';
                 setTimeout(() => window.location.href = 'my-bookings.html', 1500);
             } catch (err) {
