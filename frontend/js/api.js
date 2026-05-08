@@ -167,7 +167,6 @@ export async function uploadAvatar(file) {
         throw new Error(error.error || 'Upload avatar failed');
     }
     const data = await response.json();
-    // 更新本地缓存的头像
     const user = getCurrentUser();
     if (user) {
         user.avatar = data.avatar;
@@ -266,6 +265,7 @@ export async function rescheduleBooking(bookingId, newSlotId) {
     }
     return response.json();
 }
+
 // ========== Specialist APIs ==========
 export async function getSpecialistById(id) {
     const response = await fetch(`${API_BASE}/api/v1/specialists/${id}`);
@@ -316,4 +316,15 @@ export async function createBooking(specialistId, timeSlotId, topic, notes = '')
         throw new Error(error.error || 'Failed to create booking');
     }
     return response.json();
+}
+
+// ========== Fee Calculation API ==========
+export async function getBookingFee(specialistId) {
+    const response = await fetch(`${API_BASE}/api/v1/specialists/${specialistId}/fee`);
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to fetch fee');
+    }
+    const data = await response.json();
+    return data.bookingFee;
 }
