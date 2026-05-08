@@ -1,23 +1,18 @@
-import { getCustomerByUserId, updateCustomer, uploadAvatar, updatePassword, deleteAccount } from './api.js';
+import { fetchProfile, updateProfile, uploadAvatar, changePassword, deleteAccount, logout } from './api.js';
 
-const userId = localStorage.getItem('userId');
-if (!userId) location.href = 'login.html';
-
-let customer = null;
+let currentProfile = null;
 
 async function loadProfile() {
     try {
-        const data = await getCustomerByUserId(userId);
-        customer = data;
-        document.getElementById('displayName').innerText = customer.name || '';
-        document.getElementById('displayPhone').innerText = customer.phone || '';
-        document.getElementById('displayUsername').innerText = localStorage.getItem('username') || '';
-        document.getElementById('displayRole').innerText = localStorage.getItem('role') || '';
+        currentProfile = await fetchProfile();
+        document.getElementById('displayName').innerText = currentProfile.username || '';
+        document.getElementById('displayEmail').innerText = currentProfile.email || '';
+        document.getElementById('displayPhone').innerText = currentProfile.phone || '';
         const avatarImg = document.getElementById('avatarImg');
-        if (customer.avatarUrl) avatarImg.src = customer.avatarUrl;
+        if (currentProfile.avatar) avatarImg.src = currentProfile.avatar;
         else avatarImg.src = 'https://via.placeholder.com/100';
     } catch (err) {
-        document.getElementById('profileView').innerHTML = '<p>Failed to load profile</p>';
+        showMessage(err.message, 'error');
     }
 }
 
@@ -31,8 +26,8 @@ function showMessage(text, type) {
 document.getElementById('editBtn')?.addEventListener('click', () => {
     document.getElementById('profileView').style.display = 'none';
     document.getElementById('editForm').style.display = 'block';
-    document.getElementById('editName').value = customer.name || '';
-    document.getElementById('editPhone').value = customer.phone || '';
+    document.getElementById('editName').value = currentProfile.username || '';
+    document.getElementById('editPhone').value = currentProfile.phone || '';
 });
 document.getElementById('cancelBtn')?.addEventListener('click', () => {
     document.getElementById('editForm').style.display = 'none';
@@ -43,8 +38,8 @@ document.getElementById('saveBtn')?.addEventListener('click', async () => {
     const phone = document.getElementById('editPhone').value.trim();
     const file = document.getElementById('avatarFile').files[0];
     try {
-        await updateCustomer(customer.id, name, phone);
-        if (file) await uploadAvatar(customer.id, file);
+        await updateProfile(name, phone);
+        if (file) await uploadAvatar(file);
         await loadProfile();
         document.getElementById('editForm').style.display = 'none';
         document.getElementById('profileView').style.display = 'block';
@@ -64,17 +59,23 @@ document.getElementById('cancelPwdBtn')?.addEventListener('click', () => {
     document.getElementById('profileView').style.display = 'block';
 });
 document.getElementById('submitPwdBtn')?.addEventListener('click', async () => {
+    const oldPassword = document.getElementById('oldPassword').value;
     const newPassword = document.getElementById('newPassword').value;
-    if (!newPassword || newPassword.length < 6) {
-        showMessage('Password must be at least 6 characters', 'error');
+    const confirm = document.getElementById('confirmNewPassword').value;
+    if (!oldPassword || !newPassword || !confirm) {
+        showMessage('Please fill all fields', 'error');
+        return;
+    }
+    if (newPassword !== confirm) {
+        showMessage('New passwords do not match', 'error');
         return;
     }
     try {
-        await updatePassword(userId, newPassword);
-        showMessage('Password updated. Please login again.', 'success');
-        setTimeout(() => {
-            localStorage.clear();
-            location.href = 'login.html';
+        await changePassword(oldPassword, newPassword);
+        showMessage('Password changed. Please login again.', 'success');
+        setTimeout(async () => {
+            await logout();
+            window.location.href = 'login.html';
         }, 1500);
     } catch (err) {
         showMessage(err.message, 'error');
@@ -83,13 +84,13 @@ document.getElementById('submitPwdBtn')?.addEventListener('click', async () => {
 
 // Delete account
 document.getElementById('deleteAccountBtn')?.addEventListener('click', async () => {
-    if (!confirm('Are you sure you want to delete your account? This action is permanent.')) return;
+    const pwd = prompt('Please enter your password to confirm account deletion:');
+    if (!pwd) return;
     try {
-        await deleteAccount(userId);
+        await deleteAccount(pwd);
         showMessage('Account deleted', 'success');
         setTimeout(() => {
-            localStorage.clear();
-            location.href = 'login.html';
+            window.location.href = 'login.html';
         }, 1500);
     } catch (err) {
         showMessage(err.message, 'error');
@@ -97,9 +98,9 @@ document.getElementById('deleteAccountBtn')?.addEventListener('click', async () 
 });
 
 // Logout
-document.getElementById('logoutBtn')?.addEventListener('click', () => {
-    localStorage.clear();
-    location.href = 'login.html';
+document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+    await logout();
+    window.location.href = 'login.html';
 });
 
 loadProfile();
