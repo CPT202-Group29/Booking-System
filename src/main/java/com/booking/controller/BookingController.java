@@ -2,6 +2,7 @@ package com.booking.controller;
 
 import com.booking.dto.*;
 import com.booking.model.BookingStatus;
+import com.booking.model.BookingStatusLog;
 import com.booking.model.TimeSlot;
 import com.booking.service.BookingService;
 import jakarta.validation.Valid;
@@ -80,6 +81,11 @@ public class BookingController {
             @PathVariable Long id,
             @Valid @RequestBody RescheduleRequest request) {
         return ResponseEntity.ok(bookingService.rescheduleBooking(id, request));
+    }
+
+    @GetMapping("/bookings/{id}/logs")
+    public ResponseEntity<List<BookingStatusLog>> getBookingStatusLogs(@PathVariable Long id) {
+        return ResponseEntity.ok(bookingService.getStatusLogs(id));
     }
 
     @GetMapping("/slots")
