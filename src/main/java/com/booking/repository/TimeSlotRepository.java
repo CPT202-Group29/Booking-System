@@ -36,4 +36,22 @@ public interface TimeSlotRepository extends JpaRepository<TimeSlot, Long> {
     boolean existsByIdAndIsAvailableTrue(Long id);
 
     List<TimeSlot> findByIdIn(List<Long> ids);
+
+    /** Check if a slot exists that overlaps with the given time range for a specialist. */
+    @Query("SELECT COUNT(t) > 0 FROM TimeSlot t WHERE t.specialistId = :specialistId " +
+           "AND t.isAvailable = true " +
+           "AND t.startTime < :endTime AND t.endTime > :startTime")
+    boolean existsOverlappingSlot(@Param("specialistId") Long specialistId,
+                                   @Param("startTime") LocalDateTime startTime,
+                                   @Param("endTime") LocalDateTime endTime);
+
+    /** Check if a slot exists that overlaps with the given time range, excluding a specific slot ID (used for updates). */
+    @Query("SELECT COUNT(t) > 0 FROM TimeSlot t WHERE t.specialistId = :specialistId " +
+           "AND t.id <> :excludeId " +
+           "AND t.isAvailable = true " +
+           "AND t.startTime < :endTime AND t.endTime > :startTime")
+    boolean existsOverlappingSlotExcludingId(@Param("specialistId") Long specialistId,
+                                              @Param("startTime") LocalDateTime startTime,
+                                              @Param("endTime") LocalDateTime endTime,
+                                              @Param("excludeId") Long excludeId);
 }
