@@ -14,7 +14,6 @@ const pendingBookings = document.getElementById("pendingBookings");
 const confirmedBookings = document.getElementById("confirmedBookings");
 const completedBookings = document.getElementById("completedBookings");
 
-// 状态工具函数（保持不变）
 function normalizeStatus(status) {
   if (!status) return "";
   const upperStatus = status.toString().toUpperCase();
@@ -54,14 +53,17 @@ async function loadBookings() {
   try {
     const selectedStatus = bookingStatusFilter.value;
     currentStatusFilter = selectedStatus;
-    let url = `${API_BASE_URL}/bookings`;
+    // 拉取所有预订，避免分页遗漏
+    let url = `${API_BASE_URL}/bookings?size=999`;
     if (selectedStatus !== "All") {
-      url += `?status=${toBackendStatus(selectedStatus)}`;
+      url += `&status=${toBackendStatus(selectedStatus)}`;
     }
     const response = await fetch(url);
     if (!response.ok) throw new Error(`Failed to load bookings. Status: ${response.status}`);
     const data = await response.json();
-    bookings = Array.isArray(data) ? data.map(mapBookingFromBackend) : [];
+    // 兼容分页格式：如果后端返回分页对象，提取 content 数组；否则直接使用原始数组
+    const raw = Array.isArray(data.content) ? data.content : data;
+    bookings = Array.isArray(raw) ? raw.map(mapBookingFromBackend) : [];
     currentPage = 0;
     renderBookings();
     updateStats();
@@ -140,7 +142,6 @@ function renderPagination() {
   });
 }
 
-// 统计保持不变，但统计全部数据，不受分页影响
 function updateStats() {
   totalBookings.textContent = bookings.length;
   pendingBookings.textContent = bookings.filter(b => b.status === "Pending").length;
@@ -148,13 +149,59 @@ function updateStats() {
   completedBookings.textContent = bookings.filter(b => b.status === "Completed").length;
 }
 
-// 确认、完成、取消操作函数（不变），成功后重新加载数据
-async function confirmBooking(id) { /* ... 代码不变 ... */ await loadBookings(); }
-async function completeBooking(id) { /* ... */ await loadBookings(); }
-async function cancelBooking(id) { /* ... */ await loadBookings(); }
+async function confirmBooking(id) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/bookings/${id}/confirm`, { method: "PUT" });
+    if (!response.ok) throw new Error(`Confirm failed. Status: ${response.status}`);
+    await loadBookings();
+  } catch (error) {
+    console.error("Error confirming booking:", error);
+    alert("Failed to confirm booking.");
+  }
+}
 
-// 日志查看函数保持不变
-async function viewLogs(id) { /* ... 代码不变 ... */ }
+async function completeBooking(id) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/bookings/${id}/complete`, { method: "PUT" });
+    if (!response.ok) throw new Error(`Complete failed. Status: ${response.status}`);
+    await loadBookings();
+  } catch (error) {
+    console.error("Error completing booking:", error);
+    alert("Failed to complete booking.");
+  }
+}
+
+async function cancelBooking(id) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/bookings/${id}/admin-cancel`, { method: "POST" });
+    if (!response.ok) throw new Error(`Cancel failed. Status: ${response.status}`);
+    await loadBookings();
+  } catch (error) {
+    console.error("Error cancelling booking:", error);
+    alert("Failed to cancel booking.");
+  }
+}
+
+// 日志查看函数需保持原有实现
+async function viewLogs(id) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/bookings/${id}/logs`);
+    if (!response.ok) throw new Error("Failed to load logs");
+    const logs = await response.json();
+    if (logs.length === 0) {
+      alert('No status change logs for this booking.');
+      return;
+    }
+    let logText = 'Status Change Logs:\n\n';
+    logs.forEach(log => {
+      logText += `[${new Date(log.changedAt).toLocaleString()}] ${log.previousStatus || 'N/A'} → ${log.newStatus} by ${log.changedBy || 'System'}\nReason: ${log.reason || 'N/A'}\n\n`;
+    });
+    alert(logText);
+  } catch (error) {
+    console.error("Error loading logs:", error);
+    alert('Failed to load logs.');
+  }
+}
 
 bookingStatusFilter.addEventListener("change", () => loadBookings());
 refreshBtn.addEventListener("click", () => loadBookings());
