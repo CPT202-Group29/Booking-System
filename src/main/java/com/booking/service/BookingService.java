@@ -4,8 +4,10 @@ import com.booking.dto.*;
 import com.booking.exception.BookingException;
 import com.booking.model.Booking;
 import com.booking.model.BookingStatus;
+import com.booking.model.BookingStatusLog;
 import com.booking.model.TimeSlot;
 import com.booking.repository.BookingRepository;
+import com.booking.repository.BookingStatusLogRepository;
 import com.booking.repository.TimeSlotRepository;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
@@ -28,13 +30,26 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final TimeSlotRepository timeSlotRepository;
     private final ChargeCalculationService chargeService;
+    private final BookingStatusLogRepository logRepository;
 
     public BookingService(BookingRepository bookingRepository,
                           TimeSlotRepository timeSlotRepository,
-                          ChargeCalculationService chargeService) {
+                          ChargeCalculationService chargeService,
+                          BookingStatusLogRepository logRepository) {
         this.bookingRepository = bookingRepository;
         this.timeSlotRepository = timeSlotRepository;
         this.chargeService = chargeService;
+        this.logRepository = logRepository;
+    }
+
+    /**
+     * 记录状态变更日志
+     */
+    private void logStatusChange(Long bookingId, String previousStatus, String newStatus,
+                                 String changedBy, String reason) {
+        BookingStatusLog log = new BookingStatusLog(bookingId, previousStatus, newStatus,
+                changedBy, reason);
+        logRepository.save(log);
     }
 
     public BookingResponse createBooking(BookingRequest request) {
@@ -74,6 +89,7 @@ public class BookingService {
         }
 
         Booking saved = bookingRepository.save(booking);
+        logStatusChange(saved.getId(), null, BookingStatus.PENDING.name(), "CUSTOMER", "Booking created");
         return toResponse(saved);
     }
 
@@ -98,7 +114,7 @@ public class BookingService {
 
     /** List bookings for a customer. */
     @Transactional(readOnly = true)
-    public List<BookingResponse> getCustomerBookings(Integer customerId) {   // 改为 Integer
+    public List<BookingResponse> getCustomerBookings(Integer customerId) {
         List<Booking> bookings = bookingRepository
                 .findByCustomerIdOrderByCreatedAtDesc(customerId);
         return toResponseList(bookings);
@@ -115,26 +131,32 @@ public class BookingService {
         Booking booking = bookingRepository.findByIdWithLock(bookingId)
                 .orElseThrow(() -> new BookingException(
                         "Booking not found: " + bookingId, 404));
+        String previousStatus = booking.getStatus().name();
         if (!booking.canConfirm()) {
             throw new BookingException(
                     "Cannot confirm booking " + bookingId
                     + ". Current status: " + booking.getStatus(), 400);
         }
         booking.setStatus(BookingStatus.CONFIRMED);
-        return toResponse(bookingRepository.save(booking));
+        BookingResponse response = toResponse(bookingRepository.save(booking));
+        logStatusChange(bookingId, previousStatus, BookingStatus.CONFIRMED.name(), "ADMIN", "Booking confirmed");
+        return response;
     }
 
     public BookingResponse completeBooking(Long bookingId) {
         Booking booking = bookingRepository.findByIdWithLock(bookingId)
                 .orElseThrow(() -> new BookingException(
                         "Booking not found: " + bookingId, 404));
+        String previousStatus = booking.getStatus().name();
         if (!booking.canComplete()) {
             throw new BookingException(
                     "Cannot complete booking " + bookingId
                     + ". Current status: " + booking.getStatus(), 400);
         }
         booking.setStatus(BookingStatus.COMPLETED);
-        return toResponse(bookingRepository.save(booking));
+        BookingResponse response = toResponse(bookingRepository.save(booking));
+        logStatusChange(bookingId, previousStatus, BookingStatus.COMPLETED.name(), "SPECIALIST", "Booking completed");
+        return response;
     }
 
     public BookingResponse cancelBooking(Long bookingId, CancelRequest request) {
@@ -147,6 +169,7 @@ public class BookingService {
                     "Customer " + request.getCustomerId()
                     + " is not the owner of booking " + bookingId, 403);
         }
+        String previousStatus = booking.getStatus().name();
         if (!booking.canCancel()) {
             throw new BookingException(
                     "Booking " + bookingId + " cannot be cancelled in "
@@ -173,6 +196,7 @@ public class BookingService {
             throw new BookingException("Slot release failed due to concurrent update.", 409, e);
         }
 
+        logStatusChange(bookingId, previousStatus, BookingStatus.CANCELLED.name(), "CUSTOMER", request.getCancelReason());
         return toResponse(saved);
     }
 
@@ -186,6 +210,7 @@ public class BookingService {
                     "Customer " + request.getCustomerId()
                     + " is not the owner of booking " + bookingId, 403);
         }
+        String previousStatus = existing.getStatus().name();
         if (!existing.canReschedule()) {
             throw new BookingException(
                     "Booking " + bookingId + " cannot be rescheduled in "
@@ -232,7 +257,10 @@ public class BookingService {
                 ? BookingStatus.CONFIRMED : BookingStatus.PENDING);
         newBooking.setChargeAmount(chargeService.calculateCharge(existing.getSpecialistId()));
 
-        return toResponse(bookingRepository.save(newBooking));
+        BookingResponse response = toResponse(bookingRepository.save(newBooking));
+        logStatusChange(bookingId, previousStatus, BookingStatus.CANCELLED.name(), "CUSTOMER",
+                "Rescheduled -> new booking " + newBooking.getId());
+        return response;
     }
 
     @Transactional(readOnly = true)
@@ -298,6 +326,7 @@ public class BookingService {
                 .orElseThrow(() -> new BookingException(
                         "Booking not found: " + bookingId, 404));
 
+        String previousStatus = booking.getStatus().name();
         if (!booking.canCancel()) {
             throw new BookingException(
                     "Cannot cancel booking " + bookingId
@@ -317,7 +346,13 @@ public class BookingService {
             throw new BookingException("Slot release failed due to concurrent update.", 409, e);
         }
 
+        logStatusChange(bookingId, previousStatus, BookingStatus.CANCELLED.name(), "ADMIN", cancelReason);
         return toResponse(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public List<BookingStatusLog> getStatusLogs(Long bookingId) {
+        return logRepository.findByBookingIdOrderByChangedAtAsc(bookingId);
     }
 
     private BookingResponse toResponse(Booking booking) {
