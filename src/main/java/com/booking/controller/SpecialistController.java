@@ -2,6 +2,7 @@ package com.booking.controller;
 
 import com.booking.entity.Specialist;
 import com.booking.repository.SpecialistRepository;
+import com.booking.service.ChargeCalculationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
@@ -21,6 +22,9 @@ public class SpecialistController {
 
     @Autowired
     private SpecialistRepository specialistRepository;
+
+    @Autowired
+    private ChargeCalculationService feeService;
 
     /** 查询专家列表，支持多条件筛选 */
     @GetMapping
@@ -77,6 +81,21 @@ public class SpecialistController {
                     .body(Map.of("error", "Specialist not found: " + id));
         }
         return ResponseEntity.ok(specialist);
+    }
+
+    /** 获取某专家的预估咨询费用 */
+    @GetMapping("/{id}/fee")
+    public ResponseEntity<?> getBookingFee(@PathVariable Integer id) {
+        try {
+            BigDecimal fee = feeService.calculateCharge(Long.valueOf(id));
+            return ResponseEntity.ok(Map.of(
+                    "specialistId", id,
+                    "bookingFee", fee.toString()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to calculate fee: " + e.getMessage()));
+        }
     }
 
     /** 创建新专家 */
