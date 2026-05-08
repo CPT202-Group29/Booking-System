@@ -2,59 +2,173 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>My Profile</title>
+    <title>My Profile - Expert Booking System</title>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* 页面布局 - 统一侧边栏风格 */
+        body.portal-body { display: flex; min-height: 100vh; margin: 0; font-family: Arial, sans-serif; }
+        
+        /* 侧边栏 */
+        .portal-sidebar {
+            width: 240px;
+            background: #1e293b;
+            color: white;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .portal-sidebar h2 { 
+            color: white; 
+            text-align: center; 
+            margin-bottom: 30px; 
+            font-size: 1.2rem;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 15px;
+        }
+        .portal-sidebar nav { display: flex; flex-direction: column; }
+        .portal-sidebar nav a {
+            color: #cbd5e1;
+            text-decoration: none;
+            padding: 12px 20px;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+        .portal-sidebar nav a:hover, .portal-sidebar nav a.active {
+            background: #334155;
+            color: white;
+            border-left: 3px solid #3b82f6;
+        }
+        .portal-sidebar .sidebar-footer {
+            margin-top: auto;
+            padding: 20px;
+            border-top: 1px solid #334155;
+        }
+        
+        /* 主内容区 */
+        .portal-main {
+            flex: 1;
+            background: #f1f5f9;
+            padding: 30px;
+        }
+        .portal-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        /* 欢迎卡片 */
+        .welcome-card {
+            background: #e8f5e9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .welcome-card h3 { margin: 0; }
+        .welcome-card .quick-actions button {
+            margin-left: 10px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+            font-size: 0.9rem;
+        }
+        .btn-search { background: #3b82f6; }
+        .btn-bookings { background: #10b981; }
+        .btn-admin { background: #f59e0b; }
+        
+        /* Profile 原有样式 */
+        .avatar-preview { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background: #007bff; color: white; border: none; padding: 10px 16px; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; }
+        button:hover { opacity: 0.9; }
+        .message { margin-top: 15px; padding: 10px; border-radius: 4px; }
+        .error { background: #f8d7da; color: #721c24; }
+        .success { background: #d4edda; color: #155724; }
+    </style>
 </head>
-<body>
-    <div class="container">
-        <h2>My Profile</h2>
-        <div id="profileView">
-            <div style="text-align:center">
-                <img id="avatarImg" class="avatar-preview" src="" alt="Avatar">
-            </div>
-            <p><strong>Name:</strong> <span id="displayName"></span></p>
-            <p><strong>Email:</strong> <span id="displayEmail"></span> (read-only)</p>
-            <p><strong>Phone:</strong> <span id="displayPhone"></span></p>
-            <button id="editBtn">Edit Profile</button>
-            <button id="changePwdBtn">Change Password</button>
-            <button id="deleteAccountBtn" style="background:#dc3545;">Delete Account</button>
-            <button id="logoutBtn" style="background:#6c757d;">Logout</button>
+<body class="portal-body">
+    <!-- 侧边栏导航 -->
+    <aside class="portal-sidebar">
+        <h2>Expert Booking</h2>
+        <nav>
+            <a href="profile.html" class="active">My Profile</a>
+            <a href="specialist-list.html">Find a Specialist</a>
+            <a href="my-bookings.html">My Bookings</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="#" id="sidebarLogout" style="color:#cbd5e1; text-decoration:none;">Logout</a>
         </div>
-        <div id="editForm" style="display:none;">
-            <div class="form-group">
-                <label>Name</label>
-                <input type="text" id="editName">
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="portal-main">
+        <div class="portal-container">
+            <!-- 欢迎卡片 -->
+            <div class="welcome-card" id="welcomeCard">
+                <div>
+                    <h3>Welcome, <span id="welcomeName"></span>!</h3>
+                    <p style="margin:5px 0 0; color:#666;">What would you like to do today?</p>
+                </div>
+                <div class="quick-actions">
+                    <button class="btn-search" onclick="location.href='specialist-list.html'">Find a Specialist</button>
+                    <button class="btn-bookings" onclick="location.href='my-bookings.html'">My Bookings</button>
+                    <button class="btn-admin" onclick="location.href='admin-dashboard/index.html'" id="adminBtn" style="display:none;">Admin</button>
+                </div>
             </div>
-            <div class="form-group">
-                <label>Phone</label>
-                <input type="text" id="editPhone">
+
+            <!-- Profile 原有内容 -->
+            <h2>Profile Details</h2>
+            <div id="profileView">
+                <div style="text-align:center">
+                    <img id="avatarImg" class="avatar-preview" src="" alt="Avatar">
+                </div>
+                <p><strong>Name:</strong> <span id="displayName"></span></p>
+                <p><strong>Email:</strong> <span id="displayEmail"></span> (read-only)</p>
+                <p><strong>Phone:</strong> <span id="displayPhone"></span></p>
+                <button id="editBtn">Edit Profile</button>
+                <button id="changePwdBtn">Change Password</button>
+                <button id="deleteAccountBtn" style="background:#dc3545;">Delete Account</button>
             </div>
-            <div class="form-group">
-                <label>Upload Avatar</label>
-                <input type="file" id="avatarFile" accept="image/jpeg,image/png">
+            <div id="editForm" style="display:none;">
+                <div class="form-group"><label>Name</label><input type="text" id="editName"></div>
+                <div class="form-group"><label>Phone</label><input type="text" id="editPhone"></div>
+                <div class="form-group"><label>Upload Avatar</label><input type="file" id="avatarFile" accept="image/jpeg,image/png"></div>
+                <button id="saveBtn">Save</button>
+                <button id="cancelBtn" style="background:#6c757d; margin-top:10px;">Cancel</button>
             </div>
-            <button id="saveBtn">Save</button>
-            <button id="cancelBtn">Cancel</button>
+            <div id="changePwdForm" style="display:none;">
+                <div class="form-group"><label>Old Password</label><input type="password" id="oldPassword"></div>
+                <div class="form-group"><label>New Password</label><input type="password" id="newPassword"></div>
+                <div class="form-group"><label>Confirm New Password</label><input type="password" id="confirmNewPassword"></div>
+                <button id="submitPwdBtn">Confirm Change</button>
+                <button id="cancelPwdBtn" style="background:#6c757d; margin-top:10px;">Cancel</button>
+            </div>
+            <div id="message" class="message"></div>
         </div>
-        <div id="changePwdForm" style="display:none;">
-            <div class="form-group">
-                <label>Old Password</label>
-                <input type="password" id="oldPassword">
-            </div>
-            <div class="form-group">
-                <label>New Password</label>
-                <input type="password" id="newPassword">
-                <small>At least 6 characters, include letters and numbers</small>
-            </div>
-            <div class="form-group">
-                <label>Confirm New Password</label>
-                <input type="password" id="confirmNewPassword">
-            </div>
-            <button id="submitPwdBtn">Confirm Change</button>
-            <button id="cancelPwdBtn">Cancel</button>
-        </div>
-        <div id="message" class="message"></div>
-    </div>
+    </main>
     <script type="module" src="js/profile.js"></script>
+    <script>
+        // 显示欢迎名字和管理员按钮
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('welcomeName').textContent = user.username || user.email || 'User';
+        if (user.role === 'ADMIN') {
+            document.getElementById('adminBtn').style.display = 'inline-block';
+        }
+        // 侧边栏登出
+        document.getElementById('sidebarLogout').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.clear();
+            window.location.href = 'login.html';
+        });
+    </script>
 </body>
 </html>
