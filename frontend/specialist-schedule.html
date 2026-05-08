@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Schedule - Specialist</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        .booking-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+        .pagination button {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .pagination button.active {
+            background: #007bff;
+            color: white;
+        }
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>My Consultation Schedule</h2>
+        <div class="filter-bar">
+            <label>Status:</label>
+            <select id="statusFilter">
+                <option value="">All</option>
+                <option value="PENDING">Pending</option>
+                <option value="CONFIRMED">Confirmed</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="CANCELLED">Cancelled</option>
+            </select>
+            <label>From:</label>
+            <input type="date" id="dateFrom">
+            <label>To:</label>
+            <input type="date" id="dateTo">
+            <button id="applyFilterBtn">Apply</button>
+        </div>
+        <div id="scheduleList">Loading...</div>
+        <div class="pagination" id="pagination"></div>
+        <a href="index.html" style="margin-top:20px;display:inline-block;">← Back to Home</a>
+    </div>
+    <script type="module" src="js/specialist-schedule.js"></script>
+</body>
+</html>
