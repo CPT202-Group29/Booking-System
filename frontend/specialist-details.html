@@ -41,7 +41,7 @@
         <a href="specialist-list.html" class="back-btn">← Back to Specialists</a>
     </div>
     <script type="module">
-        import { getExpertById, getAvailableSlots, createBooking } from './js/api.js';
+        import { getSpecialistById, getAvailableSlots, createBooking } from './js/api.js';
 
         const urlParams = new URLSearchParams(window.location.search);
         const expertId = urlParams.get('id');
@@ -54,15 +54,16 @@
 
         async function loadExpert() {
             try {
-                expert = await getExpertById(expertId);
+                expert = await getSpecialistById(expertId);
+                const statusText = expert.statusText || (expert.status === 1 ? 'Available' : 'Unavailable');
                 document.getElementById('expertInfo').innerHTML = `
                     <div class="expert-card">
                         <h3>${expert.name}</h3>
                         <p><strong>Expertise:</strong> ${expert.expertise}</p>
                         <p><strong>Level:</strong> ${expert.level}</p>
                         <p><strong>Fee:</strong> $${expert.fee}/hour</p>
-                        <p><strong>Status:</strong> ${expert.status}</p>
-                        <p><strong>Contact:</strong> ${expert.email}</p>
+                        <p><strong>Status:</strong> ${statusText}</p>
+                        <p><strong>Contact:</strong> ${expert.contact || 'N/A'}</p>
                         <p><strong>Description:</strong> ${expert.description || 'N/A'}</p>
                     </div>
                 `;
@@ -85,7 +86,9 @@
                 slots.forEach(slot => {
                     const option = document.createElement('option');
                     option.value = slot.id;
-                    option.textContent = slot.display;
+                    const startTime = slot.startTime ? new Date(slot.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+                    const endTime = slot.endTime ? new Date(slot.endTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+                    option.textContent = `${startTime} - ${endTime}`;
                     timeSlotSelect.appendChild(option);
                 });
             } catch (err) {
@@ -95,21 +98,14 @@
 
         document.getElementById('bookingForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const customerId = localStorage.getItem('customerId');
-            if (!customerId) {
-                alert('Please login first');
-                window.location.href = 'login.html';
-                return;
-            }
-            const date = dateInput.value;
             const timeSlotId = timeSlotSelect.value;
             const topic = document.getElementById('topic').value.trim();
-            if (!date || !timeSlotId || !topic) {
+            if (!timeSlotId || !topic) {
                 alert('Please fill all fields');
                 return;
             }
             try {
-                await createBooking(parseInt(customerId), parseInt(expertId), parseInt(timeSlotId), topic);
+                await createBooking(parseInt(expertId), parseInt(timeSlotId), topic);
                 document.getElementById('message').innerHTML = '<div class="success">Booking created! Status: PENDING</div>';
                 setTimeout(() => window.location.href = 'my-bookings.html', 1500);
             } catch (err) {
