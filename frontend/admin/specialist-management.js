@@ -1,11 +1,11 @@
 // ===============================
 // Specialist Management - A2 Admin
-// Backend API: http://localhost:8080/api/v1/specialists
+// Backend API: http://121.196.221.244:8080/api/v1/specialists
 // ===============================
 
 let specialists = [];
 
-const SPECIALIST_API_URL = "http://localhost:8080/api/v1/specialists";
+const SPECIALIST_API_URL = "http://121.196.221.244:8080/api/v1/specialists";
 
 const specialistTableBody = document.getElementById("specialistTableBody");
 const specialistForm = document.getElementById("specialistForm");
@@ -99,7 +99,7 @@ async function loadSpecialists() {
     refreshView();
   } catch (error) {
     console.error("Specialist API Error:", error);
-    alert("Failed to load specialists from backend. Please check whether the backend is running on http://localhost:8080.");
+    alert("Failed to load specialists from backend. Please check whether the backend is running on http://121.196.221.244:8080.");
   }
 }
 
