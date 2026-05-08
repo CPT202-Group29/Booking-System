@@ -266,3 +266,54 @@ export async function rescheduleBooking(bookingId, newSlotId) {
     }
     return response.json();
 }
+// ========== Specialist APIs ==========
+export async function getSpecialistById(id) {
+    const response = await fetch(`${API_BASE}/api/v1/specialists/${id}`);
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to fetch specialist');
+    }
+    return response.json();
+}
+
+export async function getAvailableSlots(specialistId, date) {
+    const from = `${date}T00:00:00`;
+    const to = `${date}T23:59:59`;
+    const response = await fetch(
+        `${API_BASE}/api/v1/slots?specialistId=${specialistId}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`
+    );
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to fetch slots');
+    }
+    return response.json();
+}
+
+// ========== Booking Creation API ==========
+export async function createBooking(specialistId, timeSlotId, topic, notes = '') {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    if (!token || !userStr) throw new Error('Not authenticated');
+    const user = JSON.parse(userStr);
+    const customerId = user.userId || user.id;
+
+    const response = await fetch(`${API_BASE}/api/v1/bookings`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            customerId: customerId,
+            specialistId: specialistId,
+            timeSlotId: timeSlotId,
+            topic: topic,
+            notes: notes
+        })
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create booking');
+    }
+    return response.json();
+}
