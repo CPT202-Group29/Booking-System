@@ -106,4 +106,8 @@ public class Booking {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
+        /** Check if booking can be auto-expired (only PENDING and older than 24h). */
+    public boolean canExpire() {
+        return status == BookingStatus.PENDING;
+    }
 }
