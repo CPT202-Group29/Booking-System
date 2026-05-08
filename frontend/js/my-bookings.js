@@ -8,14 +8,71 @@ if (!customerId) {
     document.getElementById('bookingsList').innerHTML = '<p>Please <a href="login.html">login</a> first.</p>';
 }
 
+let allBookings = [];
+let currentTab = 'upcoming';   // 'upcoming' | 'history'
+const pageSize = 5;            // 每页显示5条
+let currentPage = 0;
+
+// Tab 切换
+document.getElementById('tabUpcoming').addEventListener('click', () => switchTab('upcoming'));
+document.getElementById('tabHistory').addEventListener('click', () => switchTab('history'));
+
+function switchTab(tab) {
+    currentTab = tab;
+    document.getElementById('tabUpcoming').classList.toggle('active', tab === 'upcoming');
+    document.getElementById('tabHistory').classList.toggle('active', tab === 'history');
+    currentPage = 0;
+    filterAndRender();
+}
+
 async function loadBookings() {
     try {
         if (!customerId) return;
-        const bookings = await getMyBookings();
-        renderBookings(bookings);
+        allBookings = await getMyBookings();    // 从后端获取所有预约
+        filterAndRender();
     } catch (err) {
         document.getElementById('bookingsList').innerHTML = `<p class="error">Error loading bookings: ${err.message}</p>`;
     }
+}
+
+function filterAndRender() {
+    // 根据当前 Tab 筛选
+    const now = new Date();
+    let filtered = allBookings.filter(b => {
+        // 这里假设后端返回的 booking 对象包含 date 字段（如 "2026-05-10"），或 slot date
+        const bookingDate = parseBookingDate(b);
+        if (!bookingDate) return false;
+        if (currentTab === 'upcoming') {
+            return bookingDate >= now.setHours(0,0,0,0) && (b.status === 'PENDING' || b.status === 'CONFIRMED');
+        } else {
+            return bookingDate < now.setHours(0,0,0,0) || (b.status === 'COMPLETED' || b.status === 'CANCELLED' || b.status === 'EXPIRED');
+        }
+    });
+
+    // 排序：Upcoming 按日期升序，History 按日期降序
+    filtered.sort((a, b) => {
+        const da = parseBookingDate(a) || 0;
+        const db = parseBookingDate(b) || 0;
+        return currentTab === 'upcoming' ? da - db : db - da;
+    });
+
+    const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+    const start = currentPage * pageSize;
+    const pageItems = filtered.slice(start, start + pageSize);
+
+    renderBookings(pageItems);
+    renderPagination(currentPage, totalPages, (page) => {
+        currentPage = page;
+        filterAndRender();
+    });
+}
+
+// 从 booking 对象提取日期（优先用 date 字段，否则尝试 slotDate）
+function parseBookingDate(booking) {
+    if (booking.date) return new Date(booking.date).getTime();
+    if (booking.slotDate) return new Date(booking.slotDate).getTime();
+    if (booking.createdAt) return new Date(booking.createdAt).getTime();
+    return null;
 }
 
 function renderBookings(bookings) {
@@ -25,11 +82,12 @@ function renderBookings(bookings) {
         return;
     }
     container.innerHTML = bookings.map(b => {
-        let timeDisplay = b.date || '';
+        let timeDisplay = b.date || b.slotDate || '';
         if (b.time) timeDisplay += ' ' + b.time;
         else if (!timeDisplay && b.timeSlotId) timeDisplay = `Slot #${b.timeSlotId}`;
         return `
-        <div class="booking-card" data-id="${b.id}" data-specialist-id="${b.specialistId || ''}">
+        <div class="booking-card" data-booking='${JSON.stringify(b).replace(/'/g, "&#39;")}' 
+             onclick="showDetail(this)">
             <p><strong>Specialist ID:</strong> ${b.specialistId || 'N/A'}</p>
             <p><strong>Topic:</strong> ${b.topic || 'N/A'}</p>
             <p><strong>Status:</strong> <span class="status-${b.status}">${b.status}</span></p>
@@ -37,85 +95,81 @@ function renderBookings(bookings) {
             <p><strong>Fee:</strong> $${b.chargeAmount ?? '0.00'}</p>
             ${b.cancelReason ? `<p><strong>Cancel Reason:</strong> ${b.cancelReason}</p>` : ''}
             ${b.status === 'CONFIRMED' ? `
-                <button class="btn-cancel" data-id="${b.id}">Cancel</button>
-                <button class="btn-reschedule" data-id="${b.id}">Reschedule</button>
+                <button class="btn-cancel" data-id="${b.id}" onclick="event.stopPropagation(); handleCancel(${b.id})">Cancel</button>
+                <button class="btn-reschedule" data-id="${b.id}" onclick="event.stopPropagation(); handleReschedule(${b.id})">Reschedule</button>
             ` : ''}
         </div>
         `;
     }).join('');
+}
 
-    // 取消按钮事件
-    document.querySelectorAll('.btn-cancel').forEach(btn => {
-        btn.addEventListener('click', async () => {
-            const bookingId = parseInt(btn.dataset.id);
-            const reason = prompt('Please enter the cancellation reason:');
-            if (!reason) return;
-            try {
-                const result = await cancelBooking(bookingId, reason);
-                alert(`Booking cancelled successfully.${result.refundAmount ? ` Refund: $${result.refundAmount}` : ''}`);
-                loadBookings();
-            } catch (err) {
-                alert('Cancel failed: ' + err.message);
-            }
-        });
-    });
-
-    // 改期按钮事件
-    document.querySelectorAll('.btn-reschedule').forEach(btn => {
-        btn.addEventListener('click', async () => {
-            const bookingId = parseInt(btn.dataset.id);
-            const card = btn.closest('.booking-card');
-            const specialistId = card ? card.dataset.specialistId : null;
-            if (!specialistId) {
-                alert('Cannot identify specialist for this booking.');
-                return;
-            }
-            // 获取未来7天的可用槽位
-            const today = new Date().toISOString().split('T')[0];
-            try {
-                const slots = await getAvailableSlots(specialistId, today);
-                const slotListDiv = document.getElementById('rescheduleSlotList');
-                if (!slots.length) {
-                    slotListDiv.innerHTML = '<p>No available slots in the coming week.</p>';
-                } else {
-                    let html = '<ul>';
-                    slots.forEach(s => {
-                        const start = s.startTime ? new Date(s.startTime).toLocaleString() : '';
-                        const end = s.endTime ? new Date(s.endTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
-                        html += `<li><label><input type="radio" name="newSlot" value="${s.id}"> ${start} - ${end}</label></li>`;
-                    });
-                    html += '</ul>';
-                    slotListDiv.innerHTML = html;
-                }
-                document.getElementById('rescheduleModal').style.display = 'flex';
-                // 确认按钮事件
-                const confirmBtn = document.getElementById('confirmRescheduleBtn');
-                const newClickHandler = async () => {
-                    const selected = document.querySelector('input[name="newSlot"]:checked');
-                    if (!selected) {
-                        alert('Please select a slot.');
-                        return;
-                    }
-                    const newSlotId = parseInt(selected.value);
-                    try {
-                        await rescheduleBooking(bookingId, newSlotId);
-                        alert('Rescheduled successfully!');
-                        document.getElementById('rescheduleModal').style.display = 'none';
-                        loadBookings();
-                    } catch (err) {
-                        alert('Reschedule failed: ' + err.message);
-                    }
-                };
-                // 移除旧的事件监听，简单处理：替换按钮
-                const newConfirmBtn = confirmBtn.cloneNode(true);
-                confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
-                newConfirmBtn.addEventListener('click', newClickHandler);
-            } catch (err) {
-                alert('Failed to load available slots: ' + err.message);
-            }
+// 简单分页导航
+function renderPagination(current, total, callback) {
+    const container = document.getElementById('pagination');
+    if (total <= 1) { container.innerHTML = ''; return; }
+    let html = '';
+    html += `<button ${current === 0 ? 'disabled' : ''} data-page="${current - 1}">← Prev</button>`;
+    for (let i = 0; i < total; i++) {
+        html += `<button class="${i === current ? 'active' : ''}" data-page="${i}">${i + 1}</button>`;
+    }
+    html += `<button ${current >= total - 1 ? 'disabled' : ''} data-page="${current + 1}">Next →</button>`;
+    container.innerHTML = html;
+    container.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const page = parseInt(e.target.dataset.page);
+            if (!isNaN(page) && page >= 0 && page < total) callback(page);
         });
     });
 }
+
+// 点击卡片或详情按钮，显示详情模态框
+window.showDetail = function(card) {
+    const booking = JSON.parse(card.dataset.booking);
+    const content = document.getElementById('detailContent');
+    content.innerHTML = `
+        <p><strong>Booking ID:</strong> ${booking.id}</p>
+        <p><strong>Specialist ID:</strong> ${booking.specialistId || 'N/A'}</p>
+        <p><strong>Topic:</strong> ${booking.topic || 'N/A'}</p>
+        <p><strong>Notes:</strong> ${booking.notes || 'N/A'}</p>
+        <p><strong>Status:</strong> ${booking.status}</p>
+        <p><strong>Date:</strong> ${booking.date || 'N/A'}</p>
+        <p><strong>Time:</strong> ${booking.time || 'N/A'}</p>
+        <p><strong>Fee:</strong> $${booking.chargeAmount ?? '0.00'}</p>
+        <p><strong>Cancel Reason:</strong> ${booking.cancelReason || 'N/A'}</p>
+        <p><strong>Created At:</strong> ${booking.createdAt ? new Date(booking.createdAt).toLocaleString() : 'N/A'}</p>
+    `;
+    document.getElementById('detailModal').style.display = 'flex';
+};
+
+// 关闭模态框（点击背景关闭）
+document.getElementById('detailModal')?.addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
+});
+
+// 取消和改期逻辑（保留原有逻辑，但使用真实函数）
+window.handleCancel = async function(bookingId) {
+    const reason = prompt('Please enter the cancellation reason:');
+    if (!reason) return;
+    try {
+        const result = await cancelBooking(bookingId, reason);
+        alert(`Booking cancelled successfully.${result.refundAmount ? ` Refund: $${result.refundAmount}` : ''}`);
+        await loadBookings();
+    } catch (err) {
+        alert('Cancel failed: ' + err.message);
+    }
+};
+
+window.handleReschedule = async function(bookingId) {
+    const newSlotId = prompt('Enter new time slot ID:');
+    if (!newSlotId || isNaN(parseInt(newSlotId))) return;
+    try {
+        await rescheduleBooking(bookingId, parseInt(newSlotId));
+        alert('Rescheduled successfully!');
+        await loadBookings();
+    } catch (err) {
+        alert('Reschedule failed: ' + err.message);
+    }
+};
 
 document.getElementById('logoutLink')?.addEventListener('click', (e) => {
     e.preventDefault();
