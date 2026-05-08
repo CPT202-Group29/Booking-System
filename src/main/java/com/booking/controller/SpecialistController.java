@@ -2,6 +2,7 @@ package com.booking.controller;
 
 import com.booking.entity.Specialist;
 import com.booking.repository.SpecialistRepository;
+import com.booking.repository.TimeSlotRepository;
 import com.booking.service.ChargeCalculationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,8 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -26,17 +27,23 @@ public class SpecialistController {
     @Autowired
     private ChargeCalculationService feeService;
 
-    /** 查询专家列表，支持多条件筛选 */
+    @Autowired
+    private TimeSlotRepository timeSlotRepository;
+
+    /** 查询专家列表，支持多条件筛选 + 分页 + 时间段可用性过滤 */
     @GetMapping
-    public ResponseEntity<List<Specialist>> getAllSpecialists(
+    public ResponseEntity<Map<String, Object>> getAllSpecialists(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String expertise,
             @RequestParam(required = false) String level,
             @RequestParam(required = false) Integer status,
             @RequestParam(required = false) BigDecimal minFee,
-            @RequestParam(required = false) BigDecimal maxFee) {
+            @RequestParam(required = false) BigDecimal maxFee,
+            @RequestParam(required = false) String availableFrom,
+            @RequestParam(required = false) String availableTo,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
-        // 使用 QBE (Query By Example) 进行基础匹配
         Specialist probe = new Specialist();
         probe.setExpertise(expertise);
         probe.setLevel(level);
@@ -45,10 +52,9 @@ public class SpecialistController {
         ExampleMatcher matcher = ExampleMatcher.matching()
                 .withIgnorePaths("id", "fee", "contact", "description");
 
-        // 如果有 name 参数，启用模糊匹配（忽略大小写，包含即可）
         if (name != null && !name.isEmpty()) {
             probe.setName(name);
-            matcher = matcher.withMatcher("name", 
+            matcher = matcher.withMatcher("name",
                     ExampleMatcher.GenericPropertyMatchers.contains().ignoreCase());
         } else {
             matcher = matcher.withIgnorePaths("name");
@@ -57,7 +63,7 @@ public class SpecialistController {
         Example<Specialist> example = Example.of(probe, matcher);
         List<Specialist> results = specialistRepository.findAll(example);
 
-        // 手动过滤费用范围（QBE 不支持范围查询）
+        // 费用范围过滤
         if (minFee != null || maxFee != null) {
             results = results.stream()
                     .filter(s -> {
@@ -69,7 +75,38 @@ public class SpecialistController {
                     .collect(Collectors.toList());
         }
 
-        return ResponseEntity.ok(results);
+        // 时间段可用性过滤
+        if (availableFrom != null && !availableFrom.isEmpty() && availableTo != null && !availableTo.isEmpty()) {
+            try {
+                LocalDateTime from = LocalDateTime.parse(availableFrom);
+                LocalDateTime to = LocalDateTime.parse(availableTo);
+                List<Long> availableIds = timeSlotRepository
+                        .findSpecialistIdsWithAvailableSlotInRange(from, to);
+                Set<Long> idSet = new HashSet<>(availableIds);
+                results = results.stream()
+                        .filter(s -> idSet.contains(Long.valueOf(s.getId())))
+                        .collect(Collectors.toList());
+            } catch (Exception e) {
+                // 日期解析失败时忽略该筛选条件
+            }
+        }
+
+        // 手动分页
+        int totalElements = results.size();
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        int fromIndex = page * size;
+        int toIndex = Math.min(fromIndex + size, totalElements);
+        List<Specialist> pageContent = (fromIndex < totalElements)
+                ? results.subList(fromIndex, toIndex)
+                : new ArrayList<>();
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("content", pageContent);
+        response.put("totalElements", totalElements);
+        response.put("totalPages", totalPages);
+        response.put("currentPage", page);
+        response.put("pageSize", size);
+        return ResponseEntity.ok(response);
     }
 
     /** 根据 ID 查询单个专家 */
@@ -124,9 +161,9 @@ public class SpecialistController {
         return ResponseEntity.ok(specialistRepository.save(specialist));
     }
 
-    /** 修改专家状态（可用/不可用） */
+    /** 修改专家状态 */
     @PatchMapping("/{id}/status")
-    public ResponseEntity<?> updateStatus(@PathVariable Integer id, 
+    public ResponseEntity<?> updateStatus(@PathVariable Integer id,
                                           @RequestBody Map<String, Object> body) {
         Specialist specialist = specialistRepository.findById(id).orElse(null);
         if (specialist == null) {
