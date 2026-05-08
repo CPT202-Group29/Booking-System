@@ -17,7 +17,7 @@ public class SlotController {
     @Autowired
     private TimeSlotRepository timeSlotRepository;
 
-    /** 创建时间段 */
+    /** 创建时间段（含重叠检测） */
     @PostMapping
     public ResponseEntity<?> createSlot(@RequestBody TimeSlot slot) {
         if (slot.getStartTime() == null || slot.getEndTime() == null) {
@@ -29,11 +29,16 @@ public class SlotController {
         if (slot.getSpecialistId() == null) {
             return ResponseEntity.badRequest().body(Map.of("error", "Specialist ID is required"));
         }
+        // 重叠检测
+        if (timeSlotRepository.existsOverlappingSlot(slot.getSpecialistId(), slot.getStartTime(), slot.getEndTime())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", "Time slot overlaps with an existing slot for this specialist"));
+        }
         slot.setIsAvailable(true);
         return ResponseEntity.status(HttpStatus.CREATED).body(timeSlotRepository.save(slot));
     }
 
-    /** 更新时间段 */
+    /** 更新时间段（含重叠检测，排除自身） */
     @PutMapping("/{id}")
     public ResponseEntity<?> updateSlot(@PathVariable Long id, @RequestBody TimeSlot updates) {
         Optional<TimeSlot> existing = timeSlotRepository.findById(id);
@@ -46,9 +51,16 @@ public class SlotController {
         if (updates.getEndTime() != null) slot.setEndTime(updates.getEndTime());
         if (updates.getSpecialistId() != null) slot.setSpecialistId(updates.getSpecialistId());
         if (updates.getIsAvailable() != null) slot.setIsAvailable(updates.getIsAvailable());
+
         if (slot.getStartTime() != null && slot.getEndTime() != null &&
                 !slot.getStartTime().isBefore(slot.getEndTime())) {
             return ResponseEntity.badRequest().body(Map.of("error", "Start time must be before end time"));
+        }
+        // 重叠检测（排除自身）
+        if (timeSlotRepository.existsOverlappingSlotExcludingId(
+                slot.getSpecialistId(), slot.getStartTime(), slot.getEndTime(), id)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", "Updated time slot overlaps with another existing slot"));
         }
         return ResponseEntity.ok(timeSlotRepository.save(slot));
     }
