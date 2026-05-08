@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,7 +20,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("SELECT b FROM Booking b WHERE b.id = :id")
     Optional<Booking> findByIdWithLock(@Param("id") Long id);
 
-    List<Booking> findByCustomerIdOrderByCreatedAtDesc(Integer customerId);   // 改为 Integer
+    List<Booking> findByCustomerIdOrderByCreatedAtDesc(Integer customerId);
 
     List<Booking> findBySpecialistIdOrderByCreatedAtDesc(Long specialistId);
 
@@ -35,4 +36,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findByStatus(@Param("status") BookingStatus status);
 
     List<Booking> findAllByOrderByCreatedAtDesc();
+
+    /** 查询创建时间超过24小时且仍为 PENDING 的预约，用于自动过期 */
+    @Query("SELECT b FROM Booking b WHERE b.status = 'PENDING' AND b.createdAt < :cutoff")
+    List<Booking> findPendingBookingsOlderThan(@Param("cutoff") LocalDateTime cutoff);
 }
