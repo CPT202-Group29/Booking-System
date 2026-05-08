@@ -4,163 +4,72 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Find a Specialist</title>
-    <link rel="stylesheet" href="css/style.css">
     <style>
-        .search-bar {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            align-items: flex-end;
-        }
-        .search-bar > div {
-            display: flex;
-            flex-direction: column;
-            min-width: 100px;
-        }
-        .search-bar label {
-            font-size: 0.8em;
-            color: #666;
-            margin-bottom: 2px;
-        }
-        .search-bar input, .search-bar select {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            flex: 1;
-        }
-        .search-bar button {
-            padding: 8px 14px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            white-space: nowrap;
-            height: 38px;
-        }
-        .search-bar button.clear-btn {
-            background: #6c757d;
-        }
-        .search-bar button.save-btn {
-            background: #17a2b8;
-        }
-        .search-bar button.load-btn {
-            background: #28a745;
-        }
-        .specialist-card {
-            border: 1px solid #ddd;
-            padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            background: #fafafa;
-        }
-        .specialist-card h3 { margin: 0 0 10px 0; }
-        .specialist-card p { margin: 5px 0; }
-        .badge-available { color: green; font-weight: bold; }
-        .badge-unavailable { color: red; font-weight: bold; }
-        .view-btn {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 6px 12px;
-            background: #28a745;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-        }
-        .pagination {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-        .pagination button {
-            padding: 6px 12px;
-            border: 1px solid #ddd;
-            background: white;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-        .pagination button.active {
-            background: #007bff;
-            color: white;
-            border-color: #007bff;
-        }
-        .pagination button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        .pagination span {
-            padding: 6px 8px;
-            color: #666;
-        }
+        body { display: flex; min-height: 100vh; margin: 0; font-family: Arial, sans-serif; }
+        .sidebar { width: 240px; background: #1e293b; color: white; padding: 20px 0; }
+        .sidebar h2 { color: white; text-align: center; margin-bottom: 30px; font-size: 1.2rem; border-bottom: 1px solid #334155; padding-bottom: 15px; }
+        .sidebar nav { display: flex; flex-direction: column; }
+        .sidebar nav a { color: #cbd5e1; text-decoration: none; padding: 12px 20px; }
+        .sidebar nav a:hover, .sidebar nav a.active { background: #334155; color: white; border-left: 3px solid #3b82f6; }
+        .main { flex: 1; background: #f1f5f9; padding: 30px; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .search-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: flex-end; }
+        .search-bar > div { display: flex; flex-direction: column; min-width: 100px; }
+        .search-bar label { font-size: 0.8em; color: #666; margin-bottom: 2px; }
+        .search-bar input, .search-bar select { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .search-bar button { padding: 8px 14px; border: none; border-radius: 4px; cursor: pointer; color: white; height: 38px; }
+        .btn-search { background: #3b82f6; }
+        .btn-clear { background: #6b7280; }
+        .btn-save { background: #10b981; }
+        .btn-load { background: #f59e0b; }
+        .specialist-card { border: 1px solid #e5e7eb; padding: 16px; margin-bottom: 12px; border-radius: 8px; background: #f9fafb; display: flex; justify-content: space-between; align-items: center; }
+        .specialist-card h3 { margin: 0 0 8px 0; }
+        .specialist-card p { margin: 4px 0; color: #6b7280; }
+        .badge-available { color: #059669; font-weight: 600; }
+        .badge-unavailable { color: #dc2626; font-weight: 600; }
+        .view-btn { display: inline-block; padding: 8px 16px; background: #3b82f6; color: white; text-decoration: none; border-radius: 4px; font-size: 0.9rem; }
+        .view-btn:hover { background: #2563eb; }
+        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 20px; }
+        .pagination button { padding: 6px 12px; border: 1px solid #d1d5db; background: white; cursor: pointer; border-radius: 4px; }
+        .pagination button.active { background: #3b82f6; color: white; border-color: #3b82f6; }
+        .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Find a Specialist</h2>
-        <div class="search-bar">
-            <div>
-                <label>Name</label>
-                <input type="text" id="searchName" placeholder="Search by name...">
+    <aside class="sidebar">
+        <h2>Expert Booking</h2>
+        <nav>
+            <a href="profile.html">My Profile</a>
+            <a href="specialist-list.html" class="active">Find a Specialist</a>
+            <a href="my-bookings.html">My Bookings</a>
+            <a href="#" onclick="localStorage.clear();location.href='login.html'" style="margin-top:auto;border-top:1px solid #334155;padding-top:15px;margin-top:20px;">Logout</a>
+        </nav>
+    </aside>
+    <main class="main">
+        <div class="container">
+            <h2 style="margin-top:0;">Find a Specialist</h2>
+            <div class="search-bar">
+                <div><label>Name</label><input type="text" id="searchName" placeholder="Search by name..."></div>
+                <div><label>Expertise</label><select id="searchExpertise"><option value="">All</option></select></div>
+                <div><label>Level</label><select id="searchLevel"><option value="">All</option><option value="Junior">Junior</option><option value="Intermediate">Intermediate</option><option value="Senior">Senior</option></select></div>
+                <div><label>Status</label><select id="searchStatus"><option value="">All</option><option value="1">Available</option><option value="0">Unavailable</option></select></div>
+                <div><label>Min Fee</label><input type="number" id="searchMinFee" placeholder="0" style="width:80px;"></div>
+                <div><label>Max Fee</label><input type="number" id="searchMaxFee" placeholder="999" style="width:80px;"></div>
+                <div><label>Date</label><input type="date" id="searchDate"></div>
+                <div><label>Time From</label><input type="time" id="searchTimeFrom"></div>
+                <div><label>Time To</label><input type="time" id="searchTimeTo"></div>
+                <button class="btn-search" id="searchBtn">Search</button>
+                <button class="btn-clear" id="clearBtn">Clear All</button>
+                <button class="btn-save" id="savePrefBtn">Save</button>
+                <button class="btn-load" id="loadPrefBtn">Load</button>
             </div>
-            <div>
-                <label>Expertise</label>
-                <select id="searchExpertise"><option value="">All</option></select>
-            </div>
-            <div>
-                <label>Level</label>
-                <select id="searchLevel">
-                    <option value="">All</option>
-                    <option value="Junior">Junior</option>
-                    <option value="Intermediate">Intermediate</option>
-                    <option value="Senior">Senior</option>
-                </select>
-            </div>
-            <div>
-                <label>Status</label>
-                <select id="searchStatus">
-                    <option value="">All</option>
-                    <option value="1">Available</option>
-                    <option value="0">Unavailable</option>
-                </select>
-            </div>
-            <div>
-                <label>Min Fee</label>
-                <input type="number" id="searchMinFee" placeholder="0" min="0" style="width:80px;">
-            </div>
-            <div>
-                <label>Max Fee</label>
-                <input type="number" id="searchMaxFee" placeholder="999" min="0" style="width:80px;">
-            </div>
-            <div>
-                <label>Date</label>
-                <input type="date" id="searchDate">
-            </div>
-            <div>
-                <label>Time From</label>
-                <input type="time" id="searchTimeFrom" step="1800">
-            </div>
-            <div>
-                <label>Time To</label>
-                <input type="time" id="searchTimeTo" step="1800">
-            </div>
-            <button id="searchBtn">Search</button>
-            <button id="clearBtn" class="clear-btn">Clear All</button>
-            <button id="savePrefBtn" class="save-btn">Save</button>
-            <button id="loadPrefBtn" class="load-btn">Load</button>
+            <div id="specialistList">Loading specialists...</div>
+            <div class="pagination" id="pagination"></div>
         </div>
-        <div id="specialistList">Loading specialists...</div>
-        <div class="pagination" id="pagination"></div>
-    </div>
-
+    </main>
     <script type="module">
         const API_BASE = 'http://121.196.221.244:8080';
-        let currentPage = 0;
-        let totalPages = 1;
-        const pageSize = 10;
-
+        let currentPage = 0, totalPages = 1, pageSize = 10;
         function getFilters() {
             return {
                 name: document.getElementById('searchName').value.trim(),
@@ -174,7 +83,6 @@
                 timeTo: document.getElementById('searchTimeTo').value
             };
         }
-
         async function loadSpecialists(page = 0) {
             const f = getFilters();
             const params = new URLSearchParams();
@@ -190,7 +98,6 @@
             }
             params.append('page', page);
             params.append('size', pageSize);
-
             try {
                 const response = await fetch(`${API_BASE}/api/v1/specialists?${params.toString()}`);
                 if (!response.ok) throw new Error('Failed to fetch specialists');
@@ -201,49 +108,40 @@
                 renderSpecialists(specialists);
                 renderPagination(currentPage, totalPages);
             } catch (err) {
-                document.getElementById('specialistList').innerHTML = `<p class="error">Failed to load: ${err.message}</p>`;
+                document.getElementById('specialistList').innerHTML = '<p style="color:red;">Failed to load specialists.</p>';
             }
         }
-
         function renderSpecialists(list) {
             const container = document.getElementById('specialistList');
             if (!list || list.length === 0) {
-                container.innerHTML = '<p>No specialists found.</p>';
+                container.innerHTML = '<p style="text-align:center;color:#6b7280;">No specialists found.</p>';
                 return;
             }
             container.innerHTML = list.map(s => {
                 const statusText = s.statusText || (s.status === 1 ? 'Available' : 'Unavailable');
-                const statusClass = s.status === 1 ? 'badge-available' : 'badge-unavailable';
                 return `
                     <div class="specialist-card">
-                        <h3>${s.name}</h3>
-                        <p><strong>Expertise:</strong> ${s.expertise}</p>
-                        <p><strong>Level:</strong> ${s.level}</p>
-                        <p><strong>Fee:</strong> $${s.fee}/hour</p>
-                        <p><strong>Status:</strong> <span class="${statusClass}">${statusText}</span></p>
+                        <div>
+                            <h3>${s.name}</h3>
+                            <p>Expertise: ${s.expertise} | Level: ${s.level} | Fee: $${s.fee}/hour</p>
+                            <p>Status: <span class="${s.status === 1 ? 'badge-available' : 'badge-unavailable'}">${statusText}</span></p>
+                        </div>
                         <a href="specialist-details.html?id=${s.id}" class="view-btn">View & Book</a>
                     </div>
                 `;
             }).join('');
         }
-
         function renderPagination(current, total) {
             const container = document.getElementById('pagination');
             if (total <= 1) { container.innerHTML = ''; return; }
-            let html = '';
-            html += `<button ${current === 0 ? 'disabled' : ''} onclick="goToPage(${current - 1})">← Prev</button>`;
+            let html = `<button ${current === 0 ? 'disabled' : ''} onclick="goToPage(${current - 1})">← Prev</button>`;
             for (let i = 0; i < total; i++) {
                 html += `<button class="${i === current ? 'active' : ''}" onclick="goToPage(${i})">${i + 1}</button>`;
             }
             html += `<button ${current >= total - 1 ? 'disabled' : ''} onclick="goToPage(${current + 1})">Next →</button>`;
-            html += `<span>Page ${current + 1} of ${total}</span>`;
             container.innerHTML = html;
         }
-
-        window.goToPage = function(page) {
-            loadSpecialists(page);
-        };
-
+        window.goToPage = function(page) { loadSpecialists(page); };
         async function loadExpertiseOptions() {
             try {
                 const resp = await fetch(`${API_BASE}/api/v1/expertise`);
@@ -258,29 +156,15 @@
                 });
             } catch (err) { console.error('Failed to load expertise:', err); }
         }
-
-        // 搜索按钮
         document.getElementById('searchBtn').addEventListener('click', () => loadSpecialists(0));
-        // 清除按钮
         document.getElementById('clearBtn').addEventListener('click', () => {
-            document.getElementById('searchName').value = '';
-            document.getElementById('searchExpertise').value = '';
-            document.getElementById('searchLevel').value = '';
-            document.getElementById('searchStatus').value = '';
-            document.getElementById('searchMinFee').value = '';
-            document.getElementById('searchMaxFee').value = '';
-            document.getElementById('searchDate').value = '';
-            document.getElementById('searchTimeFrom').value = '';
-            document.getElementById('searchTimeTo').value = '';
+            document.querySelectorAll('.search-bar input, .search-bar select').forEach(el => el.value = '');
             loadSpecialists(0);
         });
-        // 保存偏好
         document.getElementById('savePrefBtn').addEventListener('click', () => {
-            const prefs = getFilters();
-            localStorage.setItem('searchPreferences', JSON.stringify(prefs));
+            localStorage.setItem('searchPreferences', JSON.stringify(getFilters()));
             alert('Search preferences saved!');
         });
-        // 加载偏好
         document.getElementById('loadPrefBtn').addEventListener('click', () => {
             const stored = localStorage.getItem('searchPreferences');
             if (!stored) { alert('No saved preferences exist.'); return; }
@@ -296,7 +180,6 @@
             document.getElementById('searchTimeTo').value = prefs.timeTo || '';
             loadSpecialists(0);
         });
-
         loadExpertiseOptions();
         loadSpecialists(0);
     </script>
