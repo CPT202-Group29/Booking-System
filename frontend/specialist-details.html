@@ -14,7 +14,7 @@
         .error { color: red; }
         .success { color: green; }
         .back-btn { display: inline-block; margin-top: 20px; }
-        .fee-info { background: #e8f5e9; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .fee-info { background: #e8f5e9; padding: 10px; border-radius: 4px; margin: 10px 0; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -22,7 +22,7 @@
         <h2>Specialist Details</h2>
         <div id="expertInfo">Loading...</div>
         <form id="bookingForm" style="display:none;">
-            <div class="fee-info" id="feeDisplay"></div>
+            <div class="fee-info" id="feeDisplay">Calculating fee...</div>
             <div class="form-group">
                 <label>Date</label>
                 <input type="date" id="date" required>
@@ -47,7 +47,7 @@
         <a href="specialist-list.html" class="back-btn">← Back to Specialists</a>
     </div>
     <script type="module">
-        import { getSpecialistById, getAvailableSlots, createBooking } from './js/api.js';
+        import { getSpecialistById, getAvailableSlots, createBooking, getBookingFee } from './js/api.js';
 
         const urlParams = new URLSearchParams(window.location.search);
         const expertId = urlParams.get('id');
@@ -57,7 +57,6 @@
         }
 
         let expert = null;
-        const CONSULTATION_FEE = 50.00; // Fixed flat rate as defined in ChargeCalculationService
 
         async function loadExpert() {
             try {
@@ -74,9 +73,11 @@
                         <p><strong>Description:</strong> ${expert.description || 'N/A'}</p>
                     </div>
                 `;
-                // Show the fixed consultation fee
-                document.getElementById('feeDisplay').innerHTML = `<strong>Consultation Fee:</strong> $${CONSULTATION_FEE.toFixed(2)} (flat rate per session)`;
                 document.getElementById('bookingForm').style.display = 'block';
+
+                // 获取并显示预估费用
+                const bookingFee = await getBookingFee(expertId);
+                document.getElementById('feeDisplay').innerHTML = `Consultation Fee: <strong>$${bookingFee}</strong> (based on specialist level)`;
             } catch (err) {
                 document.getElementById('expertInfo').innerHTML = `<p class="error">Failed to load expert: ${err.message}</p>`;
             }
@@ -116,7 +117,7 @@
             }
             try {
                 const booking = await createBooking(parseInt(expertId), parseInt(timeSlotId), topic, notes);
-                document.getElementById('message').innerHTML = `<div class="success">Booking created! Status: PENDING, Fee: $${booking.chargeAmount || CONSULTATION_FEE.toFixed(2)}</div>`;
+                document.getElementById('message').innerHTML = `<div class="success">Booking created! Status: PENDING, Fee: $${booking.chargeAmount}</div>`;
                 setTimeout(() => window.location.href = 'my-bookings.html', 1500);
             } catch (err) {
                 document.getElementById('message').innerHTML = `<div class="error">${err.message}</div>`;
