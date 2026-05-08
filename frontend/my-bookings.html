@@ -5,20 +5,34 @@
     <title>My Bookings</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
-        .status-PENDING { color: #f0ad4e; }
-        .status-CONFIRMED { color: #5bc0de; }
-        .status-COMPLETED { color: #5cb85c; }
-        .status-CANCELLED { color: #d9534f; }
+        .status-PENDING { color: #f0ad4e; font-weight: bold; }
+        .status-CONFIRMED { color: #5bc0de; font-weight: bold; }
+        .status-COMPLETED { color: #5cb85c; font-weight: bold; }
+        .status-CANCELLED { color: #d9534f; font-weight: bold; }
+        .status-EXPIRED { color: #999; font-weight: bold; }
         .booking-card {
             border: 1px solid #ddd;
             margin-bottom: 15px;
             padding: 15px;
             border-radius: 8px;
+            background: #fafafa;
         }
-        .btn-cancel, .btn-reschedule {
-            margin-right: 10px;
+        .btn-cancel {
+            background: #d9534f;
+            color: white;
+            border: none;
             padding: 5px 10px;
             cursor: pointer;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .btn-reschedule {
+            background: #f0ad4e;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 4px;
         }
     </style>
 </head>
@@ -27,7 +41,7 @@
         <h2>My Bookings</h2>
         <div id="bookingsList">Loading...</div>
         <div class="nav-links">
-            <a href="specialist-list.html">specialist-list.html</a> |
+            <a href="specialist-list.html">Find a Specialist</a> |
             <a href="profile.html">My Profile</a> |
             <a href="#" id="logoutLink">Logout</a>
         </div>
