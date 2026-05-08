@@ -12,13 +12,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Repository for time slot data access.
- */
 @Repository
 public interface TimeSlotRepository extends JpaRepository<TimeSlot, Long> {
 
-    /** Find time slot with pessimistic lock for concurrency-safe booking. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT t FROM TimeSlot t WHERE t.id = :id")
     Optional<TimeSlot> findByIdWithLock(@Param("id") Long id);
@@ -37,7 +33,6 @@ public interface TimeSlotRepository extends JpaRepository<TimeSlot, Long> {
 
     List<TimeSlot> findByIdIn(List<Long> ids);
 
-    /** Check if a slot exists that overlaps with the given time range for a specialist. */
     @Query("SELECT COUNT(t) > 0 FROM TimeSlot t WHERE t.specialistId = :specialistId " +
            "AND t.isAvailable = true " +
            "AND t.startTime < :endTime AND t.endTime > :startTime")
@@ -45,7 +40,6 @@ public interface TimeSlotRepository extends JpaRepository<TimeSlot, Long> {
                                    @Param("startTime") LocalDateTime startTime,
                                    @Param("endTime") LocalDateTime endTime);
 
-    /** Check if a slot exists that overlaps with the given time range, excluding a specific slot ID (used for updates). */
     @Query("SELECT COUNT(t) > 0 FROM TimeSlot t WHERE t.specialistId = :specialistId " +
            "AND t.id <> :excludeId " +
            "AND t.isAvailable = true " +
@@ -54,4 +48,13 @@ public interface TimeSlotRepository extends JpaRepository<TimeSlot, Long> {
                                               @Param("startTime") LocalDateTime startTime,
                                               @Param("endTime") LocalDateTime endTime,
                                               @Param("excludeId") Long excludeId);
+
+    /** 查询在指定时间段内至少有一个可用槽位的所有专家 ID */
+    @Query("SELECT DISTINCT t.specialistId FROM TimeSlot t " +
+           "WHERE t.isAvailable = true " +
+           "AND t.startTime <= :customerEnd " +
+           "AND t.endTime >= :customerStart")
+    List<Long> findSpecialistIdsWithAvailableSlotInRange(
+            @Param("customerStart") LocalDateTime customerStart,
+            @Param("customerEnd") LocalDateTime customerEnd);
 }
