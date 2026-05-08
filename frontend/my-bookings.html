@@ -34,6 +34,29 @@
             cursor: pointer;
             border-radius: 4px;
         }
+        /* 改期模态框 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top:0; left:0;
+            width:100%; height:100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index:1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-content h3 { margin-top:0; }
+        .modal-actions { margin-top: 15px; text-align: right; }
+        .modal-actions button { margin-left: 10px; }
     </style>
 </head>
 <body>
@@ -46,6 +69,19 @@
             <a href="#" id="logoutLink">Logout</a>
         </div>
     </div>
+
+    <!-- 改期模态框 -->
+    <div class="modal-overlay" id="rescheduleModal">
+        <div class="modal-content">
+            <h3>Select New Time Slot</h3>
+            <div id="rescheduleSlotList">Loading available slots...</div>
+            <div class="modal-actions">
+                <button onclick="document.getElementById('rescheduleModal').style.display='none'">Cancel</button>
+                <button id="confirmRescheduleBtn" class="btn-reschedule">Confirm Reschedule</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="js/my-bookings.js"></script>
 </body>
 </html>
