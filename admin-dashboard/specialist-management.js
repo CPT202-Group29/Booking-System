@@ -32,24 +32,17 @@ const unavailableSpecialists = document.getElementById("unavailableSpecialists")
 
 function getAuthHeaders() {
   const token = localStorage.getItem("token");
-
   if (token) {
     return {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`
     };
   }
-
-  return {
-    "Content-Type": "application/json"
-  };
+  return { "Content-Type": "application/json" };
 }
 
 function getStatusText(status) {
-  if (status === "Available" || status === "Unavailable") {
-    return status;
-  }
-
+  if (status === "Available" || status === "Unavailable") return status;
   return Number(status) === 1 ? "Available" : "Unavailable";
 }
 
@@ -67,7 +60,6 @@ function clearForm() {
   specialistForm.reset();
   editIndex.value = "";
   statusInput.value = "1";
-
   formTitle.textContent = "Add Specialist";
   submitBtn.textContent = "Save Specialist";
 }
@@ -84,9 +76,11 @@ function getSpecialistFormData() {
   };
 }
 
+/** 加载专家列表，兼容分页格式，拉取全部数据（用于管理） */
 async function loadSpecialists() {
   try {
-    const response = await fetch(SPECIALIST_API_URL, {
+    // 使用 size=999 确保管理端获取全部专家，无需分页
+    const response = await fetch(`${SPECIALIST_API_URL}?size=999`, {
       method: "GET",
       headers: getAuthHeaders()
     });
@@ -95,7 +89,15 @@ async function loadSpecialists() {
       throw new Error("Failed to load specialist data.");
     }
 
-    specialists = await response.json();
+    const data = await response.json();
+    // 兼容分页格式：如果返回的是分页对象，提取 content 数组；否则直接使用
+    if (data && Array.isArray(data.content)) {
+      specialists = data.content;
+    } else if (Array.isArray(data)) {
+      specialists = data;
+    } else {
+      throw new Error("Unexpected response format");
+    }
     refreshView();
   } catch (error) {
     console.error("Specialist API Error:", error);
@@ -115,11 +117,7 @@ function renderSpecialists(status = "All") {
         });
 
   if (filteredSpecialists.length === 0) {
-    specialistTableBody.innerHTML = `
-      <tr>
-        <td colspan="8">No specialist records found.</td>
-      </tr>
-    `;
+    specialistTableBody.innerHTML = `<tr><td colspan="8">No specialist records found.</td></tr>`;
     return;
   }
 
@@ -129,41 +127,31 @@ function renderSpecialists(status = "All") {
     const statusNumber = getStatusNumber(specialist.status);
 
     const row = document.createElement("tr");
-
     row.innerHTML = `
       <td>${specialist.name || ""}</td>
       <td>${specialist.expertise || ""}</td>
       <td>${specialist.level || ""}</td>
       <td>${specialist.fee ?? ""}</td>
-      <td>
-        <span class="badge ${statusText.toLowerCase()}">
-          ${statusText}
-        </span>
-      </td>
+      <td><span class="badge ${statusText.toLowerCase()}">${statusText}</span></td>
       <td>${specialist.contact || ""}</td>
       <td class="description-cell">${specialist.description || ""}</td>
       <td>
-        <button class="table-btn edit-btn" onclick="editSpecialist(${realIndex})">
-          Edit
-        </button>
+        <button class="table-btn edit-btn" onclick="editSpecialist(${realIndex})">Edit</button>
         <button class="table-btn disable-btn" onclick="toggleSpecialistStatus(${realIndex})">
           ${statusNumber === 1 ? "Set Unavailable" : "Set Available"}
         </button>
       </td>
     `;
-
     specialistTableBody.appendChild(row);
   });
 }
 
 function updateStats() {
   totalSpecialists.textContent = specialists.length;
-
   availableSpecialists.textContent = specialists.filter((specialist) => {
     const statusText = specialist.statusText || getStatusText(specialist.status);
     return statusText === "Available";
   }).length;
-
   unavailableSpecialists.textContent = specialists.filter((specialist) => {
     const statusText = specialist.statusText || getStatusText(specialist.status);
     return statusText === "Unavailable";
@@ -177,41 +165,29 @@ function refreshView() {
 
 specialistForm.addEventListener("submit", async function (event) {
   event.preventDefault();
-
   const specialistData = getSpecialistFormData();
   const currentEditIndex = editIndex.value;
 
   try {
     let response;
-
     if (currentEditIndex === "") {
       response = await fetch(SPECIALIST_API_URL, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify(specialistData)
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to add specialist.");
-      }
-
+      if (!response.ok) throw new Error("Failed to add specialist.");
       alert("Specialist added successfully.");
     } else {
       const specialistId = getSpecialistId(specialists[currentEditIndex]);
-
       response = await fetch(`${SPECIALIST_API_URL}/${specialistId}`, {
         method: "PUT",
         headers: getAuthHeaders(),
         body: JSON.stringify(specialistData)
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to update specialist.");
-      }
-
+      if (!response.ok) throw new Error("Failed to update specialist.");
       alert("Specialist updated successfully.");
     }
-
     clearForm();
     await loadSpecialists();
   } catch (error) {
@@ -222,9 +198,7 @@ specialistForm.addEventListener("submit", async function (event) {
 
 function editSpecialist(index) {
   const specialist = specialists[index];
-
   editIndex.value = index;
-
   nameInput.value = specialist.name || "";
   expertiseInput.value = specialist.expertise || "";
   levelInput.value = specialist.level || "";
@@ -232,14 +206,9 @@ function editSpecialist(index) {
   statusInput.value = String(getStatusNumber(specialist.status));
   contactInput.value = specialist.contact || "";
   descriptionInput.value = specialist.description || "";
-
   formTitle.textContent = "Edit Specialist";
   submitBtn.textContent = "Update Specialist";
-
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth"
-  });
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 async function toggleSpecialistStatus(index) {
@@ -247,18 +216,13 @@ async function toggleSpecialistStatus(index) {
   const specialistId = getSpecialistId(specialist);
   const currentStatus = getStatusNumber(specialist.status);
   const newStatus = currentStatus === 1 ? 0 : 1;
-
   try {
     const response = await fetch(`${SPECIALIST_API_URL}/${specialistId}/status`, {
       method: "PATCH",
       headers: getAuthHeaders(),
       body: JSON.stringify(newStatus)
     });
-
-    if (!response.ok) {
-      throw new Error("Failed to update specialist status.");
-    }
-
+    if (!response.ok) throw new Error("Failed to update specialist status.");
     await loadSpecialists();
   } catch (error) {
     console.error("Update Specialist Status Error:", error);
@@ -271,10 +235,7 @@ resetBtn.addEventListener("click", clearForm);
 
 showFormBtn.addEventListener("click", function () {
   clearForm();
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth"
-  });
+  window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
 loadSpecialists();
