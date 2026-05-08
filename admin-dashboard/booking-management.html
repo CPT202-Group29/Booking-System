@@ -5,6 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Booking Management</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 20px;
+    }
+    .pagination button {
+        padding: 6px 12px;
+        border: 1px solid #ddd;
+        background: white;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+    .pagination button.active {
+        background: #007bff;
+        color: white;
+    }
+    .pagination button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+  </style>
 </head>
 <body>
   <div class="admin-layout">
@@ -29,25 +52,10 @@
       </header>
 
       <section class="stats-grid">
-        <div class="stat-card">
-          <p>Total Bookings</p>
-          <h2 id="totalBookings">0</h2>
-        </div>
-
-        <div class="stat-card">
-          <p>Pending</p>
-          <h2 id="pendingBookings">0</h2>
-        </div>
-
-        <div class="stat-card">
-          <p>Confirmed</p>
-          <h2 id="confirmedBookings">0</h2>
-        </div>
-
-        <div class="stat-card">
-          <p>Completed</p>
-          <h2 id="completedBookings">0</h2>
-        </div>
+        <div class="stat-card"><p>Total Bookings</p><h2 id="totalBookings">0</h2></div>
+        <div class="stat-card"><p>Pending</p><h2 id="pendingBookings">0</h2></div>
+        <div class="stat-card"><p>Confirmed</p><h2 id="confirmedBookings">0</h2></div>
+        <div class="stat-card"><p>Completed</p><h2 id="completedBookings">0</h2></div>
       </section>
 
       <section class="panel">
@@ -58,7 +66,6 @@
               Booking status follows the workflow: Pending → Confirmed → Completed, with cancellation support.
             </p>
           </div>
-
           <select id="bookingStatusFilter">
             <option value="All">All Status</option>
             <option value="Pending">Pending</option>
@@ -67,7 +74,6 @@
             <option value="Completed">Completed</option>
           </select>
         </div>
-
         <table>
           <thead>
             <tr>
@@ -84,6 +90,7 @@
           </thead>
           <tbody id="bookingTableBody"></tbody>
         </table>
+        <div class="pagination" id="pagination"></div>
       </section>
 
       <section class="panel">
