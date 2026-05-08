@@ -1,6 +1,6 @@
 const API_BASE = 'http://121.196.221.244:8080';
 
-// ========== Auth APIs (Real Backend) ==========
+// ========== Auth APIs ==========
 export async function register(name, email, password, verificationCode) {
     const response = await fetch(`${API_BASE}/api/auth/register`, {
         method: 'POST',
@@ -40,13 +40,25 @@ export async function logout() {
 }
 
 export async function sendVerificationCode(email) {
-    console.log(`Verification code requested for ${email} (bypassed)`);
-    return { success: true, message: 'Verification code sent' };
+    const response = await fetch(`${API_BASE}/api/auth/send-code?email=${encodeURIComponent(email)}`, {
+        method: 'POST'
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to send verification code');
+    }
+    return response.json();
 }
 
 export async function sendResetCode(email) {
-    console.log(`Reset code requested for ${email} (bypassed)`);
-    return { success: true };
+    const response = await fetch(`${API_BASE}/api/auth/send-reset-code?email=${encodeURIComponent(email)}`, {
+        method: 'POST'
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to send reset code');
+    }
+    return response.json();
 }
 
 export async function resetPassword(email, verificationCode, newPassword) {
@@ -62,7 +74,7 @@ export async function resetPassword(email, verificationCode, newPassword) {
     return response.json();
 }
 
-// ========== Change Password (Real Backend) ==========
+// ========== Change Password ==========
 export async function changePassword(oldPassword, newPassword) {
     const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
@@ -85,7 +97,7 @@ export async function changePassword(oldPassword, newPassword) {
     return response.json();
 }
 
-// ========== Profile APIs (Real Backend) ==========
+// ========== Profile APIs ==========
 let currentUser = null;
 export function setCurrentUser(user) {
     currentUser = user;
@@ -127,7 +139,6 @@ export async function updateProfile(name, phone) {
         const error = await response.json();
         throw new Error(error.error || 'Update failed');
     }
-    // 更新本地 currentUser
     const user = getCurrentUser();
     if (user) {
         if (name) user.username = name;
@@ -138,8 +149,31 @@ export async function updateProfile(name, phone) {
 }
 
 export async function uploadAvatar(file) {
-    // 暂不实现上传，返回空
-    return { avatarUrl: '' };
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Not authenticated');
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_BASE}/api/users/me/avatar`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        },
+        body: formData
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Upload avatar failed');
+    }
+    const data = await response.json();
+    // 更新本地缓存的头像
+    const user = getCurrentUser();
+    if (user) {
+        user.avatar = data.avatar;
+        setCurrentUser(user);
+    }
+    return data;
 }
 
 export async function deleteAccount(password) {
@@ -162,7 +196,7 @@ export async function deleteAccount(password) {
     return { success: true };
 }
 
-// ========== Bookings APIs (Real Backend B2) ==========
+// ========== Bookings APIs ==========
 export async function getMyBookings() {
     const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
