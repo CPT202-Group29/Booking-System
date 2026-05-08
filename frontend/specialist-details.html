@@ -14,6 +14,7 @@
         .error { color: red; }
         .success { color: green; }
         .back-btn { display: inline-block; margin-top: 20px; }
+        .fee-info { background: #e8f5e9; padding: 10px; border-radius: 4px; margin: 10px 0; }
     </style>
 </head>
 <body>
@@ -21,6 +22,7 @@
         <h2>Specialist Details</h2>
         <div id="expertInfo">Loading...</div>
         <form id="bookingForm" style="display:none;">
+            <div class="fee-info" id="feeDisplay"></div>
             <div class="form-group">
                 <label>Date</label>
                 <input type="date" id="date" required>
@@ -55,6 +57,7 @@
         }
 
         let expert = null;
+        const CONSULTATION_FEE = 50.00; // Fixed flat rate as defined in ChargeCalculationService
 
         async function loadExpert() {
             try {
@@ -71,6 +74,8 @@
                         <p><strong>Description:</strong> ${expert.description || 'N/A'}</p>
                     </div>
                 `;
+                // Show the fixed consultation fee
+                document.getElementById('feeDisplay').innerHTML = `<strong>Consultation Fee:</strong> $${CONSULTATION_FEE.toFixed(2)} (flat rate per session)`;
                 document.getElementById('bookingForm').style.display = 'block';
             } catch (err) {
                 document.getElementById('expertInfo').innerHTML = `<p class="error">Failed to load expert: ${err.message}</p>`;
@@ -110,8 +115,8 @@
                 return;
             }
             try {
-                await createBooking(parseInt(expertId), parseInt(timeSlotId), topic, notes);
-                document.getElementById('message').innerHTML = '<div class="success">Booking created! Status: PENDING</div>';
+                const booking = await createBooking(parseInt(expertId), parseInt(timeSlotId), topic, notes);
+                document.getElementById('message').innerHTML = `<div class="success">Booking created! Status: PENDING, Fee: $${booking.chargeAmount || CONSULTATION_FEE.toFixed(2)}</div>`;
                 setTimeout(() => window.location.href = 'my-bookings.html', 1500);
             } catch (err) {
                 document.getElementById('message').innerHTML = `<div class="error">${err.message}</div>`;
