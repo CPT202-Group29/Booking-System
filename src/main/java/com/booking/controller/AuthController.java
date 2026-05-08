@@ -8,10 +8,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -26,8 +27,17 @@ public class AuthController {
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
 
-    // 简单内存存储验证码（生产环境应使用 Redis 或数据库）
-    private final Map<String, String> codeStore = new HashMap<>();
+    // 内存验证码存储，附带过期时间（5分钟有效）
+    private static class CodeInfo {
+        String code;
+        LocalDateTime expireTime;
+        CodeInfo(String code, LocalDateTime expireTime) {
+            this.code = code;
+            this.expireTime = expireTime;
+        }
+    }
+    private final Map<String, CodeInfo> codeStore = new ConcurrentHashMap<>();
+    private static final long CODE_EXPIRE_MINUTES = 5;
 
     /** 用户注册 */
     @PostMapping("/register")
@@ -53,7 +63,7 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("token", token, "message", "Registration successful"));
     }
 
-    /** 用户登录 */
+    /** 用户登录（含账户锁定逻辑） */
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
         String email = request.get("email");
@@ -66,11 +76,31 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("error", "Invalid email or password"));
         }
         User user = optionalUser.get();
+
+        // 检查账户是否被锁定
+        if (user.getLockedUntil() != null && LocalDateTime.now().isBefore(user.getLockedUntil())) {
+            return ResponseEntity.status(423).body(Map.of("error", "Account locked. Please try again later."));
+        }
+
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+            // 密码错误：累加失败次数，达到5次锁定15分钟
+            user.setFailedAttempts(user.getFailedAttempts() + 1);
+            if (user.getFailedAttempts() >= 5) {
+                user.setLockedUntil(LocalDateTime.now().plusMinutes(15));
+                user.setFailedAttempts(0); // 锁定后重置计数
+                userRepository.save(user);
+                return ResponseEntity.status(423).body(Map.of("error", "Account locked for 15 minutes due to multiple failed attempts."));
+            }
+            userRepository.save(user);
             return ResponseEntity.badRequest().body(Map.of("error", "Invalid email or password"));
         }
+
+        // 登录成功：清除失败记录
+        user.setFailedAttempts(0);
+        user.setLockedUntil(null);
+        userRepository.save(user);
+
         String token = jwtTokenUtil.generateToken(user.getEmail());
-        // 返回 token 和简单的用户信息
         return ResponseEntity.ok(Map.of(
                 "token", token,
                 "message", "Login successful",
@@ -92,6 +122,9 @@ public class AuthController {
         String oldPassword = request.get("oldPassword");
         String newPassword = request.get("newPassword");
         
+        if (email == null || oldPassword == null || newPassword == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Email, old password and new password are required"));
+        }
         Optional<User> optionalUser = userRepository.findByEmail(email);
         if (optionalUser.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "User not found"));
@@ -105,31 +138,31 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("message", "Password changed successfully"));
     }
 
-    /** 发送验证码（注册场景） */
+    /** 发送验证码（注册场景，带过期时间） */
     @PostMapping("/send-code")
     public ResponseEntity<?> sendVerificationCode(@RequestParam String email) {
         if (userRepository.existsByEmail(email)) {
             return ResponseEntity.badRequest().body(Map.of("error", "Email already registered"));
         }
         String code = String.format("%06d", new Random().nextInt(1000000));
-        codeStore.put(email, code);
+        codeStore.put(email, new CodeInfo(code, LocalDateTime.now().plusMinutes(CODE_EXPIRE_MINUTES)));
         System.out.println("Verification code for " + email + ": " + code);
         return ResponseEntity.ok(Map.of("message", "Verification code sent"));
     }
 
-    /** 发送重置密码验证码 */
+    /** 发送重置密码验证码（带过期时间） */
     @PostMapping("/send-reset-code")
     public ResponseEntity<?> sendResetCode(@RequestParam String email) {
         if (!userRepository.existsByEmail(email)) {
             return ResponseEntity.badRequest().body(Map.of("error", "Email not registered"));
         }
         String code = String.format("%06d", new Random().nextInt(1000000));
-        codeStore.put(email, code);
+        codeStore.put(email, new CodeInfo(code, LocalDateTime.now().plusMinutes(CODE_EXPIRE_MINUTES)));
         System.out.println("Reset code for " + email + ": " + code);
         return ResponseEntity.ok(Map.of("message", "Reset code sent"));
     }
 
-    /** 重置密码 */
+    /** 重置密码（验证码校验，含过期检查） */
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
         String email = request.get("email");
@@ -139,8 +172,8 @@ public class AuthController {
         if (email == null || code == null || newPassword == null) {
             return ResponseEntity.badRequest().body(Map.of("error", "Email, code and new password are required"));
         }
-        String storedCode = codeStore.get(email);
-        if (storedCode == null || !storedCode.equals(code)) {
+        CodeInfo stored = codeStore.get(email);
+        if (stored == null || !stored.code.equals(code) || LocalDateTime.now().isAfter(stored.expireTime)) {
             return ResponseEntity.badRequest().body(Map.of("error", "Invalid or expired verification code"));
         }
         Optional<User> userOpt = userRepository.findByEmail(email);
