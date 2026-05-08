@@ -2,28 +2,40 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Register</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Expert Booking System</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="container">
-        <h2>Register</h2>
+        <h2>User Registration</h2>
         <form id="registerForm">
             <div class="form-group">
-                <label>Username</label>
-                <input type="text" id="username" required>
+                <label>Full Name</label>
+                <input type="text" id="name" required>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="email" required>
             </div>
             <div class="form-group">
                 <label>Password</label>
                 <input type="password" id="password" required>
-                <small>Minimum 6 characters</small>
+                <small id="pwdHint" style="color: gray;"></small>
             </div>
             <div class="form-group">
                 <label>Confirm Password</label>
                 <input type="password" id="confirmPassword" required>
             </div>
+            <div class="form-group">
+                <label>Verification Code</label>
+                <div class="verification-row">
+                    <input type="text" id="verificationCode" required placeholder="6-digit code">
+                    <button type="button" id="sendCodeBtn">Send Code</button>
+                </div>
+            </div>
             <button type="submit">Register</button>
-            <p>Already have an account? <a href="login.html">Login</a></p>
+            <p>Already have an account? <a href="login.html">Sign in</a></p>
         </form>
         <div id="message" class="message"></div>
     </div>
