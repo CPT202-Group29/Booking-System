@@ -1,4 +1,4 @@
-const API_BASE = "http://47.111.224.168:8080";
+const API_BASE = "http://121.196.221.244:8080";
 
 function mapBooking(item) {
   return {
