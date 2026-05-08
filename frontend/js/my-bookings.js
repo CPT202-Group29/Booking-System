@@ -1,31 +1,17 @@
 import { getMyBookings, cancelBooking, rescheduleBooking } from './api.js';
 
-const customerId = localStorage.getItem('customerId');
+const userStr = localStorage.getItem('user');
+const user = userStr ? JSON.parse(userStr) : null;
+const customerId = user ? (user.userId || user.id) : null;
+
 if (!customerId) {
-    console.warn('No customerId found, using mock data');
+    document.getElementById('bookingsList').innerHTML = '<p>Please <a href="login.html">login</a> first.</p>';
 }
 
-// Set to true to use mock data (useful when backend is unavailable)
-const USE_MOCK = true;  // Change to false when backend is ready
-
 async function loadBookings() {
-    if (USE_MOCK) {
-        // Mock data for demonstration
-        const mockBookings = [
-            { id: 1, specialistId: 1, topic: 'Career planning', status: 'CONFIRMED', timeSlotId: 101, date: '2026-05-10', timeSlot: '09:00-10:00' },
-            { id: 2, specialistId: 2, topic: 'Anxiety management', status: 'PENDING', timeSlotId: 102, date: '2026-05-11', timeSlot: '14:00-15:00' },
-            { id: 3, specialistId: 3, topic: 'Academic support', status: 'CANCELLED', timeSlotId: 103, date: '2026-05-09', timeSlot: '16:00-17:00' }
-        ];
-        renderBookings(mockBookings);
-        return;
-    }
-
     try {
-        if (!customerId) {
-            document.getElementById('bookingsList').innerHTML = '<p>Please login first.</p>';
-            return;
-        }
-        const bookings = await getMyBookings(customerId);
+        if (!customerId) return;
+        const bookings = await getMyBookings();
         renderBookings(bookings);
     } catch (err) {
         document.getElementById('bookingsList').innerHTML = `<p class="error">Error loading bookings: ${err.message}</p>`;
@@ -38,55 +24,72 @@ function renderBookings(bookings) {
         container.innerHTML = '<p>No bookings found.</p>';
         return;
     }
-    container.innerHTML = bookings.map(b => `
+    container.innerHTML = bookings.map(b => {
+        // 尝试提取时间显示
+        let timeDisplay = b.time || '';
+        if (!timeDisplay && b.date) {
+            timeDisplay = b.date;
+            if (b.time) timeDisplay += ' ' + b.time;
+        } else if (!timeDisplay) {
+            timeDisplay = `Slot #${b.timeSlotId || 'N/A'}`;
+        }
+
+        return `
         <div class="booking-card" data-id="${b.id}">
-            <p><strong>Specialist ID:</strong> ${b.specialistId}</p>
+            <p><strong>Specialist ID:</strong> ${b.specialistId || 'N/A'}</p>
             <p><strong>Topic:</strong> ${b.topic || 'N/A'}</p>
             <p><strong>Status:</strong> <span class="status-${b.status}">${b.status}</span></p>
-            <p><strong>Date:</strong> ${b.date || 'N/A'} ${b.timeSlot || ''}</p>
+            <p><strong>Date:</strong> ${timeDisplay}</p>
+            <p><strong>Fee:</strong> $${b.chargeAmount ?? '0.00'}</p>
+            ${b.cancelReason ? `<p><strong>Cancel Reason:</strong> ${b.cancelReason}</p>` : ''}
             ${b.status === 'CONFIRMED' ? `
                 <button class="btn-cancel" data-id="${b.id}">Cancel</button>
                 <button class="btn-reschedule" data-id="${b.id}">Reschedule</button>
             ` : ''}
         </div>
-    `).join('');
+        `;
+    }).join('');
 
+    // 取消按钮事件
     document.querySelectorAll('.btn-cancel').forEach(btn => {
         btn.addEventListener('click', async () => {
             const bookingId = parseInt(btn.dataset.id);
-            const reason = prompt('Cancel reason:');
+            const reason = prompt('Please enter the cancellation reason:');
             if (!reason) return;
             try {
-                if (!USE_MOCK) await cancelBooking(bookingId, parseInt(customerId), reason);
-                alert('Cancelled');
+                await cancelBooking(bookingId, reason);
+                alert('Booking cancelled successfully');
                 loadBookings();
             } catch (err) {
-                alert(err.message);
+                alert('Cancel failed: ' + err.message);
             }
         });
     });
 
+    // 改期按钮事件
     document.querySelectorAll('.btn-reschedule').forEach(btn => {
         btn.addEventListener('click', async () => {
             const bookingId = parseInt(btn.dataset.id);
-            const newSlotId = prompt('Enter new time slot ID:');
-            if (!newSlotId || isNaN(parseInt(newSlotId))) return;
+            const newSlotId = prompt('Please enter the new time slot ID:\n(Find available slots on the Specialist Details page)');
+            if (!newSlotId || isNaN(parseInt(newSlotId))) {
+                alert('Invalid slot ID');
+                return;
+            }
             try {
-                if (!USE_MOCK) await rescheduleBooking(bookingId, parseInt(customerId), parseInt(newSlotId));
-                alert('Rescheduled');
+                await rescheduleBooking(bookingId, parseInt(newSlotId));
+                alert('Reschedule successful!');
                 loadBookings();
             } catch (err) {
-                alert(err.message);
+                alert('Reschedule failed: ' + err.message);
             }
         });
     });
 }
 
-loadBookings();
-
-// Logout button if exists
 document.getElementById('logoutLink')?.addEventListener('click', (e) => {
     e.preventDefault();
     localStorage.clear();
     window.location.href = 'login.html';
 });
+
+loadBookings();
