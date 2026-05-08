@@ -4,120 +4,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Bookings</title>
-    <link rel="stylesheet" href="css/style.css">
     <style>
-        .status-PENDING { color: #f0ad4e; font-weight: bold; }
-        .status-CONFIRMED { color: #5bc0de; font-weight: bold; }
-        .status-COMPLETED { color: #5cb85c; font-weight: bold; }
-        .status-CANCELLED { color: #d9534f; font-weight: bold; }
-        .status-EXPIRED { color: #999; font-weight: bold; }
-        .booking-card {
-            border: 1px solid #ddd;
-            margin-bottom: 15px;
-            padding: 15px;
-            border-radius: 8px;
-            background: #fafafa;
-            cursor: pointer;
-        }
-        .booking-card:hover { background: #f0f0f0; }
-        .btn-cancel {
-            background: #d9534f;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            cursor: pointer;
-            border-radius: 4px;
-            margin-right: 10px;
-        }
-        .btn-reschedule {
-            background: #f0ad4e;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-        .tabs button {
-            padding: 8px 16px;
-            border: none;
-            background: #eee;
-            cursor: pointer;
-            border-radius: 4px 4px 0 0;
-        }
-        .tabs button.active {
-            background: #007bff;
-            color: white;
-        }
-        .pagination {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin-top: 20px;
-        }
-        .pagination button {
-            padding: 6px 12px;
-            border: 1px solid #ddd;
-            background: white;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-        .pagination button.active {
-            background: #007bff;
-            color: white;
-            border-color: #007bff;
-        }
-        .pagination button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        /* 详情模态框 */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top:0; left:0;
-            width:100%; height:100%;
-            background: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
-            z-index:1000;
-        }
-        .modal-content {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
+        body { display: flex; min-height: 100vh; margin: 0; font-family: Arial, sans-serif; }
+        .sidebar { width: 240px; background: #1e293b; color: white; padding: 20px 0; }
+        .sidebar h2 { color: white; text-align: center; margin-bottom: 30px; font-size: 1.2rem; border-bottom: 1px solid #334155; padding-bottom: 15px; }
+        .sidebar nav { display: flex; flex-direction: column; }
+        .sidebar nav a { color: #cbd5e1; text-decoration: none; padding: 12px 20px; }
+        .sidebar nav a:hover, .sidebar nav a.active { background: #334155; color: white; border-left: 3px solid #3b82f6; }
+        .main { flex: 1; background: #f1f5f9; padding: 30px; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .tabs { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 2px solid #e5e7eb; }
+        .tabs button { padding: 10px 20px; border: none; background: transparent; cursor: pointer; font-size: 1rem; color: #6b7280; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+        .tabs button.active { color: #3b82f6; border-bottom-color: #3b82f6; }
+        .booking-card { border: 1px solid #e5e7eb; padding: 16px; margin-bottom: 12px; border-radius: 8px; background: #f9fafb; cursor: pointer; }
+        .booking-card:hover { background: #f3f4f6; }
+        .status-PENDING { color: #f59e0b; font-weight: 600; }
+        .status-CONFIRMED { color: #3b82f6; font-weight: 600; }
+        .status-COMPLETED { color: #059669; font-weight: 600; }
+        .status-CANCELLED { color: #dc2626; font-weight: 600; }
+        .status-EXPIRED { color: #9ca3af; font-weight: 600; }
+        .btn-cancel { background: #dc2626; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-right: 8px; }
+        .btn-reschedule { background: #f59e0b; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 20px; }
+        .pagination button { padding: 6px 12px; border: 1px solid #d1d5db; background: white; cursor: pointer; border-radius: 4px; }
+        .pagination button.active { background: #3b82f6; color: white; border-color: #3b82f6; }
+        .modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index:1000; }
+        .modal-content { background: white; padding: 20px; border-radius: 10px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
         .modal-content h3 { margin-top:0; }
-        .modal-close {
-            float: right;
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
+        .modal-close { float: right; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6b7280; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>My Bookings</h2>
-        <div class="tabs">
-            <button id="tabUpcoming" class="active">Upcoming</button>
-            <button id="tabHistory">History</button>
+    <aside class="sidebar">
+        <h2>Expert Booking</h2>
+        <nav>
+            <a href="profile.html">My Profile</a>
+            <a href="specialist-list.html">Find a Specialist</a>
+            <a href="my-bookings.html" class="active">My Bookings</a>
+            <a href="#" onclick="localStorage.clear();location.href='login.html'" style="margin-top:auto;border-top:1px solid #334155;padding-top:15px;margin-top:20px;">Logout</a>
+        </nav>
+    </aside>
+    <main class="main">
+        <div class="container">
+            <h2 style="margin-top:0;">My Bookings</h2>
+            <div class="tabs">
+                <button id="tabUpcoming" class="active">Upcoming</button>
+                <button id="tabHistory">History</button>
+            </div>
+            <div id="bookingsList">Loading...</div>
+            <div class="pagination" id="pagination"></div>
         </div>
-        <div id="bookingsList">Loading...</div>
-        <div class="pagination" id="pagination"></div>
-        <div class="nav-links">
-            <a href="specialist-list.html">Find a Specialist</a> |
-            <a href="profile.html">My Profile</a> |
-            <a href="#" id="logoutLink">Logout</a>
-        </div>
-    </div>
-
-    <!-- 详情模态框 -->
+    </main>
     <div class="modal-overlay" id="detailModal">
         <div class="modal-content">
             <button class="modal-close" onclick="document.getElementById('detailModal').style.display='none'">&times;</button>
@@ -125,7 +62,6 @@
             <div id="detailContent"></div>
         </div>
     </div>
-
     <script type="module" src="js/my-bookings.js"></script>
 </body>
 </html>
