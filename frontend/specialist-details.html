@@ -15,6 +15,34 @@
         .success { color: green; }
         .back-btn { display: inline-block; margin-top: 20px; }
         .fee-info { background: #e8f5e9; padding: 10px; border-radius: 4px; margin: 10px 0; font-weight: bold; }
+
+        /* 模态框样式 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .modal-content h3 { margin-top: 0; }
+        .modal-content table { width: 100%; margin: 15px 0; border-collapse: collapse; }
+        .modal-content table td { padding: 8px 0; border-bottom: 1px solid #eee; }
+        .modal-content table td:first-child { font-weight: bold; width: 40%; }
+        .modal-actions { display: flex; gap: 10px; }
+        .modal-actions button { flex: 1; }
+        .btn-confirm { background: #28a745; }
+        .btn-cancel { background: #6c757d; }
     </style>
 </head>
 <body>
@@ -46,6 +74,26 @@
         <div id="message"></div>
         <a href="specialist-list.html" class="back-btn">← Back to Specialists</a>
     </div>
+
+    <!-- 确认摘要模态框 -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal-content">
+            <h3>📋 Booking Summary</h3>
+            <table>
+                <tr><td>Specialist</td><td id="summarySpecialist"></td></tr>
+                <tr><td>Date</td><td id="summaryDate"></td></tr>
+                <tr><td>Time</td><td id="summaryTime"></td></tr>
+                <tr><td>Fee</td><td id="summaryFee"></td></tr>
+                <tr><td>Topic</td><td id="summaryTopic"></td></tr>
+                <tr><td>Notes</td><td id="summaryNotes"></td></tr>
+            </table>
+            <div class="modal-actions">
+                <button class="btn-confirm" id="confirmSubmitBtn">Confirm Booking</button>
+                <button class="btn-cancel" id="cancelSubmitBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { getSpecialistById, getAvailableSlots, createBooking, getBookingFee } from './js/api.js';
 
@@ -57,6 +105,7 @@
         }
 
         let expert = null;
+        let currentFee = null; // 存储当前预估费用
 
         async function loadExpert() {
             try {
@@ -76,8 +125,8 @@
                 document.getElementById('bookingForm').style.display = 'block';
 
                 // 获取并显示预估费用
-                const bookingFee = await getBookingFee(expertId);
-                document.getElementById('feeDisplay').innerHTML = `Consultation Fee: <strong>$${bookingFee}</strong> (based on specialist level)`;
+                currentFee = await getBookingFee(expertId);
+                document.getElementById('feeDisplay').innerHTML = `Consultation Fee: <strong>$${currentFee}</strong> (based on specialist level)`;
             } catch (err) {
                 document.getElementById('expertInfo').innerHTML = `<p class="error">Failed to load expert: ${err.message}</p>`;
             }
@@ -106,7 +155,8 @@
             }
         });
 
-        document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+        // 提交事件改为弹出确认摘要
+        document.getElementById('bookingForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const timeSlotId = timeSlotSelect.value;
             const topic = document.getElementById('topic').value.trim();
@@ -115,13 +165,37 @@
                 alert('Please fill all required fields');
                 return;
             }
+
+            // 填充摘要信息
+            document.getElementById('summarySpecialist').textContent = expert.name;
+            document.getElementById('summaryDate').textContent = dateInput.value;
+            document.getElementById('summaryTime').textContent = timeSlotSelect.options[timeSlotSelect.selectedIndex].textContent;
+            document.getElementById('summaryFee').textContent = '$' + currentFee;
+            document.getElementById('summaryTopic').textContent = topic;
+            document.getElementById('summaryNotes').textContent = notes || '-';
+
+            // 显示模态框
+            document.getElementById('confirmModal').style.display = 'flex';
+        });
+
+        // 确认按钮：真正提交预约
+        document.getElementById('confirmSubmitBtn').addEventListener('click', async () => {
+            document.getElementById('confirmModal').style.display = 'none';
+            const timeSlotId = timeSlotSelect.value;
+            const topic = document.getElementById('topic').value.trim();
+            const notes = document.getElementById('notes').value.trim();
             try {
                 const booking = await createBooking(parseInt(expertId), parseInt(timeSlotId), topic, notes);
-                document.getElementById('message').innerHTML = `<div class="success">Booking created! Status: PENDING, Fee: $${booking.chargeAmount}</div>`;
+                document.getElementById('message').innerHTML = `<div class="success">Booking created! Status: PENDING, Fee: $${booking.chargeAmount || currentFee}</div>`;
                 setTimeout(() => window.location.href = 'my-bookings.html', 1500);
             } catch (err) {
                 document.getElementById('message').innerHTML = `<div class="error">${err.message}</div>`;
             }
+        });
+
+        // 取消按钮：关闭模态框
+        document.getElementById('cancelSubmitBtn').addEventListener('click', () => {
+            document.getElementById('confirmModal').style.display = 'none';
         });
 
         loadExpert();
