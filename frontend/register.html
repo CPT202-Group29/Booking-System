@@ -4,11 +4,121 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - Expert Booking System</title>
-    <link rel="stylesheet" href="css/style.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .register-card {
+            background: white;
+            padding: 35px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 440px;
+        }
+        .register-card h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #1e293b;
+            font-size: 1.4rem;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.9rem;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59,130,246,0.15);
+        }
+        .verification-row {
+            display: flex;
+            gap: 10px;
+        }
+        .verification-row input {
+            flex: 1;
+        }
+        .verification-row button {
+            white-space: nowrap;
+            padding: 0 16px;
+            background: #f59e0b;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        .verification-row button:hover {
+            background: #d97706;
+        }
+        .btn-register {
+            width: 100%;
+            padding: 12px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        .btn-register:hover {
+            background: #2563eb;
+        }
+        .message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        .error { background: #fee2e2; color: #991b1b; }
+        .success { background: #d1fae5; color: #065f46; }
+        .register-card p {
+            text-align: center;
+            margin-top: 15px;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        .register-card p a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .register-card p a:hover {
+            text-decoration: underline;
+        }
+        small {
+            display: block;
+            margin-top: 4px;
+            font-size: 0.8rem;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h2>User Registration</h2>
+    <div class="register-card">
+        <h2>Create Your Account</h2>
         <form id="registerForm">
             <div class="form-group">
                 <label>Full Name</label>
@@ -34,10 +144,10 @@
                     <button type="button" id="sendCodeBtn">Send Code</button>
                 </div>
             </div>
-            <button type="submit">Register</button>
-            <p>Already have an account? <a href="login.html">Sign in</a></p>
+            <button type="submit" class="btn-register">Register</button>
         </form>
         <div id="message" class="message"></div>
+        <p>Already have an account? <a href="login.html">Sign in</a></p>
     </div>
     <script type="module" src="js/auth.js"></script>
 </body>
