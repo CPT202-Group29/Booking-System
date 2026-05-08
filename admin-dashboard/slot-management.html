@@ -26,7 +26,7 @@
 
       <section class="panel" id="slotFormPanel">
         <div class="panel-header">
-          <h2>Create New Slot</h2>
+          <h2 id="formTitle">Create New Slot</h2>
         </div>
 
         <form id="slotForm" class="specialist-form">
@@ -48,6 +48,26 @@
             <button type="submit" class="primary-btn" id="submitBtn">Save Slot</button>
           </div>
         </form>
+      </section>
+
+      <section class="panel" style="margin-top:20px;">
+        <div class="panel-header">
+          <h2>Existing Slots</h2>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Specialist ID</th>
+              <th>Start Time</th>
+              <th>End Time</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="slotListBody">
+            <tr><td colspan="5">Loading slots...</td></tr>
+          </tbody>
+        </table>
       </section>
     </main>
   </div>
