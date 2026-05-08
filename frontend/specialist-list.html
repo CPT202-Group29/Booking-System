@@ -13,27 +13,40 @@
             flex-wrap: wrap;
             align-items: flex-end;
         }
+        .search-bar > div {
+            display: flex;
+            flex-direction: column;
+            min-width: 100px;
+        }
+        .search-bar label {
+            font-size: 0.8em;
+            color: #666;
+            margin-bottom: 2px;
+        }
         .search-bar input, .search-bar select {
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
             flex: 1;
-            min-width: 100px;
         }
         .search-bar button {
-            padding: 8px 16px;
+            padding: 8px 14px;
             background: #007bff;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             white-space: nowrap;
+            height: 38px;
         }
-        .search-bar label {
-            display: block;
-            font-size: 0.8em;
-            color: #666;
-            margin-bottom: 2px;
+        .search-bar button.clear-btn {
+            background: #6c757d;
+        }
+        .search-bar button.save-btn {
+            background: #17a2b8;
+        }
+        .search-bar button.load-btn {
+            background: #28a745;
         }
         .specialist-card {
             border: 1px solid #ddd;
@@ -54,6 +67,33 @@
             color: white;
             text-decoration: none;
             border-radius: 4px;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .pagination button {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .pagination button.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .pagination span {
+            padding: 6px 8px;
+            color: #666;
         }
     </style>
 </head>
@@ -94,41 +134,84 @@
                 <label>Max Fee</label>
                 <input type="number" id="searchMaxFee" placeholder="999" min="0" style="width:80px;">
             </div>
+            <div>
+                <label>Date</label>
+                <input type="date" id="searchDate">
+            </div>
+            <div>
+                <label>Time From</label>
+                <input type="time" id="searchTimeFrom" step="1800">
+            </div>
+            <div>
+                <label>Time To</label>
+                <input type="time" id="searchTimeTo" step="1800">
+            </div>
             <button id="searchBtn">Search</button>
-            <button id="clearBtn" style="background:#6c757d;">Clear All</button>
+            <button id="clearBtn" class="clear-btn">Clear All</button>
+            <button id="savePrefBtn" class="save-btn">Save</button>
+            <button id="loadPrefBtn" class="load-btn">Load</button>
         </div>
         <div id="specialistList">Loading specialists...</div>
+        <div class="pagination" id="pagination"></div>
     </div>
 
     <script type="module">
         const API_BASE = 'http://121.196.221.244:8080';
+        let currentPage = 0;
+        let totalPages = 1;
+        const pageSize = 10;
 
-        async function loadSpecialists(filters = {}) {
+        function getFilters() {
+            return {
+                name: document.getElementById('searchName').value.trim(),
+                expertise: document.getElementById('searchExpertise').value,
+                level: document.getElementById('searchLevel').value,
+                status: document.getElementById('searchStatus').value,
+                minFee: document.getElementById('searchMinFee').value,
+                maxFee: document.getElementById('searchMaxFee').value,
+                date: document.getElementById('searchDate').value,
+                timeFrom: document.getElementById('searchTimeFrom').value,
+                timeTo: document.getElementById('searchTimeTo').value
+            };
+        }
+
+        async function loadSpecialists(page = 0) {
+            const f = getFilters();
             const params = new URLSearchParams();
-            if (filters.name) params.append('name', filters.name);
-            if (filters.expertise) params.append('expertise', filters.expertise);
-            if (filters.level) params.append('level', filters.level);
-            if (filters.status !== undefined && filters.status !== '') params.append('status', filters.status);
-            if (filters.minFee) params.append('minFee', filters.minFee);
-            if (filters.maxFee) params.append('maxFee', filters.maxFee);
+            if (f.name) params.append('name', f.name);
+            if (f.expertise) params.append('expertise', f.expertise);
+            if (f.level) params.append('level', f.level);
+            if (f.status !== '') params.append('status', f.status);
+            if (f.minFee) params.append('minFee', f.minFee);
+            if (f.maxFee) params.append('maxFee', f.maxFee);
+            if (f.date && f.timeFrom && f.timeTo) {
+                params.append('availableFrom', `${f.date}T${f.timeFrom}:00`);
+                params.append('availableTo', `${f.date}T${f.timeTo}:00`);
+            }
+            params.append('page', page);
+            params.append('size', pageSize);
 
             try {
                 const response = await fetch(`${API_BASE}/api/v1/specialists?${params.toString()}`);
                 if (!response.ok) throw new Error('Failed to fetch specialists');
-                const specialists = await response.json();
+                const data = await response.json();
+                const specialists = data.content || data;
+                currentPage = data.currentPage || 0;
+                totalPages = data.totalPages || 1;
                 renderSpecialists(specialists);
+                renderPagination(currentPage, totalPages);
             } catch (err) {
-                document.getElementById('specialistList').innerHTML = `<p class="error">Failed to load specialists: ${err.message}</p>`;
+                document.getElementById('specialistList').innerHTML = `<p class="error">Failed to load: ${err.message}</p>`;
             }
         }
 
-        function renderSpecialists(specialists) {
+        function renderSpecialists(list) {
             const container = document.getElementById('specialistList');
-            if (specialists.length === 0) {
+            if (!list || list.length === 0) {
                 container.innerHTML = '<p>No specialists found.</p>';
                 return;
             }
-            container.innerHTML = specialists.map(s => {
+            container.innerHTML = list.map(s => {
                 const statusText = s.statusText || (s.status === 1 ? 'Available' : 'Unavailable');
                 const statusClass = s.status === 1 ? 'badge-available' : 'badge-unavailable';
                 return `
@@ -144,33 +227,41 @@
             }).join('');
         }
 
+        function renderPagination(current, total) {
+            const container = document.getElementById('pagination');
+            if (total <= 1) { container.innerHTML = ''; return; }
+            let html = '';
+            html += `<button ${current === 0 ? 'disabled' : ''} onclick="goToPage(${current - 1})">← Prev</button>`;
+            for (let i = 0; i < total; i++) {
+                html += `<button class="${i === current ? 'active' : ''}" onclick="goToPage(${i})">${i + 1}</button>`;
+            }
+            html += `<button ${current >= total - 1 ? 'disabled' : ''} onclick="goToPage(${current + 1})">Next →</button>`;
+            html += `<span>Page ${current + 1} of ${total}</span>`;
+            container.innerHTML = html;
+        }
+
+        window.goToPage = function(page) {
+            loadSpecialists(page);
+        };
+
         async function loadExpertiseOptions() {
             try {
-                const response = await fetch(`${API_BASE}/api/v1/expertise`);
-                if (!response.ok) return;
-                const expertiseList = await response.json();
+                const resp = await fetch(`${API_BASE}/api/v1/expertise`);
+                if (!resp.ok) return;
+                const list = await resp.json();
                 const select = document.getElementById('searchExpertise');
-                expertiseList.forEach(exp => {
-                    const option = document.createElement('option');
-                    option.value = exp.expertiseName;
-                    option.textContent = exp.expertiseName;
-                    select.appendChild(option);
+                list.forEach(exp => {
+                    const opt = document.createElement('option');
+                    opt.value = exp.expertiseName;
+                    opt.textContent = exp.expertiseName;
+                    select.appendChild(opt);
                 });
             } catch (err) { console.error('Failed to load expertise:', err); }
         }
 
-        document.getElementById('searchBtn').addEventListener('click', () => {
-            const filters = {
-                name: document.getElementById('searchName').value.trim(),
-                expertise: document.getElementById('searchExpertise').value,
-                level: document.getElementById('searchLevel').value,
-                status: document.getElementById('searchStatus').value,
-                minFee: document.getElementById('searchMinFee').value,
-                maxFee: document.getElementById('searchMaxFee').value
-            };
-            loadSpecialists(filters);
-        });
-
+        // 搜索按钮
+        document.getElementById('searchBtn').addEventListener('click', () => loadSpecialists(0));
+        // 清除按钮
         document.getElementById('clearBtn').addEventListener('click', () => {
             document.getElementById('searchName').value = '';
             document.getElementById('searchExpertise').value = '';
@@ -178,11 +269,36 @@
             document.getElementById('searchStatus').value = '';
             document.getElementById('searchMinFee').value = '';
             document.getElementById('searchMaxFee').value = '';
-            loadSpecialists();
+            document.getElementById('searchDate').value = '';
+            document.getElementById('searchTimeFrom').value = '';
+            document.getElementById('searchTimeTo').value = '';
+            loadSpecialists(0);
+        });
+        // 保存偏好
+        document.getElementById('savePrefBtn').addEventListener('click', () => {
+            const prefs = getFilters();
+            localStorage.setItem('searchPreferences', JSON.stringify(prefs));
+            alert('Search preferences saved!');
+        });
+        // 加载偏好
+        document.getElementById('loadPrefBtn').addEventListener('click', () => {
+            const stored = localStorage.getItem('searchPreferences');
+            if (!stored) { alert('No saved preferences exist.'); return; }
+            const prefs = JSON.parse(stored);
+            document.getElementById('searchName').value = prefs.name || '';
+            document.getElementById('searchExpertise').value = prefs.expertise || '';
+            document.getElementById('searchLevel').value = prefs.level || '';
+            document.getElementById('searchStatus').value = prefs.status || '';
+            document.getElementById('searchMinFee').value = prefs.minFee || '';
+            document.getElementById('searchMaxFee').value = prefs.maxFee || '';
+            document.getElementById('searchDate').value = prefs.date || '';
+            document.getElementById('searchTimeFrom').value = prefs.timeFrom || '';
+            document.getElementById('searchTimeTo').value = prefs.timeTo || '';
+            loadSpecialists(0);
         });
 
         loadExpertiseOptions();
-        loadSpecialists();
+        loadSpecialists(0);
     </script>
 </body>
 </html>
