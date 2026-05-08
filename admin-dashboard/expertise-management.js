@@ -1,6 +1,6 @@
 let expertiseCategories = [];
 
-const API_BASE_URL = "http://localhost:8080/api/v1/expertise";
+const API_BASE_URL = "http://121.196.221.244:8080/api/v1/expertise";
 
 const expertiseTableBody = document.getElementById("expertiseTableBody");
 const expertiseForm = document.getElementById("expertiseForm");
@@ -24,13 +24,22 @@ const usedCategories = document.getElementById("usedCategories");
 
 async function loadExpertise() {
   try {
-    const response = await fetch(API_BASE_URL);
+    // 拉取全部数据，避免分页导致列表不完整
+    const response = await fetch(`${API_BASE_URL}?size=999`);
 
     if (!response.ok) {
       throw new Error("Failed to load expertise data.");
     }
 
-    expertiseCategories = await response.json();
+    const data = await response.json();
+    // 兼容分页格式：如果后端返回分页对象，提取 content 数组；否则直接使用原始数组
+    if (data && Array.isArray(data.content)) {
+      expertiseCategories = data.content;
+    } else if (Array.isArray(data)) {
+      expertiseCategories = data;
+    } else {
+      expertiseCategories = [];
+    }
     refreshView();
   } catch (error) {
     console.error(error);
