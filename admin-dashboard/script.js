@@ -3,8 +3,8 @@
 // Integrated with B2 booking API and B3 specialist API
 // ===============================
 
-const SPECIALIST_API_URL = "http://localhost:8080/api/v1/specialists";
-const BOOKING_API_URL = "http://localhost:8080/api/v1/bookings";
+const SPECIALIST_API_URL = "http://121.196.221.244:8080/api/v1/specialists";
+const BOOKING_API_URL = "http://121.196.221.244:8080/api/v1/bookings";
 
 let specialists = [];
 let bookings = [];
@@ -58,7 +58,8 @@ function getBookingTime(booking) {
 
 async function loadSpecialists() {
   try {
-    const response = await fetch(SPECIALIST_API_URL, {
+    // 获取所有专家，避免分页导致只拉取前10条或空数组
+    const response = await fetch(`${SPECIALIST_API_URL}?size=999`, {
       method: "GET",
       headers: getAuthHeaders()
     });
@@ -67,7 +68,15 @@ async function loadSpecialists() {
       throw new Error("Failed to load specialists.");
     }
 
-    specialists = await response.json();
+    const data = await response.json();
+    // 兼容分页格式：如果后端返回的是分页对象，则提取 content 数组，否则直接使用原始数据
+    if (data && Array.isArray(data.content)) {
+      specialists = data.content;
+    } else if (Array.isArray(data)) {
+      specialists = data;
+    } else {
+      specialists = [];
+    }
     updateSpecialistStats();
     renderSpecialistTable(statusFilter.value);
   } catch (error) {
@@ -132,7 +141,8 @@ function renderSpecialistTable(status = "All") {
 
 async function loadBookings() {
   try {
-    const response = await fetch(BOOKING_API_URL, {
+    // 拉取所有预订，同样通过 size 参数避免分页遗漏
+    const response = await fetch(`${BOOKING_API_URL}?size=999`, {
       method: "GET",
       headers: getAuthHeaders()
     });
@@ -141,7 +151,15 @@ async function loadBookings() {
       throw new Error("Failed to load bookings.");
     }
 
-    bookings = await response.json();
+    const data = await response.json();
+    // 兼容分页格式
+    if (data && Array.isArray(data.content)) {
+      bookings = data.content;
+    } else if (Array.isArray(data)) {
+      bookings = data;
+    } else {
+      bookings = [];
+    }
     updateBookingStats();
     renderBookingTable();
   } catch (error) {
