@@ -9,15 +9,16 @@
     <div class="container">
         <h2>My Profile</h2>
         <div id="profileView">
-            <img id="avatarImg" src="" alt="Avatar" style="width:100px; border-radius:50%;">
+            <div style="text-align:center">
+                <img id="avatarImg" class="avatar-preview" src="" alt="Avatar">
+            </div>
             <p><strong>Name:</strong> <span id="displayName"></span></p>
+            <p><strong>Email:</strong> <span id="displayEmail"></span> (read-only)</p>
             <p><strong>Phone:</strong> <span id="displayPhone"></span></p>
-            <p><strong>Username:</strong> <span id="displayUsername"></span></p>
-            <p><strong>Role:</strong> <span id="displayRole"></span></p>
             <button id="editBtn">Edit Profile</button>
             <button id="changePwdBtn">Change Password</button>
-            <button id="deleteAccountBtn">Delete Account</button>
-            <button id="logoutBtn">Logout</button>
+            <button id="deleteAccountBtn" style="background:#dc3545;">Delete Account</button>
+            <button id="logoutBtn" style="background:#6c757d;">Logout</button>
         </div>
         <div id="editForm" style="display:none;">
             <div class="form-group">
@@ -29,7 +30,7 @@
                 <input type="text" id="editPhone">
             </div>
             <div class="form-group">
-                <label>Avatar</label>
+                <label>Upload Avatar</label>
                 <input type="file" id="avatarFile" accept="image/jpeg,image/png">
             </div>
             <button id="saveBtn">Save</button>
@@ -37,17 +38,22 @@
         </div>
         <div id="changePwdForm" style="display:none;">
             <div class="form-group">
-                <label>New Password</label>
-                <input type="password" id="newPassword" required>
+                <label>Old Password</label>
+                <input type="password" id="oldPassword">
             </div>
-            <button id="submitPwdBtn">Update Password</button>
+            <div class="form-group">
+                <label>New Password</label>
+                <input type="password" id="newPassword">
+                <small>At least 6 characters, include letters and numbers</small>
+            </div>
+            <div class="form-group">
+                <label>Confirm New Password</label>
+                <input type="password" id="confirmNewPassword">
+            </div>
+            <button id="submitPwdBtn">Confirm Change</button>
             <button id="cancelPwdBtn">Cancel</button>
         </div>
         <div id="message" class="message"></div>
-        <div class="nav-links">
-            <a href="specialist-list.html">specialist-list.html</a> |
-            <a href="my-bookings.html">My Bookings</a>
-        </div>
     </div>
     <script type="module" src="js/profile.js"></script>
 </body>
