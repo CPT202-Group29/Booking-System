@@ -37,8 +37,7 @@ class AuthControllerTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        // 手动注入 passwordEncoder，因为 AuthController 没有 setter
-        // 使用反射设置私有字段
+        // 使用反射设置私有字段 passwordEncoder
         try {
             java.lang.reflect.Field field = AuthController.class.getDeclaredField("passwordEncoder");
             field.setAccessible(true);
@@ -62,7 +61,6 @@ class AuthControllerTest {
     @Test
     void testRegisterDuplicateEmail() {
         when(userRepository.existsByEmail("duplicate@test.com")).thenReturn(true);
-
         ResponseEntity<?> resp = authController.register(
                 Map.of("name", "Bob", "email", "duplicate@test.com", "password", "123456"));
         assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
