@@ -80,12 +80,13 @@ class AuthControllerTest {
     @Test
     void testLoginSuccess() {
         User user = new User();
+        user.setUserId(1);                    // ← 关键修复：设置 userId 非空
         user.setEmail("user@test.com");
         user.setUsername("Test User");
         user.setPasswordHash(passwordEncoder.encode("123456"));
         user.setRole("CUSTOMER");
-        user.setPhone("1234567890");    // 非空值，避免 Map.of 抛出 NPE
-        user.setAvatar("");            // 非空值
+        user.setPhone("1234567890");
+        user.setAvatar("");
         user.setFailedAttempts(0);
         user.setLockedUntil(null);
         when(userRepository.findByEmail("user@test.com")).thenReturn(Optional.of(user));
