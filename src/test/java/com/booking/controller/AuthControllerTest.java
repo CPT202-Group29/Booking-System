@@ -37,7 +37,6 @@ class AuthControllerTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        // 使用反射设置私有字段 passwordEncoder
         try {
             java.lang.reflect.Field field = AuthController.class.getDeclaredField("passwordEncoder");
             field.setAccessible(true);
@@ -82,7 +81,13 @@ class AuthControllerTest {
     void testLoginSuccess() {
         User user = new User();
         user.setEmail("user@test.com");
+        user.setUsername("Test User");
         user.setPasswordHash(passwordEncoder.encode("123456"));
+        user.setRole("CUSTOMER");
+        user.setPhone("1234567890");    // 非空值，避免 Map.of 抛出 NPE
+        user.setAvatar("");            // 非空值
+        user.setFailedAttempts(0);
+        user.setLockedUntil(null);
         when(userRepository.findByEmail("user@test.com")).thenReturn(Optional.of(user));
         when(jwtTokenUtil.generateToken("user@test.com")).thenReturn("token-login");
 
