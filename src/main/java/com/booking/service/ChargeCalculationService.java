@@ -42,9 +42,10 @@ public class ChargeCalculationService {
     /** 按距离预约时间的剩余小时数计算退款比例 */
     public BigDecimal calculateRefund(long hoursUntilAppointment) {
         if (hoursUntilAppointment >= 24) {
-            return calculateCharge(null); // 全退（取默认费用作为基数，但实际退款会基于订单金额）
+            return DEFAULT_FEE;                     // 全退
         } else if (hoursUntilAppointment >= 2) {
-            return new BigDecimal("25.00"); // 50%
+            return DEFAULT_FEE.multiply(new BigDecimal("0.5"))
+                    .setScale(2, RoundingMode.HALF_UP);
         }
         return BigDecimal.ZERO;
     }
