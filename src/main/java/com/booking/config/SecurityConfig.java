@@ -54,7 +54,13 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/api/v1/**").permitAll() // 放行所有认证和业务接口
+                // 管理员专用接口（必须放在 permitAll 之前）
+                .requestMatchers("/api/v1/specialists/**").hasAuthority("ROLE_ADMIN")
+                .requestMatchers("/api/v1/expertise/**").hasAuthority("ROLE_ADMIN")
+                .requestMatchers("/api/v1/slots/**").hasAuthority("ROLE_ADMIN")
+                // 放行所有认证和客户端业务接口
+                .requestMatchers("/api/auth/**", "/api/v1/**").permitAll()
+                // 其他请求需要认证
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
