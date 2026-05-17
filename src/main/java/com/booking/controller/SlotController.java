@@ -19,7 +19,7 @@ public class SlotController {
     private TimeSlotRepository timeSlotRepository;
 
     /** 获取所有时间段（用于管理页面列表） */
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<List<TimeSlot>> getAllSlots() {
         return ResponseEntity.ok(timeSlotRepository.findAll());
     }
