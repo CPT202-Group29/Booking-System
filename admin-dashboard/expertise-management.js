@@ -22,17 +22,31 @@ const activeExpertise = document.getElementById("activeExpertise");
 const inactiveExpertise = document.getElementById("inactiveExpertise");
 const usedCategories = document.getElementById("usedCategories");
 
+// 认证头
+function getAuthHeaders() {
+  const token = localStorage.getItem("token");
+  if (token) {
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    };
+  }
+  return { "Content-Type": "application/json" };
+}
+
 async function loadExpertise() {
   try {
-    // 拉取全部数据，避免分页导致列表不完整
-    const response = await fetch(`${API_BASE_URL}?size=999`);
+    // 拉取全部数据，附带认证头
+    const response = await fetch(`${API_BASE_URL}?size=999`, {
+      headers: getAuthHeaders()
+    });
 
     if (!response.ok) {
       throw new Error("Failed to load expertise data.");
     }
 
     const data = await response.json();
-    // 兼容分页格式：如果后端返回分页对象，提取 content 数组；否则直接使用原始数组
+    // 兼容分页格式
     if (data && Array.isArray(data.content)) {
       expertiseCategories = data.content;
     } else if (Array.isArray(data)) {
@@ -82,15 +96,12 @@ function renderExpertise(status = "All") {
 
 function updateStats() {
   totalExpertise.textContent = expertiseCategories.length;
-
   activeExpertise.textContent = expertiseCategories.filter(
     (category) => category.status === "Active"
   ).length;
-
   inactiveExpertise.textContent = expertiseCategories.filter(
     (category) => category.status === "Inactive"
   ).length;
-
   usedCategories.textContent = expertiseCategories.filter(
     (category) => Number(category.usedBy) > 0
   ).length;
@@ -124,9 +135,7 @@ expertiseForm.addEventListener("submit", async function (event) {
     if (currentEditIndex === "") {
       response = await fetch(API_BASE_URL, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(expertiseData)
       });
 
@@ -140,9 +149,7 @@ expertiseForm.addEventListener("submit", async function (event) {
 
       response = await fetch(`${API_BASE_URL}/${categoryId}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(expertiseData)
       });
 
@@ -186,9 +193,7 @@ async function toggleExpertiseStatus(index) {
   try {
     const response = await fetch(`${API_BASE_URL}/${category.id}/status`, {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify({
         status: newStatus
       })
