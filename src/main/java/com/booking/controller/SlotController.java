@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -16,6 +17,12 @@ public class SlotController {
 
     @Autowired
     private TimeSlotRepository timeSlotRepository;
+
+    /** 获取所有时间段（用于管理页面列表） */
+    @GetMapping
+    public ResponseEntity<List<TimeSlot>> getAllSlots() {
+        return ResponseEntity.ok(timeSlotRepository.findAll());
+    }
 
     /** 创建时间段（含重叠检测） */
     @PostMapping
