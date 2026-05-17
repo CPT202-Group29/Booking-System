@@ -3,6 +3,7 @@ package com.booking.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -54,13 +55,22 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                // 管理员专用接口（必须放在 permitAll 之前）
-                .requestMatchers("/api/v1/specialists/**").hasAuthority("ROLE_ADMIN")
-                .requestMatchers("/api/v1/expertise/**").hasAuthority("ROLE_ADMIN")
-                .requestMatchers("/api/v1/slots/**").hasAuthority("ROLE_ADMIN")
-                // 放行所有认证和客户端业务接口
+                // 管理员专用写操作（按方法区分）
+                .requestMatchers(HttpMethod.POST, "/api/v1/specialists").hasAuthority("ROLE_ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/v1/specialists/**").hasAuthority("ROLE_ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/v1/specialists/**").hasAuthority("ROLE_ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/specialists/**").hasAuthority("ROLE_ADMIN")
+
+                .requestMatchers(HttpMethod.POST, "/api/v1/expertise").hasAuthority("ROLE_ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/v1/expertise/**").hasAuthority("ROLE_ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/v1/expertise/**").hasAuthority("ROLE_ADMIN")
+
+                .requestMatchers(HttpMethod.POST, "/api/v1/slots").hasAuthority("ROLE_ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/v1/slots/**").hasAuthority("ROLE_ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/slots/**").hasAuthority("ROLE_ADMIN")
+
+                // 放行所有认证接口和客户端业务 GET 接口
                 .requestMatchers("/api/auth/**", "/api/v1/**").permitAll()
-                // 其他请求需要认证
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
