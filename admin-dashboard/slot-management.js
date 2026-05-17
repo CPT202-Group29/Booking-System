@@ -3,7 +3,18 @@ const slotForm = document.getElementById("slotForm");
 const slotListBody = document.getElementById("slotListBody");
 let editingSlotId = null;
 
-// 创建 or 更新 槽位
+// 认证头函数（新增）
+function getAuthHeaders() {
+  const token = localStorage.getItem("token");
+  if (token) {
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    };
+  }
+  return { "Content-Type": "application/json" };
+}
+
 slotForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const specialistId = document.getElementById("specialistId").value;
@@ -32,7 +43,7 @@ slotForm.addEventListener("submit", async (event) => {
       : `${API_BASE}/api/v1/slots`;
     const response = await fetch(url, {
       method: editingSlotId ? "PUT" : "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
       body: JSON.stringify(data)
     });
     if (!response.ok) {
@@ -50,10 +61,12 @@ slotForm.addEventListener("submit", async (event) => {
   }
 });
 
-// 加载 所有 时间槽 ← 只改了这一行 ↓
 async function loadSlots() {
   try {
-    const response = await fetch(`${API_BASE}/api/v1/slots/all`);
+    // 添加认证头（修改点）
+    const response = await fetch(`${API_BASE}/api/v1/slots/all`, {
+      headers: getAuthHeaders()
+    });
     if (!response.ok) throw new Error("Failed to load slots");
     const slots = await response.json();
     renderSlots(slots);
@@ -63,7 +76,6 @@ async function loadSlots() {
   }
 }
 
-// 渲染 时间槽列表
 function renderSlots(slots) {
   if (!slotListBody) return;
   if (slots.length === 0) {
@@ -89,7 +101,6 @@ function renderSlots(slots) {
     .join("");
 }
 
-// 点击编辑按钮后的处理
 window.editSlot = function (id, start, end, specialistId) {
   editingSlotId = id;
   document.getElementById("specialistId").value = specialistId;
@@ -98,12 +109,12 @@ window.editSlot = function (id, start, end, specialistId) {
   document.getElementById("submitBtn").textContent = "Update Slot";
 };
 
-// 删除时间槽
 window.deleteSlot = async function (id) {
   if (!confirm("Are you sure you want to delete this slot?")) return;
   try {
     const response = await fetch(`${API_BASE}/api/v1/slots/${id}`, {
-      method: "DELETE"
+      method: "DELETE",
+      headers: getAuthHeaders()
     });
     if (!response.ok) {
       const err = await response.json();
@@ -117,5 +128,4 @@ window.deleteSlot = async function (id) {
   }
 };
 
-// 页面加载时先获取一次列表
 loadSlots();
