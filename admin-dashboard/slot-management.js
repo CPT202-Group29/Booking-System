@@ -50,10 +50,10 @@ slotForm.addEventListener("submit", async (event) => {
   }
 });
 
-// 加载 所有 时间槽
+// 加载 所有 时间槽 ← 只改了这一行 ↓
 async function loadSlots() {
   try {
-    const response = await fetch(`${API_BASE}/api/v1/slots`);
+    const response = await fetch(`${API_BASE}/api/v1/slots/all`);
     if (!response.ok) throw new Error("Failed to load slots");
     const slots = await response.json();
     renderSlots(slots);
