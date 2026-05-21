@@ -70,7 +70,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, "/api/v1/slots/**").hasAuthority("ROLE_ADMIN")
 
                 // 放行所有认证接口和客户端业务 GET 接口
-                .requestMatchers("/api/auth/**", "/api/v1/**").permitAll()
+                .requestMatchers("/api/auth/**", "/api/v1/**", "/api/admin/**", "/api/specialist/**").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
