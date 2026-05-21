@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <h2>Booking Admin</h2>
+      <nav>
+        <a class="active" href="index.html">Dashboard</a>
+        <a href="specialist-management.html">Specialists</a>
+        <a href="booking-management.html">Bookings</a>
+        <a href="expertise-management.html">Expertise</a>
+        <a href="#">Reports</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="page-header">
+        <div>
+          <h1>Admin Dashboard</h1>
+          <p>Manage specialist records, booking activity, and system overview.</p>
+        </div>
+        <button class="primary-btn" id="refreshBtn">Refresh Data</button>
+      </header>
+
+      <section class="stats-grid">
+        <div class="stat-card">
+          <p>Total Specialists</p>
+          <h2 id="totalSpecialists">0</h2>
+        </div>
+
+        <div class="stat-card">
+          <p>Available Specialists</p>
+          <h2 id="availableSpecialists">0</h2>
+        </div>
+
+        <div class="stat-card">
+          <p>Total Bookings</p>
+          <h2 id="totalBookings">0</h2>
+        </div>
+
+        <div class="stat-card">
+          <p>Pending Bookings</p>
+          <h2 id="pendingBookings">0</h2>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Specialist Records</h2>
+            <p class="panel-subtitle">
+              Admin-side specialist data uses the same fields as the specialist list and detail pages.
+            </p>
+          </div>
+
+          <select id="statusFilter">
+            <option value="All">All Status</option>
+            <option value="Available">Available</option>
+            <option value="Unavailable">Unavailable</option>
+          </select>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Expertise</th>
+              <th>Level</th>
+              <th>Fee</th>
+              <th>Status</th>
+              <th>Contact</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody id="specialistTableBody"></tbody>
+        </table>
+      </section>
+
+      <section class="content-grid">
+        <div class="panel">
+          <h2>Recent Bookings</h2>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Booking ID</th>
+                <th>Customer</th>
+                <th>Specialist</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="bookingTableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="panel">
+          <h2>Booking Status Summary</h2>
+
+          <div class="status-row">
+            <span>Pending</span>
+            <strong id="summaryPendingBookings">0</strong>
+          </div>
+
+          <div class="status-row">
+            <span>Confirmed</span>
+            <strong id="summaryConfirmedBookings">0</strong>
+          </div>
+
+          <div class="status-row">
+            <span>Completed</span>
+            <strong id="summaryCompletedBookings">0</strong>
+          </div>
+
+          <div class="status-row">
+            <span>Cancelled</span>
+            <strong id="summaryCancelledBookings">0</strong>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

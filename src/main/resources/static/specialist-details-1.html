@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Specialist Details</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f6f8fb;
+      margin: 0;
+      padding: 40px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin-bottom: 12px;
+      color: #222;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 24px;
+      font-size: 16px;
+    }
+
+    .row {
+      margin-bottom: 18px;
+      font-size: 18px;
+      line-height: 1.7;
+    }
+
+    .label {
+      font-weight: bold;
+      color: #444;
+      display: inline-block;
+      width: 150px;
+      vertical-align: top;
+    }
+
+    .section-title {
+      margin-top: 32px;
+      margin-bottom: 16px;
+      font-size: 22px;
+      font-weight: bold;
+      color: #222;
+      border-bottom: 2px solid #e5e7eb;
+      padding-bottom: 8px;
+    }
+
+    .availability-box {
+      background-color: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 12px;
+    }
+
+    .availability-summary {
+      margin-bottom: 18px;
+      font-size: 17px;
+      line-height: 1.7;
+    }
+
+    .day-block {
+      margin-top: 18px;
+      padding: 16px;
+      background: white;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .day-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 12px;
+      color: #1f2937;
+    }
+
+    .slot-list {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .slot-list li {
+      margin-bottom: 8px;
+      font-size: 16px;
+      color: #374151;
+    }
+
+    .note {
+      color: #666;
+      font-size: 14px;
+      margin-top: 14px;
+    }
+
+    .back-btn {
+      display: inline-block;
+      margin-top: 28px;
+      padding: 10px 18px;
+      background: #2563eb;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+    }
+
+    .back-btn:hover {
+      background: #1d4ed8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Specialist Details</h1>
+    <p class="subtitle">View detailed information about the selected specialist.</p>
+
+    <div class="row"><span class="label">Name:</span> <span id="name"></span></div>
+    <div class="row"><span class="label">Expertise:</span> <span id="expertise"></span></div>
+    <div class="row"><span class="label">Level:</span> <span id="level"></span></div>
+    <div class="row"><span class="label">Fee:</span> <span id="fee"></span></div>
+    <div class="row"><span class="label">Status:</span> <span id="status"></span></div>
+    <div class="row"><span class="label">Contact:</span> <span id="contact"></span></div>
+    <div class="row"><span class="label">Description:</span> <span id="description"></span></div>
+
+    <div class="section-title">Availability</div>
+
+    <div class="availability-box">
+      <div class="availability-summary">
+        <strong>Total Available Slots:</strong> <span id="totalSlots"></span>
+      </div>
+      <div class="availability-summary">
+        <strong>Next Available Slot:</strong> <span id="nextSlot"></span>
+      </div>
+
+      <div id="availabilityDays"></div>
+
+      <p class="note">
+        Static prototype based on B2 availability API structure.
+      </p>
+    </div>
+
+    <a href="specialist-list.html" class="back-btn">Back</a>
+  </div>
+
+  <script>
+    const specialistData = {
+      id: 1,
+      name: "Dr. Alice Smith",
+      expertise: "Psychology",
+      level: "Senior",
+      fee: 150.00,
+      status: 1,
+      contact: "alice@example.com",
+      description: "Experienced psychologist with 10 years in clinical practice.",
+      availability: {
+        specialistId: 200,
+        totalAvailableSlots: 5,
+        nextAvailableSlot: "2026-04-28 09:00:00",
+        byDay: [
+          {
+            date: "2026-04-28",
+            dayOfWeek: "TUESDAY",
+            slots: [
+              { slotId: 1, time: "09:00 - 10:00" },
+              { slotId: 2, time: "10:00 - 11:00" }
+            ]
+          },
+          {
+            date: "2026-04-29",
+            dayOfWeek: "WEDNESDAY",
+            slots: [
+              { slotId: 3, time: "14:00 - 15:00" }
+            ]
+          }
+        ]
+      }
+    };
+
+    function mapStatus(statusValue) {
+      return statusValue === 1 ? "Available" : "Unavailable";
+    }
+
+    document.getElementById("name").textContent = specialistData.name;
+    document.getElementById("expertise").textContent = specialistData.expertise;
+    document.getElementById("level").textContent = specialistData.level;
+    document.getElementById("fee").textContent = specialistData.fee.toFixed(2);
+    document.getElementById("status").textContent = mapStatus(specialistData.status);
+    document.getElementById("contact").textContent = specialistData.contact;
+    document.getElementById("description").textContent = specialistData.description;
+
+    document.getElementById("totalSlots").textContent =
+      specialistData.availability.totalAvailableSlots;
+    document.getElementById("nextSlot").textContent =
+      specialistData.availability.nextAvailableSlot;
+
+    const availabilityDaysContainer = document.getElementById("availabilityDays");
+
+    specialistData.availability.byDay.forEach(day => {
+      const dayBlock = document.createElement("div");
+      dayBlock.className = "day-block";
+
+      const dayTitle = document.createElement("div");
+      dayTitle.className = "day-title";
+      dayTitle.textContent = `${day.date} (${day.dayOfWeek})`;
+
+      const slotList = document.createElement("ul");
+      slotList.className = "slot-list";
+
+      day.slots.forEach(slot => {
+        const li = document.createElement("li");
+        li.textContent = slot.time;
+        slotList.appendChild(li);
+      });
+
+      dayBlock.appendChild(dayTitle);
+      dayBlock.appendChild(slotList);
+      availabilityDaysContainer.appendChild(dayBlock);
+    });
+  </script>
+</body>
+</html>

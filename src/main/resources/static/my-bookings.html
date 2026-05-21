@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Bookings</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .status-pending { color: #f0ad4e; font-weight: bold; }
+        .status-confirmed { color: #5bc0de; font-weight: bold; }
+        .status-cancelled { color: #d9534f; font-weight: bold; }
+        .status-completed { color: #5cb85c; font-weight: bold; }
+        .booking-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .button-group {
+            margin-top: 10px;
+        }
+        .btn-cancel {
+            background: #d9534f;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .btn-reschedule {
+            background: #f0ad4e;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-cancel:hover, .btn-reschedule:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>My Appointments</h2>
+        <div id="bookingsList">Loading...</div>
+        <div class="nav-links">
+            <a href="index.html">Back to Experts</a> | 
+            <a href="profile.html">My Profile</a> | 
+            <a href="#" id="logoutLink">Logout</a>
+        </div>
+    </div>
+    <script type="module" src="js/my-bookings.js"></script>
+</body>
+</html>
