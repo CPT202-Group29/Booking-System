@@ -50,8 +50,7 @@ public class SpecialistController {
         probe.setStatus(status);
 
         ExampleMatcher matcher = ExampleMatcher.matching()
-                .withIgnorePaths("id", "fee", "contact", "description");
-
+            .withIgnorePaths("id", "fee", "contact", "description", "userId", "approvalStatus");
         if (name != null && !name.isEmpty()) {
             probe.setName(name);
             matcher = matcher.withMatcher("name",
@@ -61,7 +60,12 @@ public class SpecialistController {
         }
 
         Example<Specialist> example = Example.of(probe, matcher);
-        List<Specialist> results = specialistRepository.findAll(example);
+        List<Specialist> results = specialistRepository.findAll(example);   
+
+        // only show approved specialists to customers
+        results = results.stream()
+        .filter(s -> "APPROVED".equals(s.getApprovalStatus()))
+        .collect(Collectors.toList());
 
         // 费用范围过滤
         if (minFee != null || maxFee != null) {
@@ -113,10 +117,13 @@ public class SpecialistController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getSpecialistById(@PathVariable Integer id) {
         Specialist specialist = specialistRepository.findById(id).orElse(null);
-        if (specialist == null) {
+
+    // return 404 if not found or not approved
+        if (specialist == null || !"APPROVED".equals(specialist.getApprovalStatus())) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Specialist not found: " + id));
+                .body(Map.of("error", "Specialist not found: " + id));
         }
+
         return ResponseEntity.ok(specialist);
     }
 
