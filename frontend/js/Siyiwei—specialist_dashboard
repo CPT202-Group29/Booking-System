@@ -64,15 +64,6 @@
       background: #2563eb;
     }
 
-    .logout-btn {
-      margin-top: auto;
-      background: #1e293b;
-    }
-
-    .logout-btn:hover {
-      background: #334155;
-    }
-
     .main {
       flex: 1;
       padding: 32px;
@@ -253,8 +244,7 @@
       font-weight: 700;
     }
 
-    .status-available,
-    .status-approved {
+    .status-available {
       background: #dcfce7;
       color: #15803d;
     }
@@ -275,7 +265,6 @@
     }
 
     .status-cancelled,
-    .status-rejected,
     .status-expired {
       background: #fee2e2;
       color: #b91c1c;
@@ -458,7 +447,6 @@
       <button class="nav-btn active" onclick="scrollToSection('profile-section')">My Profile</button>
       <button class="nav-btn" onclick="scrollToSection('bookings-section')">My Bookings</button>
       <button class="nav-btn" onclick="scrollToSection('slots-section')">My Time Slots</button>
-      <button class="nav-btn logout-btn" onclick="logout()">Logout</button>
     </aside>
 
     <main class="main">
@@ -496,7 +484,7 @@
 
       <section class="section" id="profile-section">
         <h2>My Profile</h2>
-        <p class="section-subtitle">Profile data is loaded from the specialist dashboard backend API.</p>
+        <p class="section-subtitle">Profile data is loaded from the specialist backend API.</p>
 
         <div class="profile-grid">
           <div class="profile-avatar" id="avatarBox">SP</div>
@@ -506,11 +494,6 @@
               <div class="info-item">
                 <div class="info-label">Specialist ID</div>
                 <div class="info-value" id="profileId">-</div>
-              </div>
-
-              <div class="info-item">
-                <div class="info-label">Approval Status</div>
-                <div class="info-value" id="profileApprovalStatus">-</div>
               </div>
 
               <div class="info-item">
@@ -541,6 +524,11 @@
               <div class="info-item">
                 <div class="info-label">Current Status</div>
                 <div class="info-value" id="profileStatus">-</div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">Description</div>
+                <div class="info-value" id="profileDescriptionText">-</div>
               </div>
             </div>
 
@@ -589,7 +577,7 @@
 
       <section class="section" id="slots-section">
         <h2>My Time Slots</h2>
-        <p class="section-subtitle">The current specialist does not need to manually type a specialist ID.</p>
+        <p class="section-subtitle">The specialist only needs to choose time values. No manual specialist ID input is required.</p>
 
         <div class="slot-form">
           <div class="field">
@@ -606,7 +594,7 @@
         <button class="btn btn-primary" onclick="createSlot()">Add Slot</button>
 
         <div class="notice">
-          Slot creation now uses the specialist ID from login information, so the specialist only needs to choose time values.
+          Slot creation uses the specialist ID that has already been stored after login.
         </div>
 
         <div id="slotsContainer" class="slot-list" style="margin-top:20px;"></div>
@@ -692,11 +680,11 @@
 
     function getStatusClass(status) {
       const s = (status || '').toUpperCase();
-      if (['AVAILABLE', 'APPROVED'].includes(s)) return 'status-available';
+      if (s === 'AVAILABLE') return 'status-available';
       if (s === 'PENDING') return 'status-pending';
       if (s === 'CONFIRMED') return 'status-confirmed';
       if (s === 'COMPLETED') return 'status-completed';
-      if (['CANCELLED', 'REJECTED', 'EXPIRED'].includes(s)) return 'status-cancelled';
+      if (['CANCELLED', 'EXPIRED'].includes(s)) return 'status-cancelled';
       return 'status-pending';
     }
 
@@ -721,12 +709,9 @@
       document.getElementById('profileExpertise').textContent = data.expertise || '-';
       document.getElementById('profileLevel').textContent = data.level || '-';
       document.getElementById('profileFee').textContent = data.fee != null ? `£${data.fee}` : '-';
+      document.getElementById('profileDescriptionText').textContent = data.description || '-';
 
-      const approvalStatus = data.approvalStatus || getUser().approvalStatus || '-';
-      document.getElementById('profileApprovalStatus').innerHTML =
-        `<span class="status-badge ${getStatusClass(approvalStatus)}">${approvalStatus}</span>`;
-
-      const statusValue = data.status || 'Available';
+      const statusValue = data.status || 'AVAILABLE';
       document.getElementById('profileStatus').innerHTML =
         `<span class="status-badge ${getStatusClass(statusValue)}">${statusValue}</span>`;
 
@@ -748,6 +733,7 @@
       try {
         clearMessage();
         const specialistId = getSpecialistId();
+
         const body = {
           name: document.getElementById('profileNameInput').value.trim(),
           contact: document.getElementById('profileContactInput').value.trim(),
@@ -786,7 +772,7 @@
 
         const status = booking.status || '-';
         const cancelReason = booking.cancelReason || '-';
-        const customerText = booking.customerId || booking.customerName || '-';
+        const customerText = booking.customerName || booking.customerId || '-';
         const dateText = booking.date || booking.bookingDate || '-';
         const timeText =
           booking.timeSlotDisplay ||
@@ -956,13 +942,8 @@
         const specialistId = getSpecialistId();
 
         if (!specialistId) {
-          showMessage('No specialist account information found. Please log in again.', 'error');
+          showMessage('No specialistId found in localStorage user.', 'error');
           return;
-        }
-
-        const approvalStatus = (getUser().approvalStatus || '').toUpperCase();
-        if (approvalStatus && approvalStatus !== 'APPROVED') {
-          showMessage(`Your specialist account is currently ${approvalStatus}. Some dashboard functions may be limited.`, 'error');
         }
 
         await loadProfile();
@@ -981,12 +962,6 @@
 
     function goBack() {
       history.back();
-    }
-
-    function logout() {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '../customer/login.html';
     }
 
     initDashboard();
