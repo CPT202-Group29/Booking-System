@@ -352,3 +352,27 @@ td {
   line-height: 1.8;
   font-size: 14px;
 }
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.back-btn {
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .page-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
