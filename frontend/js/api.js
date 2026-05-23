@@ -328,3 +328,154 @@ export async function getBookingFee(specialistId) {
     const data = await response.json();
     return data.bookingFee;
 }
+
+// ========== Specialist Registration ==========
+export async function registerSpecialist(name, email, expertise, password) {
+    const response = await fetch(`${API_BASE}/api/auth/register/specialist`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, expertise, password })
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Specialist registration failed');
+    }
+    return response.json();
+}
+
+// ========== Admin: Specialist Approvals ==========
+export async function getPendingSpecialists() {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE}/api/admin/specialists/pending`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error('Failed to fetch pending specialists');
+    return response.json();
+}
+
+export async function getAllSpecialists() {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE}/api/admin/specialists/all`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error('Failed to fetch all specialists');
+    return response.json();
+}
+
+export async function approveSpecialist(id, level, fee) {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE}/api/admin/specialists/${id}/approve`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ level, fee })
+    });
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Approval failed');
+    }
+    return response.json();
+}
+
+export async function rejectSpecialist(id) {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE}/api/admin/specialists/${id}/reject`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Rejection failed');
+    }
+    return response.json();
+}
+
+// ========== Specialist Dashboard ==========
+export async function getSpecialistBookings(specialistId) {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE}/api/specialist/${specialistId}/bookings`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error('Failed to fetch bookings');
+    return response.json();
+}
+
+export async function confirmBookingBySpecialist(bookingId) {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE}/api/specialist/bookings/${bookingId}/confirm`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error('Confirm failed');
+    return response.json();
+}
+
+export async function completeBookingBySpecialist(bookingId) {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE}/api/specialist/bookings/${bookingId}/complete`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error('Complete failed');
+    return response.json();
+}
+
+export async function cancelBookingBySpecialist(bookingId, cancelReason) {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE}/api/specialist/bookings/${bookingId}/cancel`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ cancelReason })
+    });
+    if (!response.ok) throw new Error('Cancel failed');
+    return response.json();
+}
+
+export async function getSpecialistSlots(specialistId) {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE}/api/specialist/${specialistId}/slots`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error('Failed to fetch slots');
+    return response.json();
+}
+
+export async function addSpecialistSlot(specialistId, startTime, endTime) {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE}/api/specialist/${specialistId}/slots`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ startTime, endTime })
+    });
+    if (!response.ok) throw new Error('Failed to add slot');
+    return response.json();
+}
+
+export async function deleteSpecialistSlot(slotId) {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE}/api/specialist/slots/${slotId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error('Failed to delete slot');
+    return response.json();
+}
+
+export async function getSpecialistProfile(specialistId) {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE}/api/specialist/${specialistId}/profile`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error('Failed to fetch profile');
+    return response.json();
+}
+
+export async function updateSpecialistProfile(specialistId, name, contact, description) {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE}/api/specialist/${specialistId}/profile`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ name, contact, description })
+    });
+    if (!response.ok) throw new Error('Failed to update profile');
+    return response.json();
+}
