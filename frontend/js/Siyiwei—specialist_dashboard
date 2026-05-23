@@ -407,6 +407,14 @@
       padding: 10px 0;
     }
 
+    .cancel-reminder {
+      margin-top: 6px;
+      color: #dc2626;
+      font-weight: 600;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
     @media (max-width: 900px) {
       .profile-grid {
         grid-template-columns: 1fr;
@@ -565,7 +573,7 @@
               <th>Date</th>
               <th>Time Slot</th>
               <th>Status</th>
-              <th>Cancel Reason</th>
+              <th>Cancel Reason / Reminder</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -688,6 +696,20 @@
       return 'status-pending';
     }
 
+    function canSpecialistCancel(status) {
+      const s = (status || '').toUpperCase();
+      return s === 'PENDING' || s === 'CONFIRMED';
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     function updateStats(bookings = [], slots = []) {
       document.getElementById('totalBookings').textContent = bookings.length;
       document.getElementById('pendingBookings').textContent =
@@ -768,8 +790,6 @@
       empty.style.display = 'none';
 
       bookings.forEach(booking => {
-        const tr = document.createElement('tr');
-
         const status = booking.status || '-';
         const cancelReason = booking.cancelReason || '-';
         const customerText = booking.customerName || booking.customerId || '-';
@@ -781,27 +801,41 @@
           booking.slotId ||
           '-';
 
+        const cancelReminder = (status || '').toUpperCase() === 'CANCELLED'
+          ? `<div class="cancel-reminder">
+               User Reminder: The customer will see this booking as cancelled in My Bookings.
+               ${booking.cancelReason ? `Reason: ${escapeHtml(booking.cancelReason)}` : ''}
+             </div>`
+          : '';
+
         let actionHtml = '';
 
         if ((status || '').toUpperCase() === 'PENDING') {
           actionHtml += `<button class="btn-sm btn-success" onclick="confirmBooking(${booking.id})">Confirm</button>`;
-          actionHtml += `<button class="btn-sm btn-danger" onclick="cancelBooking(${booking.id})">Cancel</button>`;
-        } else if ((status || '').toUpperCase() === 'CONFIRMED') {
+        }
+
+        if ((status || '').toUpperCase() === 'CONFIRMED') {
           actionHtml += `<button class="btn-sm btn-success" onclick="completeBooking(${booking.id})">Complete</button>`;
+        }
+
+        if (canSpecialistCancel(status)) {
           actionHtml += `<button class="btn-sm btn-danger" onclick="cancelBooking(${booking.id})">Cancel</button>`;
         }
 
+        const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${booking.id ?? '-'}</td>
           <td>${customerText}</td>
-          <td>${booking.topic || '-'}</td>
+          <td>${escapeHtml(booking.topic || '-')}</td>
           <td>${dateText}</td>
           <td>${timeText}</td>
           <td><span class="status-badge ${getStatusClass(status)}">${status}</span></td>
-          <td>${cancelReason}</td>
+          <td>
+            ${escapeHtml(cancelReason)}
+            ${cancelReminder}
+          </td>
           <td><div class="table-actions">${actionHtml || '-'}</div></td>
         `;
-
         tbody.appendChild(tr);
       });
 
@@ -835,16 +869,31 @@
     }
 
     async function cancelBooking(id) {
-      const cancelReason = prompt('Please enter the cancellation reason:');
-      if (cancelReason === null) return;
+      const cancelReason = prompt('Please enter a clear cancellation reason for the customer:');
+      if (!cancelReason || !cancelReason.trim()) return;
+
+      const confirmed = confirm(
+        'After cancellation, the customer will see a clear cancellation reminder in My Bookings. Continue?'
+      );
+      if (!confirmed) return;
 
       try {
         clearMessage();
+
         await authFetch(`${API_BASE}/api/specialist/bookings/${id}/cancel`, {
           method: 'POST',
-          body: JSON.stringify({ cancelReason })
+          body: JSON.stringify({
+            cancelReason: cancelReason.trim(),
+            reason: cancelReason.trim(),
+            changedBy: 'SPECIALIST'
+          })
         });
-        showMessage(`Booking ${id} cancelled successfully.`, 'success');
+
+        showMessage(
+          `Booking ${id} cancelled successfully. The customer will be clearly reminded in My Bookings.`,
+          'success'
+        );
+
         await reloadData();
       } catch (error) {
         showMessage(`Cancel failed: ${error.message}`, 'error');
