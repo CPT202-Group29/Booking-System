@@ -1,11 +1,49 @@
 const API_BASE = 'http://121.196.221.244:8080';
 
-// ========== Auth APIs ==========
-export async function register(name, email, password, verificationCode) {
-    const response = await fetch(`${API_BASE}/api/auth/register`, {
+// ========== 通用请求封装（带 token 可选）==========
+async function authFetch(url, options = {}) {
+    const token = localStorage.getItem('token');
+    const headers = { 'Content-Type': 'application/json', ...options.headers };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(url, { ...options, headers });
+    if (!res.ok) {
+        const text = await res.text();
+        try {
+            const err = JSON.parse(text);
+            throw new Error(err.error || `HTTP ${res.status}`);
+        } catch {
+            throw new Error(text || `HTTP ${res.status}`);
+        }
+    }
+    const contentType = res.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+        return res.json();
+    }
+    return res.text();
+}
+
+// ========== 认证 API（新增/修改）==========
+
+// 发送邮箱验证码
+export async function sendVerificationCode(email) {
+    const response = await fetch(`${API_BASE}/api/v1/auth/send-code`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password })
+        body: JSON.stringify({ email })
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to send code');
+    }
+    return response.json();
+}
+
+// 客户注册（需要验证码）
+export async function register(name, email, password, verificationCode) {
+    const response = await fetch(`${API_BASE}/api/v1/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, verificationCode })
     });
     if (!response.ok) {
         const error = await response.json();
@@ -16,8 +54,23 @@ export async function register(name, email, password, verificationCode) {
     return data;
 }
 
+// 专家注册（需要验证码）
+export async function registerSpecialist(name, email, expertise, password, verificationCode) {
+    const response = await fetch(`${API_BASE}/api/auth/register/specialist`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, expertise, password, verificationCode })
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Specialist registration failed');
+    }
+    return response.json();
+}
+
+// 登录
 export async function login(email, password) {
-    const response = await fetch(`${API_BASE}/api/auth/login`, {
+    const response = await fetch(`${API_BASE}/api/v1/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -29,30 +82,22 @@ export async function login(email, password) {
     const data = await response.json();
     localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify(data.user));
-    setCurrentUser(data.user);
     return data;
 }
 
+// 登出
 export async function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     return { success: true };
 }
 
-export async function sendVerificationCode(email) {
-    const response = await fetch(`${API_BASE}/api/auth/send-code?email=${encodeURIComponent(email)}`, {
-        method: 'POST'
-    });
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to send verification code');
-    }
-    return response.json();
-}
-
+// 发送重置密码验证码
 export async function sendResetCode(email) {
-    const response = await fetch(`${API_BASE}/api/auth/send-reset-code?email=${encodeURIComponent(email)}`, {
-        method: 'POST'
+    const response = await fetch(`${API_BASE}/api/v1/auth/send-reset-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
     });
     if (!response.ok) {
         const error = await response.json();
@@ -61,11 +106,12 @@ export async function sendResetCode(email) {
     return response.json();
 }
 
+// 重置密码
 export async function resetPassword(email, verificationCode, newPassword) {
-    const response = await fetch(`${API_BASE}/api/auth/reset-password`, {
+    const response = await fetch(`${API_BASE}/api/v1/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, code: verificationCode, newPassword })
+        body: JSON.stringify({ email, verificationCode, newPassword })
     });
     if (!response.ok) {
         const error = await response.json();
@@ -74,30 +120,7 @@ export async function resetPassword(email, verificationCode, newPassword) {
     return response.json();
 }
 
-// ========== Change Password ==========
-export async function changePassword(oldPassword, newPassword) {
-    const token = localStorage.getItem('token');
-    const userStr = localStorage.getItem('user');
-    if (!token || !userStr) throw new Error('Not authenticated');
-    const user = JSON.parse(userStr);
-    const email = user.email;
-
-    const response = await fetch(`${API_BASE}/api/auth/change-password`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ email, oldPassword, newPassword })
-    });
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Change password failed');
-    }
-    return response.json();
-}
-
-// ========== Profile APIs ==========
+// ========== 原有个人资料 API ==========
 let currentUser = null;
 export function setCurrentUser(user) {
     currentUser = user;
@@ -151,15 +174,11 @@ export async function updateProfile(name, phone) {
 export async function uploadAvatar(file) {
     const token = localStorage.getItem('token');
     if (!token) throw new Error('Not authenticated');
-
     const formData = new FormData();
     formData.append('file', file);
-
     const response = await fetch(`${API_BASE}/api/users/me/avatar`, {
         method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Authorization': `Bearer ${token}` },
         body: formData
     });
     if (!response.ok) {
@@ -173,6 +192,27 @@ export async function uploadAvatar(file) {
         setCurrentUser(user);
     }
     return data;
+}
+
+export async function changePassword(oldPassword, newPassword) {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    if (!token || !userStr) throw new Error('Not authenticated');
+    const user = JSON.parse(userStr);
+    const email = user.email;
+    const response = await fetch(`${API_BASE}/api/auth/change-password`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ email, oldPassword, newPassword })
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Change password failed');
+    }
+    return response.json();
 }
 
 export async function deleteAccount(password) {
@@ -195,7 +235,7 @@ export async function deleteAccount(password) {
     return { success: true };
 }
 
-// ========== Bookings APIs ==========
+// ========== 原有预约 API ==========
 export async function getMyBookings() {
     const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
@@ -219,17 +259,13 @@ export async function cancelBooking(bookingId, cancelReason) {
     if (!token || !userStr) throw new Error('Not authenticated');
     const user = JSON.parse(userStr);
     const userId = user.userId || user.id;
-
     const response = await fetch(`${API_BASE}/api/v1/bookings/${bookingId}/cancel`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-            customerId: userId,
-            cancelReason: cancelReason
-        })
+        body: JSON.stringify({ customerId: userId, cancelReason })
     });
     if (!response.ok) {
         const errorData = await response.json();
@@ -244,17 +280,13 @@ export async function rescheduleBooking(bookingId, newSlotId) {
     if (!token || !userStr) throw new Error('Not authenticated');
     const user = JSON.parse(userStr);
     const userId = user.userId || user.id;
-
     const response = await fetch(`${API_BASE}/api/v1/bookings/${bookingId}/reschedule`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-            customerId: userId,
-            newTimeSlotId: newSlotId
-        })
+        body: JSON.stringify({ customerId: userId, newTimeSlotId: newSlotId })
     });
     if (response.status === 409) {
         throw new Error('Conflict: This time slot has just been taken by another user');
@@ -266,7 +298,34 @@ export async function rescheduleBooking(bookingId, newSlotId) {
     return response.json();
 }
 
-// ========== Specialist APIs ==========
+export async function createBooking(specialistId, timeSlotId, topic, notes = '') {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    if (!token || !userStr) throw new Error('Not authenticated');
+    const user = JSON.parse(userStr);
+    const customerId = user.userId || user.id;
+    const response = await fetch(`${API_BASE}/api/v1/bookings`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ customerId, specialistId, timeSlotId, topic, notes })
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create booking');
+    }
+    return response.json();
+}
+
+// ========== 原有专家 API ==========
+export async function getExperts() {
+    const response = await fetch(`${API_BASE}/api/v1/specialists`);
+    if (!response.ok) throw new Error('Failed to fetch experts');
+    return response.json();
+}
+
 export async function getSpecialistById(id) {
     const response = await fetch(`${API_BASE}/api/v1/specialists/${id}`);
     if (!response.ok) {
@@ -289,36 +348,6 @@ export async function getAvailableSlots(specialistId, date) {
     return response.json();
 }
 
-// ========== Booking Creation API ==========
-export async function createBooking(specialistId, timeSlotId, topic, notes = '') {
-    const token = localStorage.getItem('token');
-    const userStr = localStorage.getItem('user');
-    if (!token || !userStr) throw new Error('Not authenticated');
-    const user = JSON.parse(userStr);
-    const customerId = user.userId || user.id;
-
-    const response = await fetch(`${API_BASE}/api/v1/bookings`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-            customerId: customerId,
-            specialistId: specialistId,
-            timeSlotId: timeSlotId,
-            topic: topic,
-            notes: notes
-        })
-    });
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to create booking');
-    }
-    return response.json();
-}
-
-// ========== Fee Calculation API ==========
 export async function getBookingFee(specialistId) {
     const response = await fetch(`${API_BASE}/api/v1/specialists/${specialistId}/fee`);
     if (!response.ok) {
@@ -327,155 +356,4 @@ export async function getBookingFee(specialistId) {
     }
     const data = await response.json();
     return data.bookingFee;
-}
-
-// ========== Specialist Registration ==========
-export async function registerSpecialist(name, email, expertise, password) {
-    const response = await fetch(`${API_BASE}/api/auth/register/specialist`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, expertise, password })
-    });
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Specialist registration failed');
-    }
-    return response.json();
-}
-
-// ========== Admin: Specialist Approvals ==========
-export async function getPendingSpecialists() {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE}/api/admin/specialists/pending`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (!response.ok) throw new Error('Failed to fetch pending specialists');
-    return response.json();
-}
-
-export async function getAllSpecialists() {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE}/api/admin/specialists/all`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (!response.ok) throw new Error('Failed to fetch all specialists');
-    return response.json();
-}
-
-export async function approveSpecialist(id, level, fee) {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE}/api/admin/specialists/${id}/approve`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ level, fee })
-    });
-    if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || 'Approval failed');
-    }
-    return response.json();
-}
-
-export async function rejectSpecialist(id) {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE}/api/admin/specialists/${id}/reject`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || 'Rejection failed');
-    }
-    return response.json();
-}
-
-// ========== Specialist Dashboard ==========
-export async function getSpecialistBookings(specialistId) {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE}/api/specialist/${specialistId}/bookings`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (!response.ok) throw new Error('Failed to fetch bookings');
-    return response.json();
-}
-
-export async function confirmBookingBySpecialist(bookingId) {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE}/api/specialist/bookings/${bookingId}/confirm`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (!response.ok) throw new Error('Confirm failed');
-    return response.json();
-}
-
-export async function completeBookingBySpecialist(bookingId) {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE}/api/specialist/bookings/${bookingId}/complete`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (!response.ok) throw new Error('Complete failed');
-    return response.json();
-}
-
-export async function cancelBookingBySpecialist(bookingId, cancelReason) {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE}/api/specialist/bookings/${bookingId}/cancel`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ cancelReason })
-    });
-    if (!response.ok) throw new Error('Cancel failed');
-    return response.json();
-}
-
-export async function getSpecialistSlots(specialistId) {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE}/api/specialist/${specialistId}/slots`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (!response.ok) throw new Error('Failed to fetch slots');
-    return response.json();
-}
-
-export async function addSpecialistSlot(specialistId, startTime, endTime) {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE}/api/specialist/${specialistId}/slots`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ startTime, endTime })
-    });
-    if (!response.ok) throw new Error('Failed to add slot');
-    return response.json();
-}
-
-export async function deleteSpecialistSlot(slotId) {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE}/api/specialist/slots/${slotId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (!response.ok) throw new Error('Failed to delete slot');
-    return response.json();
-}
-
-export async function getSpecialistProfile(specialistId) {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE}/api/specialist/${specialistId}/profile`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (!response.ok) throw new Error('Failed to fetch profile');
-    return response.json();
-}
-
-export async function updateSpecialistProfile(specialistId, name, contact, description) {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE}/api/specialist/${specialistId}/profile`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ name, contact, description })
-    });
-    if (!response.ok) throw new Error('Failed to update profile');
-    return response.json();
 }
