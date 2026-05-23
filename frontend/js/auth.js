@@ -1,50 +1,53 @@
-import { sendVerificationCode, register, login, logout, sendResetCode, resetPassword, setCurrentUser } from './api.js';
+import { sendVerificationCode, register, registerSpecialist, login } from './api.js';
 
-let countdown = 0;
-let countdownInterval = null;
-
+// ========== 通用显示消息 ==========
 function showMessage(elementId, text, type) {
-    const msgDiv = document.getElementById(elementId);
-    msgDiv.innerHTML = `<div class="${type}">${text}</div>`;
-    setTimeout(() => { if (msgDiv) msgDiv.innerHTML = ''; }, 5000);
+    const div = document.getElementById(elementId);
+    if (!div) return;
+    div.innerHTML = `<div class="${type}">${text}</div>`;
+    setTimeout(() => div.innerHTML = '', 5000);
 }
 
-// Registration page
+// ========== 注册页面逻辑 ==========
 if (window.location.pathname.includes('register.html')) {
-    const sendBtn = document.getElementById('sendCodeBtn');
-    const emailInput = document.getElementById('email');
-    const pwdInput = document.getElementById('password');
-    const pwdHint = document.getElementById('pwdHint');
-
-    pwdInput.addEventListener('input', () => {
-        const pwd = pwdInput.value;
-        const regex = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/;
-        if (regex.test(pwd)) pwdHint.innerText = '✓ Password strength: good';
-        else pwdHint.innerText = '✗ Password must be at least 6 characters and contain letters & numbers';
+    // 标签页切换
+    const tabs = document.querySelectorAll('.tab-btn');
+    const customerForm = document.getElementById('customerForm');
+    const specialistForm = document.getElementById('specialistForm');
+    tabs.forEach(btn => {
+        btn.addEventListener('click', () => {
+            tabs.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            if (btn.dataset.tab === 'customer') {
+                customerForm.style.display = 'block';
+                specialistForm.style.display = 'none';
+            } else {
+                customerForm.style.display = 'none';
+                specialistForm.style.display = 'block';
+            }
+        });
     });
 
-    sendBtn.addEventListener('click', async () => {
-        const email = emailInput.value.trim();
-        if (!email) {
-            showMessage('message', 'Please enter email first', 'error');
-            return;
-        }
-        if (countdown > 0) {
-            showMessage('message', `Please wait ${countdown} seconds`, 'error');
-            return;
-        }
+    // 客户验证码发送
+    let custCountdown = 0;
+    const sendCustBtn = document.getElementById('sendCustCodeBtn');
+    const custEmail = document.getElementById('custEmail');
+    sendCustBtn?.addEventListener('click', async () => {
+        const email = custEmail.value.trim();
+        if (!email) { showMessage('message', 'Please enter email first', 'error'); return; }
+        if (custCountdown > 0) { showMessage('message', `Please wait ${custCountdown}s`, 'error'); return; }
         try {
             await sendVerificationCode(email);
-            showMessage('message', 'Verification code sent (check console)', 'success');
-            countdown = 60;
-            sendBtn.disabled = true;
-            countdownInterval = setInterval(() => {
-                countdown--;
-                sendBtn.innerText = `${countdown}s`;
-                if (countdown <= 0) {
-                    clearInterval(countdownInterval);
-                    sendBtn.disabled = false;
-                    sendBtn.innerText = 'Send Code';
+            showMessage('message', 'Code sent (check console)', 'success');
+            custCountdown = 60;
+            sendCustBtn.disabled = true;
+            const interval = setInterval(() => {
+                custCountdown--;
+                sendCustBtn.innerText = `${custCountdown}s`;
+                if (custCountdown <= 0) {
+                    clearInterval(interval);
+                    sendCustBtn.disabled = false;
+                    sendCustBtn.innerText = 'Send Code';
                 }
             }, 1000);
         } catch (err) {
@@ -52,20 +55,25 @@ if (window.location.pathname.includes('register.html')) {
         }
     });
 
-    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    // 客户注册提交
+    document.getElementById('customerForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const name = document.getElementById('name').value.trim();
-        const email = emailInput.value.trim();
-        const password = pwdInput.value;
-        const confirm = document.getElementById('confirmPassword').value;
-        const code = document.getElementById('verificationCode').value.trim();
-
+        const name = document.getElementById('custName').value.trim();
+        const email = custEmail.value.trim();
+        const password = document.getElementById('custPassword').value;
+        const confirm = document.getElementById('custConfirmPassword').value;
+        const code = document.getElementById('custVerificationCode').value.trim();
         if (!name || !email || !password || !confirm || !code) {
             showMessage('message', 'Please fill all fields', 'error');
             return;
         }
         if (password !== confirm) {
             showMessage('message', 'Passwords do not match', 'error');
+            return;
+        }
+        const pwdRegex = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/;
+        if (!pwdRegex.test(password)) {
+            showMessage('message', 'Password must be ≥6 chars with letters and numbers', 'error');
             return;
         }
         try {
@@ -76,10 +84,71 @@ if (window.location.pathname.includes('register.html')) {
             showMessage('message', err.message, 'error');
         }
     });
+
+    // 专家验证码发送
+    let specCountdown = 0;
+    const sendSpecBtn = document.getElementById('sendSpecCodeBtn');
+    const specEmail = document.getElementById('specEmail');
+    sendSpecBtn?.addEventListener('click', async () => {
+        const email = specEmail.value.trim();
+        if (!email) { showMessage('message', 'Please enter email first', 'error'); return; }
+        if (specCountdown > 0) { showMessage('message', `Please wait ${specCountdown}s`, 'error'); return; }
+        try {
+            await sendVerificationCode(email);
+            showMessage('message', 'Code sent (check console)', 'success');
+            specCountdown = 60;
+            sendSpecBtn.disabled = true;
+            const interval = setInterval(() => {
+                specCountdown--;
+                sendSpecBtn.innerText = `${specCountdown}s`;
+                if (specCountdown <= 0) {
+                    clearInterval(interval);
+                    sendSpecBtn.disabled = false;
+                    sendSpecBtn.innerText = 'Send Code';
+                }
+            }, 1000);
+        } catch (err) {
+            showMessage('message', err.message, 'error');
+        }
+    });
+
+    // 专家注册提交
+    document.getElementById('specialistForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('specName').value.trim();
+        const email = specEmail.value.trim();
+        const expertise = document.getElementById('specExpertise').value.trim();
+        const password = document.getElementById('specPassword').value;
+        const confirm = document.getElementById('specConfirmPassword').value;
+        const code = document.getElementById('specVerificationCode').value.trim();
+        if (!name || !email || !expertise || !password || !confirm || !code) {
+            showMessage('message', 'Please fill all fields', 'error');
+            return;
+        }
+        if (password !== confirm) {
+            showMessage('message', 'Passwords do not match', 'error');
+            return;
+        }
+        const pwdRegex = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/;
+        if (!pwdRegex.test(password)) {
+            showMessage('message', 'Password must be ≥6 chars with letters and numbers', 'error');
+            return;
+        }
+        try {
+            await registerSpecialist(name, email, expertise, password, code);
+            showMessage('message', 'Application submitted! Please wait for admin approval.', 'success');
+            // 清空表单
+            document.getElementById('specialistForm').reset();
+            document.getElementById('specVerificationCode').value = '';
+        } catch (err) {
+            showMessage('message', err.message, 'error');
+        }
+    });
 }
 
-// Login page
+// ========== 登录页面逻辑 ==========
 else if (window.location.pathname.includes('login.html')) {
+    // 记住密码功能
     const savedEmail = localStorage.getItem('rememberedEmail');
     const savedPwd = localStorage.getItem('rememberedPassword');
     if (savedEmail && savedPwd) {
@@ -94,101 +163,39 @@ else if (window.location.pathname.includes('login.html')) {
         const password = document.getElementById('password').value;
         const remember = document.getElementById('rememberMe').checked;
 
-try {
-    const data = await login(email, password);
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    setCurrentUser(data.user);
-    if (remember) {
-        localStorage.setItem('rememberedEmail', email);
-        localStorage.setItem('rememberedPassword', password);
-    } else {
-        localStorage.removeItem('rememberedEmail');
-        localStorage.removeItem('rememberedPassword');
-    }
-
-    // 新增：根据角色跳转
-    const role = data.user.role;
-    let redirectUrl = 'profile.html';  // default customer
-    if (role === 'ADMIN' || role === 'ROLE_ADMIN') {
-        redirectUrl = 'admin-dashboard/index.html';
-    } else if (role === 'SPECIALIST' || role === 'ROLE_SPECIALIST') {
-        // 专家需要检查 approvalStatus
-        const approvalStatus = data.user.approvalStatus;
-        if (approvalStatus !== 'APPROVED') {
-            let msg = 'Your account is pending admin approval. Please wait.';
-            if (approvalStatus === 'REJECTED') msg = 'Your application has been rejected. Contact admin.';
-            showMessage('message', msg, 'error');
-            localStorage.clear();  // 清除无效token
-            return;
-        }
-        redirectUrl = 'specialist-dashboard.html';
-    } else {
-        redirectUrl = 'profile.html';
-    }
-
-    showMessage('message', 'Login successful, redirecting...', 'success');
-    setTimeout(() => window.location.href = redirectUrl, 1000);
-} catch (err) {
-    showMessage('message', err.message, 'error');
-}
-    });
-}
-
-// Forgot password page
-else if (window.location.pathname.includes('forgot-password.html')) {
-    let resetCountdown = 0;
-    const sendBtn = document.getElementById('sendCodeBtn');
-    const emailInput = document.getElementById('email');
-
-    sendBtn.addEventListener('click', async () => {
-        const email = emailInput.value.trim();
-        if (!email) {
-            showMessage('message', 'Please enter email', 'error');
-            return;
-        }
-        if (resetCountdown > 0) {
-            showMessage('message', `Please wait ${resetCountdown} seconds`, 'error');
-            return;
-        }
         try {
-            await sendResetCode(email);
-            showMessage('message', 'Reset code sent (check console)', 'success');
-            resetCountdown = 60;
-            sendBtn.disabled = true;
-            const interval = setInterval(() => {
-                resetCountdown--;
-                sendBtn.innerText = `${resetCountdown}s`;
-                if (resetCountdown <= 0) {
-                    clearInterval(interval);
-                    sendBtn.disabled = false;
-                    sendBtn.innerText = 'Send Code';
+            const data = await login(email, password);
+            // 存储用户信息（api.js 中已存）
+            if (remember) {
+                localStorage.setItem('rememberedEmail', email);
+                localStorage.setItem('rememberedPassword', password);
+            } else {
+                localStorage.removeItem('rememberedEmail');
+                localStorage.removeItem('rememberedPassword');
+            }
+
+            // 根据角色跳转
+            const role = data.user.role;
+            let redirectUrl = 'profile.html'; // 默认客户
+            if (role === 'ADMIN' || role === 'ROLE_ADMIN') {
+                redirectUrl = 'admin-dashboard/index.html';
+            } else if (role === 'SPECIALIST' || role === 'ROLE_SPECIALIST') {
+                // 检查专家审核状态
+                const approvalStatus = data.user.approvalStatus;
+                if (approvalStatus !== 'APPROVED') {
+                    let msg = 'Your account is pending approval. Please wait.';
+                    if (approvalStatus === 'REJECTED') msg = 'Your application has been rejected.';
+                    showMessage('message', msg, 'error');
+                    localStorage.clear(); // 清除无效凭证
+                    return;
                 }
-            }, 1000);
-        } catch (err) {
-            showMessage('message', err.message, 'error');
-        }
-    });
+                redirectUrl = 'specialist-dashboard.html';
+            } else {
+                redirectUrl = 'profile.html';
+            }
 
-    document.getElementById('forgotForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = emailInput.value.trim();
-        const code = document.getElementById('verificationCode').value.trim();
-        const newPassword = document.getElementById('newPassword').value;
-        const confirm = document.getElementById('confirmPassword').value;
-
-        if (!email || !code || !newPassword || !confirm) {
-            showMessage('message', 'Please fill all fields', 'error');
-            return;
-        }
-        if (newPassword !== confirm) {
-            showMessage('message', 'New passwords do not match', 'error');
-            return;
-        }
-        try {
-            await resetPassword(email, code, newPassword);
-            showMessage('message', 'Password reset successful, please login', 'success');
-            setTimeout(() => window.location.href = 'login.html', 1500);
+            showMessage('message', 'Login successful, redirecting...', 'success');
+            setTimeout(() => window.location.href = redirectUrl, 1000);
         } catch (err) {
             showMessage('message', err.message, 'error');
         }
