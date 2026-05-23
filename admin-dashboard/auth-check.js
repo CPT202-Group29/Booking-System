@@ -25,3 +25,12 @@
         window.location.replace('/login.html');
     }
 })();
+
+
+function goBackFromAdmin() {
+  if (window.history.length > 1) {
+    window.history.back();
+  } else {
+    window.location.href = "../frontend/index.html";
+  }
+}
