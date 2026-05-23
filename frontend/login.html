@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - Expert Booking System</title>
+    <title>Login - Expert Booking System</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -14,34 +14,18 @@
             align-items: center;
             min-height: 100vh;
         }
-        .register-card {
+        .login-card {
             background: white;
             padding: 35px 30px;
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             width: 100%;
-            max-width: 480px;
+            max-width: 420px;
         }
-        .tabs {
-            display: flex;
-            gap: 0;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #e5e7eb;
-        }
-        .tab-btn {
-            flex: 1;
-            padding: 10px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-            color: #6b7280;
-            border-bottom: 2px solid transparent;
-            margin-bottom: -2px;
-        }
-        .tab-btn.active {
-            color: #3b82f6;
-            border-bottom-color: #3b82f6;
+        .login-card h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #1e293b;
         }
         .form-group {
             margin-bottom: 16px;
@@ -51,29 +35,21 @@
             margin-bottom: 5px;
             font-weight: 600;
             color: #374151;
-            font-size: 0.9rem;
         }
-        .form-group input, .form-group select {
+        .form-group input {
             width: 100%;
             padding: 10px 12px;
             border: 1px solid #d1d5db;
             border-radius: 6px;
             font-size: 0.95rem;
         }
-        .verification-row {
+        .remember-row {
             display: flex;
-            gap: 10px;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
         }
-        .verification-row button {
-            white-space: nowrap;
-            padding: 0 16px;
-            background: #f59e0b;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        .btn-register {
+        .btn-login {
             width: 100%;
             padding: 12px;
             background: #3b82f6;
@@ -83,8 +59,8 @@
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            margin-top: 8px;
         }
+        .btn-login:hover { background: #2563eb; }
         .message {
             margin-top: 15px;
             padding: 10px;
@@ -93,88 +69,36 @@
         }
         .error { background: #fee2e2; color: #991b1b; }
         .success { background: #d1fae5; color: #065f46; }
-        .info { background: #dbeafe; color: #1e40af; }
-        .register-card p { text-align: center; margin-top: 15px; }
-        .register-card p a { color: #3b82f6; text-decoration: none; }
-        small { display: block; margin-top: 4px; font-size: 0.8rem; color: #6b7280; }
+        .login-card p {
+            text-align: center;
+            margin-top: 15px;
+            color: #6b7280;
+        }
+        .login-card p a { color: #3b82f6; text-decoration: none; }
     </style>
 </head>
 <body>
-    <div class="register-card">
-        <div class="tabs">
-            <button class="tab-btn active" data-tab="customer">Customer</button>
-            <button class="tab-btn" data-tab="specialist">Specialist Applicant</button>
-        </div>
-
-        <!-- 客户注册表单 -->
-        <form id="customerForm" class="tab-content">
-            <div class="form-group">
-                <label>Full Name</label>
-                <input type="text" id="custName" required>
-            </div>
+    <div class="login-card">
+        <h2>Welcome Back</h2>
+        <form id="loginForm">
             <div class="form-group">
                 <label>Email</label>
-                <input type="email" id="custEmail" required>
+                <input type="email" id="email" required>
             </div>
             <div class="form-group">
                 <label>Password</label>
-                <input type="password" id="custPassword" required>
-                <small>At least 6 characters, include letters and numbers</small>
+                <input type="password" id="password" required>
             </div>
-            <div class="form-group">
-                <label>Confirm Password</label>
-                <input type="password" id="custConfirmPassword" required>
+            <div class="remember-row">
+                <input type="checkbox" id="rememberMe">
+                <label for="rememberMe">Remember me</label>
             </div>
-            <div class="form-group">
-                <label>Verification Code</label>
-                <div class="verification-row">
-                    <input type="text" id="custVerificationCode" placeholder="6-digit code" required>
-                    <button type="button" id="sendCustCodeBtn">Send Code</button>
-                </div>
-            </div>
-            <button type="submit" class="btn-register">Register as Customer</button>
+            <button type="submit" class="btn-login">Login</button>
         </form>
-
-        <!-- 专家注册表单 -->
-        <form id="specialistForm" class="tab-content" style="display:none;">
-            <div class="form-group">
-                <label>Full Name</label>
-                <input type="text" id="specName" required>
-            </div>
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" id="specEmail" required>
-            </div>
-            <div class="form-group">
-                <label>Expertise</label>
-                <input type="text" id="specExpertise" placeholder="e.g., Psychology, Career Advice" required>
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" id="specPassword" required>
-                <small>At least 6 characters, include letters and numbers</small>
-            </div>
-            <div class="form-group">
-                <label>Confirm Password</label>
-                <input type="password" id="specConfirmPassword" required>
-            </div>
-            <div class="form-group">
-                <label>Verification Code</label>
-                <div class="verification-row">
-                    <input type="text" id="specVerificationCode" placeholder="6-digit code" required>
-                    <button type="button" id="sendSpecCodeBtn">Send Code</button>
-                </div>
-            </div>
-            <div class="info" style="margin-bottom: 16px; padding: 10px;">
-                <strong>Note:</strong> After submitting the application, admin will review your request. You will be able to login only after approval.
-            </div>
-            <button type="submit" class="btn-register">Submit Application</button>
-        </form>
-
         <div id="message" class="message"></div>
-        <p>Already have an account? <a href="login.html">Sign in</a></p>
+        <p><a href="forgot-password.html">Forgot password?</a></p>
+        <p>No account? <a href="register.html">Register now</a></p>
     </div>
-
     <script type="module" src="js/auth.js"></script>
 </body>
 </html>
