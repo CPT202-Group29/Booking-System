@@ -9,7 +9,7 @@
 
     // 未登录 → 跳转登录页
     if (!token || !userStr) {
-        window.location.replace('/login.html');
+        window.location.replace('../frontend/login.html');
         return;
     }
 
@@ -18,11 +18,11 @@
         const user = JSON.parse(userStr);
         if (user.role !== 'ADMIN') {
             alert('Access denied. Admin only.');
-            window.location.replace('/login.html');
+            window.location.replace('../frontend/login.html');
         }
     } catch (e) {
         // JSON 解析失败 → 跳转登录页
-        window.location.replace('/login.html');
+        window.location.replace('../frontend/login.html');
     }
 })();
 
