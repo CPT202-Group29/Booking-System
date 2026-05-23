@@ -96,7 +96,6 @@ function renderBookings(bookings) {
             ${b.cancelReason ? `<p><strong>Cancel Reason:</strong> ${b.cancelReason}</p>` : ''}
             ${b.status === 'CONFIRMED' ? `
                 <button class="btn-cancel" data-id="${b.id}" onclick="event.stopPropagation(); handleCancel(${b.id})">Cancel</button>
-                <button class="btn-reschedule" data-id="${b.id}" onclick="event.stopPropagation(); handleReschedule(${b.id})">Reschedule</button>
             ` : ''}
         </div>
         `;
@@ -156,18 +155,6 @@ window.handleCancel = async function(bookingId) {
         await loadBookings();
     } catch (err) {
         alert('Cancel failed: ' + err.message);
-    }
-};
-
-window.handleReschedule = async function(bookingId) {
-    const newSlotId = prompt('Enter new time slot ID:');
-    if (!newSlotId || isNaN(parseInt(newSlotId))) return;
-    try {
-        await rescheduleBooking(bookingId, parseInt(newSlotId));
-        alert('Rescheduled successfully!');
-        await loadBookings();
-    } catch (err) {
-        alert('Reschedule failed: ' + err.message);
     }
 };
 
