@@ -94,23 +94,44 @@ else if (window.location.pathname.includes('login.html')) {
         const password = document.getElementById('password').value;
         const remember = document.getElementById('rememberMe').checked;
 
-        try {
-            const { token, user } = await login(email, password);
-            localStorage.setItem('token', token);
-            localStorage.setItem('user', JSON.stringify(user));
-            setCurrentUser(user);
-            if (remember) {
-                localStorage.setItem('rememberedEmail', email);
-                localStorage.setItem('rememberedPassword', password);
-            } else {
-                localStorage.removeItem('rememberedEmail');
-                localStorage.removeItem('rememberedPassword');
-            }
-            showMessage('message', 'Login successful, redirecting...', 'success');
-            setTimeout(() => window.location.href = 'profile.html', 1000);
-        } catch (err) {
-            showMessage('message', err.message, 'error');
+try {
+    const data = await login(email, password);
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    setCurrentUser(data.user);
+    if (remember) {
+        localStorage.setItem('rememberedEmail', email);
+        localStorage.setItem('rememberedPassword', password);
+    } else {
+        localStorage.removeItem('rememberedEmail');
+        localStorage.removeItem('rememberedPassword');
+    }
+
+    // 新增：根据角色跳转
+    const role = data.user.role;
+    let redirectUrl = 'profile.html';  // default customer
+    if (role === 'ADMIN' || role === 'ROLE_ADMIN') {
+        redirectUrl = 'admin-dashboard/index.html';
+    } else if (role === 'SPECIALIST' || role === 'ROLE_SPECIALIST') {
+        // 专家需要检查 approvalStatus
+        const approvalStatus = data.user.approvalStatus;
+        if (approvalStatus !== 'APPROVED') {
+            let msg = 'Your account is pending admin approval. Please wait.';
+            if (approvalStatus === 'REJECTED') msg = 'Your application has been rejected. Contact admin.';
+            showMessage('message', msg, 'error');
+            localStorage.clear();  // 清除无效token
+            return;
         }
+        redirectUrl = 'specialist-dashboard.html';
+    } else {
+        redirectUrl = 'profile.html';
+    }
+
+    showMessage('message', 'Login successful, redirecting...', 'success');
+    setTimeout(() => window.location.href = redirectUrl, 1000);
+} catch (err) {
+    showMessage('message', err.message, 'error');
+}
     });
 }
 
