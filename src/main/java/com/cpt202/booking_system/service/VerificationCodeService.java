@@ -55,10 +55,15 @@ public class VerificationCodeService {
                 SimpleMailMessage msg = new SimpleMailMessage();
                 msg.setFrom("3237857983@qq.com");
                 msg.setTo(email);
-                msg.setSubject("Verification Code - Expert Booking System");
-                msg.setText("Your 6-digit verification code is: " + code
-                        + "\n\nThis code expires in 5 minutes."
-                        + "\n\nIf you did not request this code, please ignore this email.");
+                msg.setSubject("[Expert Booking] Your Verification Code: " + code);
+                msg.setText("Hello,\n\n"
+                        + "Thank you for using Expert Booking System.\n\n"
+                        + "Your 6-digit verification code is: " + code + "\n\n"
+                        + "This code will expire in 5 minutes. Please enter it on the registration "
+                        + "page to complete your sign-up.\n\n"
+                        + "If you did not create an account with us, please ignore this message.\n\n"
+                        + "Best regards,\n"
+                        + "Expert Booking System Team");
                 mailSender.send(msg);
                 System.out.println("  Email sent to " + email);
             } catch (Exception e) {

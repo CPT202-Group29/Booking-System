@@ -6,11 +6,13 @@ import com.cpt202.booking_system.model.Booking;
 import com.cpt202.booking_system.model.BookingStatus;
 import com.cpt202.booking_system.model.TimeSlot;
 import com.cpt202.booking_system.repository.BookingRepository;
+import com.cpt202.booking_system.repository.BookingStatusLogRepository;
 import com.cpt202.booking_system.repository.TimeSlotRepository;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -36,13 +38,16 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final TimeSlotRepository timeSlotRepository;
     private final ChargeCalculationService chargeService;
+    private final BookingStatusLogRepository bookingStatusLogRepository;
 
     public BookingService(BookingRepository bookingRepository,
                           TimeSlotRepository timeSlotRepository,
-                          ChargeCalculationService chargeService) {
+                          ChargeCalculationService chargeService,
+                          BookingStatusLogRepository bookingStatusLogRepository) {
         this.bookingRepository = bookingRepository;
         this.timeSlotRepository = timeSlotRepository;
         this.chargeService = chargeService;
+        this.bookingStatusLogRepository = bookingStatusLogRepository;
     }
 
     /**
@@ -183,6 +188,11 @@ public class BookingService {
                     "Cannot cancel within " + CANCEL_HOURS_THRESHOLD
                     + " hours of the appointment. " + hoursUntil + "h remaining.", 400);
         }
+
+        // Calculate refund
+        BigDecimal refund = chargeService.calculateRefund(
+                booking.getChargeAmount(), hoursUntil);
+        booking.setRefundAmount(refund);
 
         booking.setStatus(BookingStatus.CANCELLED);
         booking.setCancelReason(request.getCancelReason());
@@ -351,13 +361,19 @@ public class BookingService {
                     + " in " + booking.getStatus() + " state", 400);
         }
 
+        // Admin cancel: calculate refund (no 24h restriction, but still based on hours remaining)
+        TimeSlot slot = timeSlotRepository.findById(booking.getTimeSlotId())
+                .orElseThrow(() -> new BookingException("Time slot not found", 404));
+        long hoursUntil = LocalDateTime.now().until(slot.getStartTime(), ChronoUnit.HOURS);
+        BigDecimal refund = chargeService.calculateRefund(
+                booking.getChargeAmount(), Math.max(hoursUntil, 0));
+        booking.setRefundAmount(refund);
+
         booking.setStatus(BookingStatus.CANCELLED);
         booking.setCancelReason(cancelReason);
         Booking saved = bookingRepository.save(booking);
 
         // Release the time slot
-        TimeSlot slot = timeSlotRepository.findById(booking.getTimeSlotId())
-                .orElseThrow(() -> new BookingException("Time slot not found", 404));
         slot.setIsAvailable(true);
         try {
             timeSlotRepository.save(slot);
@@ -366,6 +382,23 @@ public class BookingService {
         }
 
         return toResponse(saved);
+    }
+
+    // ==================== Booking Logs ====================
+
+    public List<Map<String, Object>> getBookingLogs(Long bookingId) {
+        return bookingStatusLogRepository.findByBookingIdOrderByChangedAtAsc(bookingId)
+                .stream().map(log -> {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("id", log.getId());
+                    m.put("bookingId", log.getBookingId());
+                    m.put("previousStatus", log.getPreviousStatus());
+                    m.put("newStatus", log.getNewStatus());
+                    m.put("changedBy", log.getChangedBy());
+                    m.put("reason", log.getReason());
+                    m.put("changedAt", log.getChangedAt().toString());
+                    return m;
+                }).collect(Collectors.toList());
     }
 
     // ==================== Response enrichment helpers ====================

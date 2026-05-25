@@ -46,6 +46,9 @@ public class Booking {
     @Column(name = "cancel_reason", length = 300)
     private String cancelReason;
 
+    @Column(name = "refund_amount", precision = 10, scale = 2)
+    private BigDecimal refundAmount;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -84,6 +87,11 @@ public class Booking {
         return status == BookingStatus.CONFIRMED;
     }
 
+    /** Check if PENDING booking can be auto-expired (24h no confirm). */
+    public boolean canExpire() {
+        return status == BookingStatus.PENDING;
+    }
+
     // --- Getters and Setters ---
 
     public Long getId() { return id; }
@@ -112,6 +120,9 @@ public class Booking {
 
     public String getCancelReason() { return cancelReason; }
     public void setCancelReason(String cancelReason) { this.cancelReason = cancelReason; }
+
+    public BigDecimal getRefundAmount() { return refundAmount; }
+    public void setRefundAmount(BigDecimal refundAmount) { this.refundAmount = refundAmount; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

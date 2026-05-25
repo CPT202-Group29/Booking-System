@@ -12,7 +12,7 @@
     <version>1.0.0</version>
     <name>CPT202 Group 29 Booking System</name>
     <properties>
-        <java.version>21</java.version>
+        <java.version>17</java.version>
     </properties>
     <dependencies>
         <dependency>

@@ -1,0 +1,57 @@
+package com.cpt202.booking_system.model;
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "booking_status_logs")
+public class BookingStatusLog {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "booking_id", nullable = false)
+    private Long bookingId;
+
+    @Column(name = "previous_status", length = 20)
+    private String previousStatus;
+
+    @Column(name = "new_status", nullable = false, length = 20)
+    private String newStatus;
+
+    @Column(name = "changed_by", length = 100)
+    private String changedBy;
+
+    @Column(name = "reason", length = 500)
+    private String reason;
+
+    @Column(name = "changed_at", nullable = false)
+    private LocalDateTime changedAt = LocalDateTime.now();
+
+    public BookingStatusLog() {}
+
+    public BookingStatusLog(Long bookingId, String previousStatus, String newStatus, String changedBy, String reason) {
+        this.bookingId = bookingId;
+        this.previousStatus = previousStatus;
+        this.newStatus = newStatus;
+        this.changedBy = changedBy;
+        this.reason = reason;
+        this.changedAt = LocalDateTime.now();
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public Long getBookingId() { return bookingId; }
+    public void setBookingId(Long bookingId) { this.bookingId = bookingId; }
+    public String getPreviousStatus() { return previousStatus; }
+    public void setPreviousStatus(String previousStatus) { this.previousStatus = previousStatus; }
+    public String getNewStatus() { return newStatus; }
+    public void setNewStatus(String newStatus) { this.newStatus = newStatus; }
+    public String getChangedBy() { return changedBy; }
+    public void setChangedBy(String changedBy) { this.changedBy = changedBy; }
+    public String getReason() { return reason; }
+    public void setReason(String reason) { this.reason = reason; }
+    public LocalDateTime getChangedAt() { return changedAt; }
+    public void setChangedAt(LocalDateTime changedAt) { this.changedAt = changedAt; }
+}

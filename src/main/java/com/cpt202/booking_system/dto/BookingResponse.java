@@ -23,6 +23,7 @@ public class BookingResponse {
     private String topic;
     private String notes;
     private BigDecimal chargeAmount;
+    private BigDecimal refundAmount;
     private String cancelReason;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -41,6 +42,7 @@ public class BookingResponse {
         resp.topic = booking.getTopic();
         resp.notes = booking.getNotes();
         resp.chargeAmount = booking.getChargeAmount();
+        resp.refundAmount = booking.getRefundAmount();
         resp.cancelReason = booking.getCancelReason();
         resp.createdAt = booking.getCreatedAt();
         resp.updatedAt = booking.getUpdatedAt();
@@ -62,6 +64,7 @@ public class BookingResponse {
     public String getTopic() { return topic; }
     public String getNotes() { return notes; }
     public BigDecimal getChargeAmount() { return chargeAmount; }
+    public BigDecimal getRefundAmount() { return refundAmount; }
     public String getCancelReason() { return cancelReason; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

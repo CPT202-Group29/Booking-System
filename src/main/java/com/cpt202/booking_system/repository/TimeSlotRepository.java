@@ -12,16 +12,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Repository for time slot data access.
- */
 @Repository
 public interface TimeSlotRepository extends JpaRepository<TimeSlot, Long> {
 
-    /** Find time slot with pessimistic lock for concurrency-safe booking. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT t FROM TimeSlot t WHERE t.id = :id")
     Optional<TimeSlot> findByIdWithLock(@Param("id") Long id);
+
+    List<TimeSlot> findBySpecialistId(Long specialistId);
 
     List<TimeSlot> findBySpecialistIdAndIsAvailableTrue(Long specialistId);
 

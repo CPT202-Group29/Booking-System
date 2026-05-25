@@ -103,10 +103,12 @@ public class BookingController {
     @GetMapping("/slots")
     public ResponseEntity<List<TimeSlot>> getAvailableSlots(
             @RequestParam Long specialistId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
+        LocalDateTime f = (from != null) ? from : LocalDateTime.now();
+        LocalDateTime t = (to != null) ? to : LocalDateTime.now().plusDays(7);
         return ResponseEntity.ok(
-                bookingService.getAvailableSlots(specialistId, from, to));
+                bookingService.getAvailableSlots(specialistId, f, t));
     }
 
     /**
@@ -125,6 +127,12 @@ public class BookingController {
         LocalDateTime t = (to != null) ? to : LocalDateTime.now().plusDays(7);
         return ResponseEntity.ok(
                 bookingService.getSpecialistAvailability(id, f, t));
+    }
+
+    /** GET /api/v1/bookings/{id}/logs - Get status change logs */
+    @GetMapping("/bookings/{id}/logs")
+    public ResponseEntity<?> getBookingLogs(@PathVariable Long id) {
+        return ResponseEntity.ok(bookingService.getBookingLogs(id));
     }
 
     /** GET /api/v1/health - Health check. */
