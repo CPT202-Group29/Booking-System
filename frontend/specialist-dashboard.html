@@ -901,14 +901,9 @@
       bookings.forEach(booking => {
         const status = booking.status || '-';
         const cancelReason = booking.cancelReason || '-';
-        const customerText = booking.customerName || booking.customerId || '-';
+        const customerText = booking.customerName || ('User #' + booking.customerId) || '-';
         const dateText = booking.date || booking.bookingDate || '-';
-        const timeText =
-          booking.timeSlotDisplay ||
-          booking.slotDisplay ||
-          booking.timeSlotId ||
-          booking.slotId ||
-          '-';
+        const timeText = booking.time || '-';
 
         const cancelReminder = (status || '').toUpperCase() === 'CANCELLED'
           ? `<div class="cancel-reminder">
