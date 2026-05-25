@@ -687,13 +687,27 @@
       return value.replace('T', ' ');
     }
 
+    function normalizeStatusText(status) {
+      if (status === null || status === undefined) return 'Unknown';
+      if (typeof status === 'number') return status === 1 ? 'Available' : 'Unavailable';
+      const s = String(status).toUpperCase();
+      if (s === 'AVAILABLE' || s === '1') return 'Available';
+      if (s === 'UNAVAILABLE' || s === '0') return 'Unavailable';
+      return String(status);
+    }
+
     function getStatusClass(status) {
-      const s = (status || '').toUpperCase();
+      let s;
+      if (typeof status === 'number') {
+        s = status === 1 ? 'AVAILABLE' : 'UNAVAILABLE';
+      } else {
+        s = String(status || '').toUpperCase();
+      }
       if (s === 'AVAILABLE') return 'status-available';
       if (s === 'PENDING') return 'status-pending';
       if (s === 'CONFIRMED') return 'status-confirmed';
       if (s === 'COMPLETED') return 'status-completed';
-      if (['CANCELLED', 'EXPIRED'].includes(s)) return 'status-cancelled';
+      if (['CANCELLED', 'EXPIRED', 'UNAVAILABLE'].includes(s)) return 'status-cancelled';
       return 'status-pending';
     }
 
@@ -734,9 +748,9 @@
       document.getElementById('profileFee').textContent = data.fee != null ? `£${data.fee}` : '-';
       document.getElementById('profileDescriptionText').textContent = data.description || '-';
 
-      const statusValue = data.status || 'AVAILABLE';
+      const statusText = normalizeStatusText(data.status);
       document.getElementById('profileStatus').innerHTML =
-        `<span class="status-badge ${getStatusClass(statusValue)}">${statusValue}</span>`;
+        `<span class="status-badge ${getStatusClass(data.status)}">${statusText}</span>`;
 
       document.getElementById('profileNameInput').value = data.name || '';
       document.getElementById('profileContactInput').value = data.contact || '';
