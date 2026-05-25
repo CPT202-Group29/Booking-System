@@ -26,6 +26,9 @@ public class Specialist {
     @Column(name = "approval_status")
     private String approvalStatus = "PENDING";
 
+    @Column(name = "avatar_url", columnDefinition = "LONGTEXT")
+    private String avatarUrl;
+
     public Specialist() {
     }
 
@@ -64,4 +67,7 @@ public class Specialist {
 
     public String getApprovalStatus() { return approvalStatus; }
     public void setApprovalStatus(String approvalStatus) { this.approvalStatus = approvalStatus; }
+
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
 }

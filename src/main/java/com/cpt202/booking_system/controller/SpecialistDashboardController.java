@@ -8,7 +8,9 @@ import com.cpt202.booking_system.repository.TimeSlotRepository;
 import com.cpt202.booking_system.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
