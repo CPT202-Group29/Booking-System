@@ -94,4 +94,26 @@ public class SpecialistDashboardController {
         if (body.containsKey("description")) specialist.setDescription(body.get("description"));
         return specialistRepository.save(specialist);
     }
+
+    // ===== Avatar Upload =====
+
+    @PostMapping("/api/specialist/{specialistId}/avatar")
+    public Object uploadAvatar(@PathVariable Integer specialistId,
+                               @RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) return Map.of("error", "File is empty");
+        if (file.getSize() > 2 * 1024 * 1024) return Map.of("error", "File size exceeds 2MB limit");
+
+        try {
+            Specialist specialist = specialistRepository.findById(specialistId).orElse(null);
+            if (specialist == null) return Map.of("error", "Specialist not found: " + specialistId);
+
+            String base64 = java.util.Base64.getEncoder().encodeToString(file.getBytes());
+            String dataUri = "data:" + file.getContentType() + ";base64," + base64;
+            specialist.setAvatarUrl(dataUri);
+            specialistRepository.save(specialist);
+            return Map.of("message", "Avatar uploaded", "avatarUrl", dataUri);
+        } catch (Exception e) {
+            return Map.of("error", "Failed to process file: " + e.getMessage());
+        }
+    }
 }
