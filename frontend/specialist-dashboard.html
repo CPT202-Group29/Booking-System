@@ -1025,12 +1025,18 @@
       empty.style.display = 'none';
 
       slots.forEach(slot => {
+        const now = new Date();
+        const endTime = new Date(slot.endTime);
+        const isPast = endTime < now;
+        const statusLabel = isPast ? 'Expired' : 'Available';
+        const statusClass = isPast ? 'status-expired' : 'status-available';
+
         const card = document.createElement('div');
         card.className = 'slot-card';
         card.innerHTML = `
           <h4>${formatDate(slot.startTime)}</h4>
           <p><strong>Time:</strong> ${formatTime(slot.startTime)} - ${formatTime(slot.endTime)}</p>
-          <p><strong>Status:</strong> Available</p>
+          <p><strong>Status:</strong> <span class="status-badge ${statusClass}">${statusLabel}</span></p>
           <div class="slot-actions">
             <button class="btn-sm btn-danger" onclick="deleteSlot(${slot.id})">Delete</button>
           </div>
