@@ -15,6 +15,7 @@ public class BookingResponse {
 
     private Long id;
     private Long customerId;
+    private String customerName;
     private Long specialistId;
     private Long timeSlotId;
     private String date;
@@ -56,6 +57,8 @@ public class BookingResponse {
 
     public Long getId() { return id; }
     public Long getCustomerId() { return customerId; }
+    public String getCustomerName() { return customerName; }
+    public void setCustomerName(String customerName) { this.customerName = customerName; }
     public Long getSpecialistId() { return specialistId; }
     public Long getTimeSlotId() { return timeSlotId; }
     public String getDate() { return date; }

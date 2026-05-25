@@ -8,6 +8,7 @@ import com.cpt202.booking_system.model.TimeSlot;
 import com.cpt202.booking_system.repository.BookingRepository;
 import com.cpt202.booking_system.repository.BookingStatusLogRepository;
 import com.cpt202.booking_system.repository.TimeSlotRepository;
+import com.cpt202.booking_system.repository.UserRepository;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,15 +40,18 @@ public class BookingService {
     private final TimeSlotRepository timeSlotRepository;
     private final ChargeCalculationService chargeService;
     private final BookingStatusLogRepository bookingStatusLogRepository;
+    private final UserRepository userRepository;
 
     public BookingService(BookingRepository bookingRepository,
                           TimeSlotRepository timeSlotRepository,
                           ChargeCalculationService chargeService,
-                          BookingStatusLogRepository bookingStatusLogRepository) {
+                          BookingStatusLogRepository bookingStatusLogRepository,
+                          UserRepository userRepository) {
         this.bookingRepository = bookingRepository;
         this.timeSlotRepository = timeSlotRepository;
         this.chargeService = chargeService;
         this.bookingStatusLogRepository = bookingStatusLogRepository;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -414,8 +418,20 @@ public class BookingService {
                 .map(Booking::getTimeSlotId).distinct().collect(Collectors.toList());
         Map<Long, TimeSlot> slotMap = timeSlotRepository.findByIdIn(slotIds).stream()
                 .collect(Collectors.toMap(TimeSlot::getId, s -> s));
+        // Batch load customer names
+        List<Long> customerIds = bookings.stream()
+                .map(Booking::getCustomerId).distinct().collect(Collectors.toList());
+        Map<Long, String> nameMap = userRepository.findAllById(customerIds).stream()
+                .collect(Collectors.toMap(
+                    u -> u.getId(),
+                    u -> u.getUsername() != null && !u.getUsername().isBlank()
+                        ? u.getUsername() : u.getEmail()));
         return bookings.stream()
-                .map(b -> BookingResponse.fromEntity(b, slotMap.get(b.getTimeSlotId())))
+                .map(b -> {
+                    BookingResponse resp = BookingResponse.fromEntity(b, slotMap.get(b.getTimeSlotId()));
+                    resp.setCustomerName(nameMap.getOrDefault(b.getCustomerId(), "User #" + b.getCustomerId()));
+                    return resp;
+                })
                 .collect(Collectors.toList());
     }
 }

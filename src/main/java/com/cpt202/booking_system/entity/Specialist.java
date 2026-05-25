@@ -1,6 +1,7 @@
 package com.cpt202.booking_system.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 import com.fasterxml.jackson.annotation.JsonGetter;
 
@@ -12,12 +13,30 @@ public class Specialist {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @NotBlank(message = "Name is required")
+    @Size(max = 100, message = "Name must be at most 100 characters")
     private String name;
+
+    @NotBlank(message = "Expertise is required")
+    @Size(max = 100, message = "Expertise must be at most 100 characters")
     private String expertise;
+
+    @NotBlank(message = "Level is required")
     private String level;
+
+    @NotNull(message = "Fee is required")
+    @DecimalMin(value = "0.0", inclusive = true, message = "Fee must be >= 0")
     private BigDecimal fee;
+
+    @NotNull(message = "Status is required")
     private Integer status;  // 1=Available, 0=Unavailable
+
+    @NotBlank(message = "Contact is required")
+    @Email(message = "Contact must be a valid email address")
     private String contact;
+
+    @NotBlank(message = "Description is required")
+    @Size(max = 500, message = "Description must be at most 500 characters")
     private String description;
 
     @Column(name = "user_id")
