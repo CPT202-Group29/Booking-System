@@ -1,4 +1,4 @@
-const API_BASE = "http://121.196.221.244:8080";
+const API_BASE = "";
 const slotForm = document.getElementById("slotForm");
 const slotListBody = document.getElementById("slotListBody");
 let editingSlotId = null;

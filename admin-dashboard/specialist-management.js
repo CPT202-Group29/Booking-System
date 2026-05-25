@@ -1,11 +1,11 @@
 // ===============================
 // Specialist Management - A2 Admin
-// Backend API: http://121.196.221.244:8080/api/v1/specialists
+// Backend API: /api/v1/specialists
 // ===============================
 
 let specialists = [];
 
-const SPECIALIST_API_URL = "http://121.196.221.244:8080/api/v1/specialists";
+const SPECIALIST_API_URL = "/api/v1/specialists";
 
 const specialistTableBody = document.getElementById("specialistTableBody");
 const specialistForm = document.getElementById("specialistForm");
@@ -101,7 +101,7 @@ async function loadSpecialists() {
     refreshView();
   } catch (error) {
     console.error("Specialist API Error:", error);
-    alert("Failed to load specialists from backend. Please check whether the backend is running on http://121.196.221.244:8080.");
+    alert("Failed to load specialists from backend. Please check whether the backend is running on .");
   }
 }
 
@@ -239,3 +239,61 @@ showFormBtn.addEventListener("click", function () {
 });
 
 loadSpecialists();
+
+// ========== Pending Applications ==========
+async function loadPendingSpecialists() {
+    try {
+        const resp = await fetch('/api/admin/specialists/pending');
+        const data = await resp.json();
+        const tbody = document.getElementById('pendingTableBody');
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5">No pending applications</td></tr>';
+            return;
+        }
+        tbody.innerHTML = data.map(s => 
+            '<tr>' +
+            '<td>' + s.id + '</td>' +
+            '<td>' + (s.name || '-') + '</td>' +
+            '<td>' + (s.expertise || '-') + '</td>' +
+            '<td><span class="badge pending">PENDING</span></td>' +
+            '<td>' +
+            '<button class="table-btn confirm-btn" onclick="approveSpecialist(' + s.id + ')">Approve</button> ' +
+            '<button class="table-btn cancel-btn" onclick="rejectSpecialist(' + s.id + ')">Reject</button>' +
+            '</td>' +
+            '</tr>'
+        ).join('');
+    } catch (e) {
+        console.error('Failed to load pending specialists', e);
+    }
+}
+
+async function approveSpecialist(id) {
+    const level = prompt('Assign level (Junior/Intermediate/Senior):', 'Junior');
+    if (!level) return;
+    const fee = prompt('Assign fee:', '50');
+    if (!fee) return;
+    try {
+        await fetch('/api/admin/specialists/' + id + '/approve', {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({level: level, fee: parseFloat(fee)})
+        });
+        alert('Specialist approved!');
+        loadPendingSpecialists();
+    } catch (e) {
+        alert('Failed to approve');
+    }
+}
+
+async function rejectSpecialist(id) {
+    if (!confirm('Reject this application?')) return;
+    try {
+        await fetch('/api/admin/specialists/' + id + '/reject', {method: 'PUT'});
+        alert('Specialist rejected');
+        loadPendingSpecialists();
+    } catch (e) {
+        alert('Failed to reject');
+    }
+}
+
+loadPendingSpecialists();

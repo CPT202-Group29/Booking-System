@@ -1,4 +1,4 @@
-import { sendVerificationCode, register, registerSpecialist, login } from './api.js';
+import { sendVerificationCode, register, registerSpecialist, login, sendResetCode, resetPassword } from './api.js';
 
 // ========== 通用显示消息 ==========
 function showMessage(elementId, text, type) {
@@ -180,15 +180,6 @@ else if (window.location.pathname.includes('login.html')) {
             if (role === 'ADMIN' || role === 'ROLE_ADMIN') {
                 redirectUrl = 'admin-dashboard/index.html';
             } else if (role === 'SPECIALIST' || role === 'ROLE_SPECIALIST') {
-                // 检查专家审核状态
-                const approvalStatus = data.user.approvalStatus;
-                if (approvalStatus !== 'APPROVED') {
-                    let msg = 'Your account is pending approval. Please wait.';
-                    if (approvalStatus === 'REJECTED') msg = 'Your application has been rejected.';
-                    showMessage('message', msg, 'error');
-                    localStorage.clear(); // 清除无效凭证
-                    return;
-                }
                 redirectUrl = 'specialist-dashboard.html';
             } else {
                 redirectUrl = 'profile.html';
@@ -196,6 +187,59 @@ else if (window.location.pathname.includes('login.html')) {
 
             showMessage('message', 'Login successful, redirecting...', 'success');
             setTimeout(() => window.location.href = redirectUrl, 1000);
+        } catch (err) {
+            showMessage('message', err.message, 'error');
+        }
+    });
+}
+
+// Forgot password page
+else if (window.location.pathname.includes('forgot-password.html')) {
+    let resetCountdown = 0;
+    const sendBtn = document.getElementById('sendCodeBtn');
+    const emailInput = document.getElementById('email');
+
+    sendBtn.addEventListener('click', async () => {
+        const email = emailInput.value.trim();
+        if (!email) { showMessage('message', 'Please enter email', 'error'); return; }
+        if (resetCountdown > 0) { showMessage('message', 'Please wait ' + resetCountdown + 's', 'error'); return; }
+        try {
+            await sendResetCode(email);
+            showMessage('message', 'Reset code sent (check email)', 'success');
+            resetCountdown = 60;
+            sendBtn.disabled = true;
+            const i = setInterval(() => {
+                resetCountdown--;
+                sendBtn.innerText = resetCountdown + 's';
+                if (resetCountdown <= 0) {
+                    clearInterval(i);
+                    sendBtn.disabled = false;
+                    sendBtn.innerText = 'Send Code';
+                }
+            }, 1000);
+        } catch (err) {
+            showMessage('message', err.message, 'error');
+        }
+    });
+
+    document.getElementById('forgotForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = emailInput.value.trim();
+        const code = document.getElementById('verificationCode').value.trim();
+        const nPwd = document.getElementById('newPassword').value;
+        const cPwd = document.getElementById('confirmPassword').value;
+        if (!email || !code || !nPwd || !cPwd) {
+            showMessage('message', 'Please fill all fields', 'error');
+            return;
+        }
+        if (nPwd !== cPwd) {
+            showMessage('message', 'New passwords do not match', 'error');
+            return;
+        }
+        try {
+            await resetPassword(email, code, nPwd);
+            showMessage('message', 'Password reset successful, please login', 'success');
+            setTimeout(() => window.location.href = 'login.html', 1500);
         } catch (err) {
             showMessage('message', err.message, 'error');
         }

@@ -3,8 +3,8 @@
 // Integrated with B2 booking API and B3 specialist API
 // ===============================
 
-const SPECIALIST_API_URL = "http://121.196.221.244:8080/api/v1/specialists";
-const BOOKING_API_URL = "http://121.196.221.244:8080/api/v1/bookings";
+const SPECIALIST_API_URL = "/api/v1/specialists";
+const BOOKING_API_URL = "/api/v1/bookings";
 
 let specialists = [];
 let bookings = [];

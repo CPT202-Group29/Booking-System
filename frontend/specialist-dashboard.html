@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Specialist Dashboard - Expert Booking</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body { display: flex; min-height: 100vh; margin: 0; font-family: Arial, sans-serif; }
+        .sidebar { width: 220px; background: #1e293b; color: #fff; padding: 20px 0; }
+        .sidebar h2 { text-align: center; font-size: 1.1rem; border-bottom: 1px solid #334155; padding-bottom: 12px; margin-bottom: 20px; }
+        .sidebar a { display: block; color: #cbd5e1; text-decoration: none; padding: 12px 20px; font-size: 0.95rem; }
+        .sidebar a:hover, .sidebar a.active { background: #334155; color: #fff; border-left: 3px solid #3b82f6; }
+        .main { flex: 1; background: #f1f5f9; padding: 30px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .panel { background: #fff; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <h2>Expert Booking</h2>
+        <a href="specialist-dashboard.html" class="active">Dashboard</a>
+        <a href="#" onclick="localStorage.clear();window.location.href='login.html'">Logout</a>
+    </aside>
+    <main class="main" id="app">
+        <div class="container">
+            <h1>Specialist Dashboard</h1>
+            <p id="welcomeMsg"></p>
+            <div class="panel" id="bookingsPanel"><h2>My Bookings</h2><div id="bookingsList">Loading...</div></div>
+            <div class="panel" id="slotsPanel"><h2>My Time Slots</h2><div id="slotsList">Loading...</div></div>
+            <div class="panel" id="profilePanel"><h2>My Profile</h2><div id="profileInfo">Loading...</div></div>
+        </div>
+    </main>
+    <script src="js/Siyiwei—specialist_dashboard.js"></script>
+</body>
+</html>

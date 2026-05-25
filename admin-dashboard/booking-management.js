@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://121.196.221.244:8080/api/v1";
+const API_BASE_URL = "/api/v1";
 
 let bookings = [];
 let currentPage = 0;

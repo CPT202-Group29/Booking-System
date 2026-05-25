@@ -1,4 +1,4 @@
-const API_BASE = "http://121.196.221.244:8080";
+const API_BASE = "";
 
 // 创建专家
 export async function createSpecialist(data) {

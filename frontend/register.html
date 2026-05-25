@@ -158,6 +158,13 @@
                 <label>Confirm Password</label>
                 <input type="password" id="specConfirmPassword" required>
             </div>
+            <div class="form-group">
+                <label>Verification Code</label>
+                <div style="display:flex; gap:8px;">
+                    <input type="text" id="specVerificationCode" required placeholder="6-digit code" style="flex:1;">
+                    <button type="button" id="sendSpecCodeBtn" class="btn-send-code">Send Code</button>
+                </div>
+            </div>
             <div class="info" style="margin-bottom: 16px; padding: 10px;">
                 <strong>Note:</strong> After submitting the application, the admin will review your request and assign your service level and fee. You will be able to login only after approval.
             </div>
@@ -255,7 +262,35 @@
             }
         });
 
-        // 专家注册逻辑（无验证码）
+        // 专家发送验证码
+        let specCountdown = 0;
+        const sendSpecBtn = document.getElementById('sendSpecCodeBtn');
+        const specEmail = document.getElementById('specEmail');
+
+        sendSpecBtn.addEventListener('click', async () => {
+            const email = specEmail.value.trim();
+            if (!email) { showMessage('Please enter email first', 'error'); return; }
+            if (specCountdown > 0) { showMessage('Please wait ' + specCountdown + 's', 'error'); return; }
+            try {
+                await sendVerificationCode(email);
+                showMessage('Verification code sent (check console)', 'success');
+                specCountdown = 60;
+                sendSpecBtn.disabled = true;
+                const interval = setInterval(() => {
+                    specCountdown--;
+                    sendSpecBtn.innerText = specCountdown + 's';
+                    if (specCountdown <= 0) {
+                        clearInterval(interval);
+                        sendSpecBtn.disabled = false;
+                        sendSpecBtn.innerText = 'Send Code';
+                    }
+                }, 1000);
+            } catch (err) {
+                showMessage(err.message, 'error');
+            }
+        });
+
+        // 专家注册逻辑（需要验证码）
         specialistForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const name = document.getElementById('specName').value.trim();
@@ -263,8 +298,9 @@
             const expertise = document.getElementById('specExpertise').value.trim();
             const password = document.getElementById('specPassword').value;
             const confirm = document.getElementById('specConfirmPassword').value;
-            if (!name || !email || !expertise || !password || !confirm) {
-                showMessage('Please fill all fields', 'error');
+            const code = document.getElementById('specVerificationCode').value.trim();
+            if (!name || !email || !expertise || !password || !confirm || !code) {
+                showMessage('Please fill all fields including verification code', 'error');
                 return;
             }
             if (password !== confirm) {
@@ -277,9 +313,8 @@
                 return;
             }
             try {
-                await registerSpecialist(name, email, expertise, password);
+                await registerSpecialist(name, email, expertise, password, code);
                 showMessage('Application submitted! Please wait for admin approval. You will receive an email once approved.', 'success');
-                // 清空表单
                 specialistForm.reset();
             } catch (err) {
                 showMessage(err.message, 'error');

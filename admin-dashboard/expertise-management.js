@@ -1,6 +1,6 @@
 let expertiseCategories = [];
 
-const API_BASE_URL = "http://121.196.221.244:8080/api/v1/expertise";
+const API_BASE_URL = "/api/v1/expertise";
 
 const expertiseTableBody = document.getElementById("expertiseTableBody");
 const expertiseForm = document.getElementById("expertiseForm");

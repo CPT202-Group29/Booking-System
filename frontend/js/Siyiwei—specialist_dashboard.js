@@ -612,7 +612,7 @@
   </div>
 
   <script>
-    const API_BASE = 'http://121.196.221.244:8080';
+    const API_BASE = '';
 
     function getToken() {
       return localStorage.getItem('token');

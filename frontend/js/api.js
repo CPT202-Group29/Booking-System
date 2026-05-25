@@ -1,4 +1,4 @@
-const API_BASE = 'http://121.196.221.244:8080';
+const API_BASE = '';
 
 // ========== 通用请求封装（带 token 可选）==========
 async function authFetch(url, options = {}) {
@@ -51,12 +51,14 @@ export async function register(name, email, password, verificationCode) {
     }
     const data = await response.json();
     localStorage.setItem('token', data.token);
-    return data;
+    var user = data.user || { id: data.userId, email: email, role: data.role, name: name };
+    localStorage.setItem('user', JSON.stringify(user));
+    return { token: data.token, user: user };
 }
 
 // 专家注册（需要验证码）
 export async function registerSpecialist(name, email, expertise, password, verificationCode) {
-    const response = await fetch(`${API_BASE}/api/auth/register/specialist`, {
+    const response = await fetch(`${API_BASE}/api/v1/auth/register/specialist`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, expertise, password, verificationCode })
@@ -65,7 +67,11 @@ export async function registerSpecialist(name, email, expertise, password, verif
         const error = await response.json();
         throw new Error(error.error || 'Specialist registration failed');
     }
-    return response.json();
+    const data = await response.json();
+    localStorage.setItem('token', data.token);
+    var user = data.user || { id: data.userId, email: email, role: data.role, name: name };
+    localStorage.setItem('user', JSON.stringify(user));
+    return { token: data.token, user: user };
 }
 
 // 登录
@@ -81,8 +87,10 @@ export async function login(email, password) {
     }
     const data = await response.json();
     localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    return data;
+    // Build user from backend response (supports both {user:{}} and flat formats)
+    var user = data.user || { id: data.userId, email: email, role: data.role, name: data.username, specialistId: data.specialistId };
+    localStorage.setItem('user', JSON.stringify(user));
+    return { token: data.token, user: user };
 }
 
 // 登出
@@ -167,6 +175,7 @@ export async function updateProfile(name, phone) {
         if (name) user.username = name;
         if (phone) user.phone = phone;
         setCurrentUser(user);
+        localStorage.setItem('user', JSON.stringify(user));
     }
     return { name, phone };
 }
@@ -190,6 +199,7 @@ export async function uploadAvatar(file) {
     if (user) {
         user.avatar = data.avatar;
         setCurrentUser(user);
+        localStorage.setItem('user', JSON.stringify(user));
     }
     return data;
 }
@@ -200,7 +210,7 @@ export async function changePassword(oldPassword, newPassword) {
     if (!token || !userStr) throw new Error('Not authenticated');
     const user = JSON.parse(userStr);
     const email = user.email;
-    const response = await fetch(`${API_BASE}/api/auth/change-password`, {
+    const response = await fetch(`${API_BASE}/api/v1/auth/change-password`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -355,5 +365,5 @@ export async function getBookingFee(specialistId) {
         throw new Error(error.error || 'Failed to fetch fee');
     }
     const data = await response.json();
-    return data.bookingFee;
+    return data.fee;
 }
