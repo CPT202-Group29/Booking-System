@@ -718,6 +718,17 @@
       return value.replace('T', ' ');
     }
 
+    function formatDate(value) {
+      if (!value) return '-';
+      return value.split('T')[0];
+    }
+
+    function formatTime(value) {
+      if (!value) return '-';
+      const t = value.split('T')[1];
+      return t ? t.substring(0, 5) : '-';
+    }
+
     function normalizeStatusText(status) {
       if (status === null || status === undefined) return 'Unknown';
       if (typeof status === 'number') return status === 1 ? 'Available' : 'Unavailable';
@@ -1017,9 +1028,8 @@
         const card = document.createElement('div');
         card.className = 'slot-card';
         card.innerHTML = `
-          <h4>Slot ID: ${slot.id ?? '-'}</h4>
-          <p><strong>Start:</strong> ${formatDateTime(slot.startTime)}</p>
-          <p><strong>End:</strong> ${formatDateTime(slot.endTime)}</p>
+          <h4>${formatDate(slot.startTime)}</h4>
+          <p><strong>Time:</strong> ${formatTime(slot.startTime)} - ${formatTime(slot.endTime)}</p>
           <p><strong>Status:</strong> Available</p>
           <div class="slot-actions">
             <button class="btn-sm btn-danger" onclick="deleteSlot(${slot.id})">Delete</button>
