@@ -2,8 +2,7 @@
 (function() {
   document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('input, select, textarea').forEach(function(el) {
-      el.addEventListener('invalid', function(e) {
-        e.preventDefault();
+      el.addEventListener('invalid', function() {
         if (this.validity.valueMissing) {
           this.setCustomValidity('Please fill out this field.');
         } else if (this.validity.typeMismatch) {
