@@ -144,27 +144,27 @@
 
     .cards {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
       margin-bottom: 28px;
     }
 
     .card {
       background: white;
-      border-radius: 18px;
-      padding: 22px;
+      border-radius: 14px;
+      padding: 14px 16px;
       box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
     }
 
     .card h3 {
-      margin: 0 0 12px 0;
-      font-size: 18px;
+      margin: 0 0 8px 0;
+      font-size: 13px;
       color: #64748b;
       font-weight: 600;
     }
 
     .card .value {
-      font-size: 38px;
+      font-size: 28px;
       font-weight: 800;
       color: #0f172a;
     }
@@ -512,6 +512,10 @@
           <div class="value" id="confirmedBookings">0</div>
         </div>
         <div class="card">
+          <h3>Rejected</h3>
+          <div class="value" id="rejectedBookings">0</div>
+        </div>
+        <div class="card">
           <h3>Available Slots</h3>
           <div class="value" id="totalSlots">0</div>
         </div>
@@ -773,6 +777,8 @@
         bookings.filter(b => (b.status || '').toUpperCase() === 'PENDING').length;
       document.getElementById('confirmedBookings').textContent =
         bookings.filter(b => (b.status || '').toUpperCase() === 'CONFIRMED').length;
+      document.getElementById('rejectedBookings').textContent =
+        bookings.filter(b => ['CANCELLED','REJECTED','EXPIRED'].includes((b.status || '').toUpperCase())).length;
       document.getElementById('totalSlots').textContent = slots.length;
     }
 
