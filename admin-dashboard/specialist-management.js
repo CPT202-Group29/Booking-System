@@ -64,12 +64,37 @@ function clearForm() {
   submitBtn.textContent = "Save Specialist";
 }
 
+function validateSpecialistForm(data) {
+  const errors = [];
+  if (!data.name) {
+    errors.push("Name cannot be empty.");
+  }
+  if (!data.expertise) {
+    errors.push("Expertise cannot be empty.");
+  }
+  if (!data.level) {
+    errors.push("Level is required.");
+  }
+  if (isNaN(data.fee) || data.fee < 0) {
+    errors.push("Fee must be a valid number (>= 0).");
+  }
+  if (!data.contact) {
+    errors.push("Contact cannot be empty.");
+  }
+  if (!data.description) {
+    errors.push("Description cannot be empty.");
+  }
+  return errors;
+}
+
 function getSpecialistFormData() {
+  const feeRaw = feeInput.value.trim();
+  const feeValue = (feeRaw === "") ? NaN : Number(feeRaw);
   return {
     name: nameInput.value.trim(),
     expertise: expertiseInput.value.trim(),
     level: levelInput.value.trim(),
-    fee: Number(feeInput.value),
+    fee: feeValue,
     status: Number(statusInput.value),
     contact: contactInput.value.trim(),
     description: descriptionInput.value.trim()
@@ -167,6 +192,12 @@ specialistForm.addEventListener("submit", async function (event) {
   event.preventDefault();
   const specialistData = getSpecialistFormData();
   const currentEditIndex = editIndex.value;
+
+  const validationErrors = validateSpecialistForm(specialistData);
+  if (validationErrors.length > 0) {
+    alert("Please fix the following errors:\n- " + validationErrors.join("\n- "));
+    return;
+  }
 
   try {
     let response;
@@ -268,10 +299,13 @@ async function loadPendingSpecialists() {
 }
 
 async function approveSpecialist(id) {
-    const level = prompt('Assign level (Junior/Intermediate/Senior):', 'Junior');
+    const level = prompt('Assign level:\n1. Junior\n2. Intermediate\n3. Senior\n\nEnter level name:', 'Junior');
     if (!level) return;
-    const fee = prompt('Assign fee:', '50');
-    if (!fee) return;
+    const fee = prompt('Assign fee:\n1. 50\n2. 90\n3. 120\n\nEnter fee amount:', '50');
+    if (!fee || !['50','90','120'].includes(fee)) {
+        alert('Fee must be 50, 90, or 120');
+        return;
+    }
     try {
         await fetch('/api/admin/specialists/' + id + '/approve', {
             method: 'PUT',
