@@ -4,35 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Find a Specialist</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { display: flex; min-height: 100vh; margin: 0; font-family: Arial, sans-serif; }
-        .sidebar { width: 240px; background: #1e293b; color: white; padding: 20px 0; }
-        .sidebar h2 { color: white; text-align: center; margin-bottom: 30px; font-size: 1.2rem; border-bottom: 1px solid #334155; padding-bottom: 15px; }
-        .sidebar nav { display: flex; flex-direction: column; }
-        .sidebar nav a { color: #cbd5e1; text-decoration: none; padding: 12px 20px; }
-        .sidebar nav a:hover, .sidebar nav a.active { background: #334155; color: white; border-left: 3px solid #3b82f6; }
-        .main { flex: 1; background: #f1f5f9; padding: 30px; }
-        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .search-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: flex-end; }
+        body { display: flex; min-height: 100vh; margin: 0; font-family: 'Fira Sans', Arial, sans-serif; }
+        .sidebar { width: 240px; background: linear-gradient(180deg, #EFE8DE 0%, #E8DFD3 100%); color: #5C5C5C; padding: 28px 18px; border-right: 1px solid #DDD4C5; }
+        .sidebar h2 { color: #3D3D3D; text-align: center; margin-bottom: 28px; font-size: 20px; font-weight: 700; border-bottom: 1px solid #DDD4C5; padding-bottom: 16px; }
+        .sidebar nav { display: flex; flex-direction: column; gap: 4px; }
+        .sidebar nav a { color: #8B8378; text-decoration: none; padding: 11px 16px; border-radius: 12px; font-size: 14px; font-weight: 500; transition: all 0.25s ease; }
+        .sidebar nav a:hover, .sidebar nav a.active { background: #F0EBE3; color: #3D3D3D; border-left: none; }
+        .sidebar nav a.active { background: #E8DFD3; font-weight: 600; }
+        .main { flex: 1; background: #F7F5F2; padding: 36px 40px; }
+        .container { max-width: 1000px; margin: 0 auto; background: #fff; padding: 32px 36px; border-radius: 22px; box-shadow: 0 2px 12px rgba(0,0,0,0.03), 0 8px 32px rgba(0,0,0,0.03); }
+        .search-bar { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; align-items: flex-end; }
         .search-bar > div { display: flex; flex-direction: column; min-width: 100px; }
-        .search-bar label { font-size: 0.8em; color: #666; margin-bottom: 2px; }
-        .search-bar input, .search-bar select { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-        .search-bar button { padding: 8px 14px; border: none; border-radius: 4px; cursor: pointer; color: white; height: 38px; }
-        .btn-search { background: #3b82f6; }
-        .btn-clear { background: #6b7280; }
-        .btn-save { background: #10b981; }
-        .btn-load { background: #f59e0b; }
-        .specialist-card { border: 1px solid #e5e7eb; padding: 16px; margin-bottom: 12px; border-radius: 8px; background: #f9fafb; display: flex; justify-content: space-between; align-items: center; }
-        .specialist-card h3 { margin: 0 0 8px 0; }
-        .specialist-card p { margin: 4px 0; color: #6b7280; }
-        .badge-available { color: #059669; font-weight: 600; }
-        .badge-unavailable { color: #dc2626; font-weight: 600; }
-        .view-btn { display: inline-block; padding: 8px 16px; background: #3b82f6; color: white; text-decoration: none; border-radius: 4px; font-size: 0.9rem; }
-        .view-btn:hover { background: #2563eb; }
-        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 20px; }
-        .pagination button { padding: 6px 12px; border: 1px solid #d1d5db; background: white; cursor: pointer; border-radius: 4px; }
-        .pagination button.active { background: #3b82f6; color: white; border-color: #3b82f6; }
-        .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .search-bar label { font-size: 11px; font-weight: 600; color: #A09888; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .search-bar input, .search-bar select { padding: 10px 14px; border: 1.5px solid #EDE8E0; border-radius: 12px; font-family: inherit; font-size: 13px; background: #FAF8F5; color: #4A4A4A; }
+        .search-bar button { padding: 10px 18px; border: none; border-radius: 40px; cursor: pointer; color: #fff; font-family: inherit; font-size: 13px; font-weight: 600; transition: all 0.25s ease; }
+        .btn-search { background: #E8B4A2; }
+        .btn-search:hover { background: #E0A18A; }
+        .btn-clear { background: #A09888; }
+        .btn-clear:hover { background: #8B8378; }
+        .btn-save { background: #A5C9A5; }
+        .btn-load { background: #E0C8A0; }
+        .specialist-card { border: 1px solid #EDE8E0; padding: 20px 24px; margin-bottom: 12px; border-radius: 18px; background: #FAF8F5; display: flex; justify-content: space-between; align-items: center; transition: box-shadow 0.25s ease; }
+        .specialist-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.04); }
+        .specialist-card h3 { margin: 0 0 8px 0; color: #3D3D3D; }
+        .specialist-card p { margin: 4px 0; color: #8B8378; font-size: 13px; }
+        .badge-available { color: #3D6B35; font-weight: 600; }
+        .badge-unavailable { color: #8A4040; font-weight: 600; }
+        .view-btn { display: inline-block; padding: 8px 20px; background: #E8B4A2; color: #fff; text-decoration: none; border-radius: 40px; font-size: 13px; font-weight: 600; transition: all 0.25s ease; }
+        .view-btn:hover { background: #E0A18A; }
+        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 24px; }
+        .pagination button { padding: 8px 14px; border: 1.5px solid #EDE8E0; background: #fff; cursor: pointer; border-radius: 12px; font-family: inherit; font-size: 13px; color: #5C5C5C; transition: all 0.25s ease; }
+        .pagination button.active { background: #E8B4A2; color: #fff; border-color: #E8B4A2; }
+        .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
     </style>
 </head>
 <body>

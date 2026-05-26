@@ -4,34 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Bookings</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { display: flex; min-height: 100vh; margin: 0; font-family: Arial, sans-serif; }
-        .sidebar { width: 240px; background: #1e293b; color: white; padding: 20px 0; }
-        .sidebar h2 { color: white; text-align: center; margin-bottom: 30px; font-size: 1.2rem; border-bottom: 1px solid #334155; padding-bottom: 15px; }
-        .sidebar nav { display: flex; flex-direction: column; }
-        .sidebar nav a { color: #cbd5e1; text-decoration: none; padding: 12px 20px; }
-        .sidebar nav a:hover, .sidebar nav a.active { background: #334155; color: white; border-left: 3px solid #3b82f6; }
-        .main { flex: 1; background: #f1f5f9; padding: 30px; }
-        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .tabs { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 2px solid #e5e7eb; }
-        .tabs button { padding: 10px 20px; border: none; background: transparent; cursor: pointer; font-size: 1rem; color: #6b7280; border-bottom: 2px solid transparent; margin-bottom: -2px; }
-        .tabs button.active { color: #3b82f6; border-bottom-color: #3b82f6; }
-        .booking-card { border: 1px solid #e5e7eb; padding: 16px; margin-bottom: 12px; border-radius: 8px; background: #f9fafb; cursor: pointer; }
-        .booking-card:hover { background: #f3f4f6; }
-        .status-PENDING { color: #f59e0b; font-weight: 600; }
-        .status-CONFIRMED { color: #3b82f6; font-weight: 600; }
-        .status-COMPLETED { color: #059669; font-weight: 600; }
-        .status-CANCELLED { color: #dc2626; font-weight: 600; }
-        .status-EXPIRED { color: #9ca3af; font-weight: 600; }
-        .btn-cancel { background: #dc2626; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-right: 8px; }
-        .btn-reschedule { background: #f59e0b; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
-        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 20px; }
-        .pagination button { padding: 6px 12px; border: 1px solid #d1d5db; background: white; cursor: pointer; border-radius: 4px; }
-        .pagination button.active { background: #3b82f6; color: white; border-color: #3b82f6; }
-        .modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index:1000; }
-        .modal-content { background: white; padding: 20px; border-radius: 10px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
-        .modal-content h3 { margin-top:0; }
-        .modal-close { float: right; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6b7280; }
+        body { display: flex; min-height: 100vh; margin: 0; font-family: 'Fira Sans', Arial, sans-serif; }
+        .sidebar { width: 240px; background: linear-gradient(180deg, #EFE8DE 0%, #E8DFD3 100%); color: #5C5C5C; padding: 28px 18px; border-right: 1px solid #DDD4C5; }
+        .sidebar h2 { color: #3D3D3D; text-align: center; margin-bottom: 28px; font-size: 20px; font-weight: 700; border-bottom: 1px solid #DDD4C5; padding-bottom: 16px; }
+        .sidebar nav { display: flex; flex-direction: column; gap: 4px; }
+        .sidebar nav a { color: #8B8378; text-decoration: none; padding: 11px 16px; border-radius: 12px; font-size: 14px; font-weight: 500; transition: all 0.25s ease; }
+        .sidebar nav a:hover, .sidebar nav a.active { background: #F0EBE3; color: #3D3D3D; border-left: none; }
+        .sidebar nav a.active { background: #E8DFD3; font-weight: 600; }
+        .main { flex: 1; background: #F7F5F2; padding: 36px 40px; }
+        .container { max-width: 1000px; margin: 0 auto; background: #fff; padding: 32px 36px; border-radius: 22px; box-shadow: 0 2px 12px rgba(0,0,0,0.03), 0 8px 32px rgba(0,0,0,0.03); }
+        .tabs { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 2px solid #EDE8E0; }
+        .tabs button { padding: 10px 20px; border: none; background: transparent; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 500; color: #A09888; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.25s ease; }
+        .tabs button.active { color: #C4A88B; border-bottom-color: #C4A88B; font-weight: 600; }
+        .booking-card { border: 1px solid #EDE8E0; padding: 18px 24px; margin-bottom: 12px; border-radius: 18px; background: #FAF8F5; cursor: pointer; transition: box-shadow 0.25s ease; }
+        .booking-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.04); }
+        .status-PENDING { color: #B8820C; font-weight: 600; }
+        .status-CONFIRMED { color: #3A5A7C; font-weight: 600; }
+        .status-COMPLETED { color: #3D6B35; font-weight: 600; }
+        .status-CANCELLED { color: #8A4040; font-weight: 600; }
+        .status-EXPIRED { color: #A09888; font-weight: 600; }
+        .btn-cancel { background: #F0D5D5; color: #8A4040; border: none; padding: 6px 14px; border-radius: 40px; cursor: pointer; margin-right: 8px; font-family: inherit; font-size: 12px; font-weight: 600; transition: all 0.25s ease; }
+        .btn-cancel:hover { background: #E0C0C0; }
+        .btn-reschedule { background: #FCE8D5; color: #8B6914; border: none; padding: 6px 14px; border-radius: 40px; cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 600; transition: all 0.25s ease; }
+        .btn-reschedule:hover { background: #F8D8B5; }
+        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 24px; }
+        .pagination button { padding: 8px 14px; border: 1.5px solid #EDE8E0; background: #fff; cursor: pointer; border-radius: 12px; font-family: inherit; font-size: 13px; color: #5C5C5C; transition: all 0.25s ease; }
+        .pagination button.active { background: #E8B4A2; color: #fff; border-color: #E8B4A2; }
+        .modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.3); justify-content: center; align-items: center; z-index:1000; }
+        .modal-content { background: #fff; padding: 28px; border-radius: 22px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
+        .modal-content h3 { margin-top:0; color: #3D3D3D; }
+        .modal-close { float: right; background: none; border: none; font-size: 22px; cursor: pointer; color: #A09888; }
     </style>
 </head>
 <body>
