@@ -12,16 +12,18 @@ import java.math.RoundingMode;
 public class ChargeCalculationService {
 
     private static final BigDecimal JUNIOR_RATE = new BigDecimal("50.00");
-    private static final BigDecimal INTERMEDIATE_RATE = new BigDecimal("80.00");
+    private static final BigDecimal INTERMEDIATE_RATE = new BigDecimal("90.00");
     private static final BigDecimal SENIOR_RATE = new BigDecimal("120.00");
 
     @Autowired
     private SpecialistRepository specialistRepository;
 
-    /** Tiered pricing by specialist level: Junior=50, Intermediate=80, Senior=120 */
+    /** Tiered pricing by specialist level: Junior=50, Intermediate=90, Senior=120 */
     public BigDecimal calculateCharge(Long specialistId) {
         Specialist s = specialistRepository.findById(specialistId.intValue()).orElse(null);
         if (s == null) return JUNIOR_RATE;
+        // If specialist has a stored fee, use it; otherwise default by level
+        if (s.getFee() != null) return s.getFee();
         return getFeeByLevel(s.getLevel());
     }
 
