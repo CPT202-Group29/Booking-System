@@ -91,7 +91,7 @@ function renderBookings() {
       <td>${booking.topic}</td>
       <td>${booking.date}</td>
       <td>${booking.time}</td>
-      <td>£${booking.fee}</td>
+      <td>¥${booking.fee}</td>
       <td><span class="badge ${getStatusClass(booking.status)}">${booking.status}</span></td>
       <td>${renderActionButtons(booking)}</td>
     `;
