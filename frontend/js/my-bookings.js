@@ -109,11 +109,11 @@ function renderBookings(bookings) {
         return `
         <div class="booking-card" data-booking='${JSON.stringify(b).replace(/'/g, "&#39;")}' 
              onclick="showDetail(this)">
-            <p><strong>Specialist ID:</strong> ${b.specialistId || 'N/A'}</p>
+            <p><strong>Specialist:</strong> ${b.specialistName || ('ID: ' + b.specialistId) || 'N/A'}</p>
             <p><strong>Topic:</strong> ${escapeHtml(b.topic || 'N/A')}</p>
             <p><strong>Status:</strong> <span class="status-${b.status}">${b.status}</span></p>
             <p><strong>Date:</strong> ${timeDisplay}</p>
-            <p><strong>Fee:</strong> $${b.chargeAmount ?? '0.00'}</p>
+            <p><strong>Fee:</strong> ¥${b.chargeAmount ?? '0.00'}</p>
             ${b.status === 'CANCELLED' ? `<p style="color:#dc2626;font-weight:600;"><strong>Important Notice:</strong> This booking has been cancelled by the specialist or administrator. Please check the reason below and book another slot if needed.</p>` : ''}
             ${b.cancelReason ? `<p><strong>Cancel Reason:</strong> ${escapeHtml(b.cancelReason)}</p>` : ''}
             ${b.status === 'CONFIRMED' ? `
@@ -149,13 +149,13 @@ window.showDetail = function(card) {
     const content = document.getElementById('detailContent');
     content.innerHTML = `
         <p><strong>Booking ID:</strong> ${booking.id}</p>
-        <p><strong>Specialist ID:</strong> ${booking.specialistId || 'N/A'}</p>
+        <p><strong>Specialist:</strong> ${booking.specialistName || ('ID: ' + booking.specialistId) || 'N/A'}</p>
         <p><strong>Topic:</strong> ${escapeHtml(booking.topic || 'N/A')}</p>
         <p><strong>Notes:</strong> ${escapeHtml(booking.notes || 'N/A')}</p>
         <p><strong>Status:</strong> ${booking.status}</p>
         <p><strong>Date:</strong> ${booking.date || 'N/A'}</p>
         <p><strong>Time:</strong> ${booking.time || 'N/A'}</p>
-        <p><strong>Fee:</strong> $${booking.chargeAmount ?? '0.00'}</p>
+        <p><strong>Fee:</strong> ¥${booking.chargeAmount ?? '0.00'}</p>
         ${booking.status === 'CANCELLED' ? '<p style="color:#dc2626;font-weight:600;"><strong>Important Notice:</strong> This booking has been cancelled. Please check the cancellation reason.</p>' : ''}
         <p><strong>Cancel Reason:</strong> ${escapeHtml(booking.cancelReason || 'N/A')}</p>
         <p><strong>Created At:</strong> ${booking.createdAt ? new Date(booking.createdAt).toLocaleString() : 'N/A'}</p>
@@ -174,7 +174,7 @@ window.handleCancel = async function(bookingId) {
     if (!reason) return;
     try {
         const result = await cancelBooking(bookingId, reason);
-        alert(`Booking cancelled successfully.${result.refundAmount ? ` Refund: $${result.refundAmount}` : ''}`);
+        alert(`Booking cancelled successfully.${result.refundAmount ? ` Refund: ¥${result.refundAmount}` : ''}`);
         await loadBookings();
     } catch (err) {
         alert('Cancel failed: ' + err.message);
