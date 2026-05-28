@@ -7,6 +7,7 @@ import com.cpt202.booking_system.model.BookingStatus;
 import com.cpt202.booking_system.model.TimeSlot;
 import com.cpt202.booking_system.repository.BookingRepository;
 import com.cpt202.booking_system.repository.BookingStatusLogRepository;
+import com.cpt202.booking_system.repository.SpecialistRepository;
 import com.cpt202.booking_system.repository.TimeSlotRepository;
 import com.cpt202.booking_system.repository.UserRepository;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -41,17 +42,20 @@ public class BookingService {
     private final ChargeCalculationService chargeService;
     private final BookingStatusLogRepository bookingStatusLogRepository;
     private final UserRepository userRepository;
+    private final SpecialistRepository specialistRepository;
 
     public BookingService(BookingRepository bookingRepository,
                           TimeSlotRepository timeSlotRepository,
                           ChargeCalculationService chargeService,
                           BookingStatusLogRepository bookingStatusLogRepository,
-                          UserRepository userRepository) {
+                          UserRepository userRepository,
+                          SpecialistRepository specialistRepository) {
         this.bookingRepository = bookingRepository;
         this.timeSlotRepository = timeSlotRepository;
         this.chargeService = chargeService;
         this.bookingStatusLogRepository = bookingStatusLogRepository;
         this.userRepository = userRepository;
+        this.specialistRepository = specialistRepository;
     }
 
     /**
@@ -426,10 +430,19 @@ public class BookingService {
                     u -> u.getId(),
                     u -> u.getUsername() != null && !u.getUsername().isBlank()
                         ? u.getUsername() : u.getEmail()));
+        // Batch load specialist names
+        List<Integer> specIds = bookings.stream()
+                .map(Booking::getSpecialistId).distinct()
+                .map(Long::intValue).collect(Collectors.toList());
+        Map<Integer, String> specNameMap = specialistRepository.findAllById(specIds).stream()
+                .collect(Collectors.toMap(
+                    s -> s.getId(),
+                    s -> s.getName() != null ? s.getName() : s.getContact()));
         return bookings.stream()
                 .map(b -> {
                     BookingResponse resp = BookingResponse.fromEntity(b, slotMap.get(b.getTimeSlotId()));
                     resp.setCustomerName(nameMap.getOrDefault(b.getCustomerId(), "User #" + b.getCustomerId()));
+                    resp.setSpecialistName(specNameMap.getOrDefault(b.getSpecialistId().intValue(), "Specialist #" + b.getSpecialistId()));
                     return resp;
                 })
                 .collect(Collectors.toList());

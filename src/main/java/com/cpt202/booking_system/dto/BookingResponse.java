@@ -17,6 +17,7 @@ public class BookingResponse {
     private Long customerId;
     private String customerName;
     private Long specialistId;
+    private String specialistName;
     private Long timeSlotId;
     private String date;
     private String time;
@@ -60,6 +61,8 @@ public class BookingResponse {
     public String getCustomerName() { return customerName; }
     public void setCustomerName(String customerName) { this.customerName = customerName; }
     public Long getSpecialistId() { return specialistId; }
+    public String getSpecialistName() { return specialistName; }
+    public void setSpecialistName(String specialistName) { this.specialistName = specialistName; }
     public Long getTimeSlotId() { return timeSlotId; }
     public String getDate() { return date; }
     public String getTime() { return time; }
