@@ -35,7 +35,6 @@ public class Specialist {
     @Email(message = "Contact must be a valid email address")
     private String contact;
 
-    @NotBlank(message = "Description is required")
     @Size(max = 500, message = "Description must be at most 500 characters")
     private String description;
 
