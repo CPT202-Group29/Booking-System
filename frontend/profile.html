@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Profile - Expert Booking System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body.portal-body { display: flex; min-height: 100vh; margin: 0; font-family: 'Fira Sans', Arial, sans-serif; }
+        .portal-sidebar {
+            width: 240px;
+            background: linear-gradient(180deg, #EFE8DE 0%, #E8DFD3 100%);
+            color: #5C5C5C;
+            padding: 28px 18px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #DDD4C5;
+        }
+        .portal-sidebar h2 {
+            color: #3D3D3D;
+            text-align: center;
+            margin-bottom: 28px;
+            font-size: 20px;
+            font-weight: 700;
+            border-bottom: 1px solid #DDD4C5;
+            padding-bottom: 16px;
+        }
+        .portal-sidebar nav { display: flex; flex-direction: column; gap: 4px; }
+        .portal-sidebar nav a {
+            color: #8B8378;
+            text-decoration: none;
+            padding: 11px 16px;
+            border-radius: 12px;
+            transition: all 0.25s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .portal-sidebar nav a:hover, .portal-sidebar nav a.active {
+            background: #F0EBE3;
+            color: #3D3D3D;
+            border-left: none;
+        }
+        .portal-sidebar nav a.active { background: #E8DFD3; font-weight: 600; }
+        .portal-sidebar .sidebar-footer {
+            margin-top: auto;
+            padding: 20px;
+            border-top: 1px solid #DDD4C5;
+        }
+        .portal-main { flex: 1; background: #F7F5F2; padding: 36px 40px; }
+        .portal-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 32px 36px;
+            border-radius: 22px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.03), 0 8px 32px rgba(0,0,0,0.03);
+        }
+        .welcome-card {
+            background: #F5F0EB;
+            padding: 20px 24px;
+            border-radius: 18px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .welcome-card h3 { margin: 0; color: #3D3D3D; }
+        .welcome-card .quick-actions button {
+            margin-left: 10px;
+            padding: 8px 18px;
+            border: none;
+            border-radius: 40px;
+            cursor: pointer;
+            color: #fff;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.25s ease;
+        }
+        .btn-search { background: #E8B4A2; }
+        .btn-search:hover { background: #E0A18A; }
+        .btn-bookings { background: #A5C9A5; }
+        .btn-bookings:hover { background: #90B890; }
+        .btn-admin { background: #E0C8A0; }
+        .btn-admin:hover { background: #D4B88A; }
+        .avatar-preview { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; color: #8B8378; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid #EDE8E0;
+            border-radius: 14px;
+            font-family: inherit;
+            font-size: 14px;
+            background: #FAF8F5;
+            color: #4A4A4A;
+            box-sizing: border-box;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #D4C4B0;
+            box-shadow: 0 0 0 4px rgba(200,180,155,0.12);
+            background: #fff;
+        }
+        button {
+            background: #E8B4A2;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.25s ease;
+            width: 100%;
+        }
+        button:hover { background: #E0A18A; }
+        .message { margin-top: 16px; padding: 12px 16px; border-radius: 14px; font-size: 13px; font-weight: 500; }
+        .error { background: #F0D5D5; color: #8A4040; border: 1px solid #E0C0C0; }
+        .success { background: #D9EAD3; color: #3D6B35; border: 1px solid #C5DCBE; }
+    </style>
+</head>
+<body class="portal-body">
+    <!-- 侧边栏导航 -->
+    <aside class="portal-sidebar">
+        <h2>Expert Booking</h2>
+        <nav>
+            <a href="profile.html" class="active">My Profile</a>
+            <a href="specialist-list.html">Find a Specialist</a>
+            <a href="my-bookings.html">My Bookings</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="#" id="sidebarLogout" style="color:#cbd5e1; text-decoration:none;">Logout</a>
+        </div>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="portal-main">
+        <div class="portal-container">
+            <!-- 欢迎卡片 -->
+            <div class="welcome-card" id="welcomeCard">
+                <div>
+                    <h3>Welcome, <span id="welcomeName"></span>!</h3>
+                    <p style="margin:5px 0 0; color:#666;">What would you like to do today?</p>
+                </div>
+                <div class="quick-actions">
+                    <button class="btn-search" onclick="location.href='specialist-list.html'">Find a Specialist</button>
+                    <button class="btn-bookings" onclick="location.href='my-bookings.html'">My Bookings</button>
+                    <button class="btn-admin" onclick="location.href='admin-dashboard/index.html'" id="adminBtn" style="display:none;">Admin</button>
+                </div>
+            </div>
+
+            <!-- Profile 原有内容 -->
+            <h2>Profile Details</h2>
+            <div id="profileView">
+                <div style="text-align:center">
+                    <img id="avatarImg" class="avatar-preview" src="" alt="Avatar">
+                </div>
+                <p><strong>Name:</strong> <span id="displayName"></span></p>
+                <p><strong>Email:</strong> <span id="displayEmail"></span> (read-only)</p>
+                <p><strong>Phone:</strong> <span id="displayPhone"></span></p>
+                <button id="editBtn">Edit Profile</button>
+                <button id="changePwdBtn">Change Password</button>
+                <button id="deleteAccountBtn" style="background:#dc3545;">Delete Account</button>
+            </div>
+            <div id="editForm" style="display:none;">
+                <div class="form-group"><label>Name</label><input type="text" id="editName"></div>
+                <div class="form-group"><label>Phone</label><input type="text" id="editPhone"></div>
+                <div class="form-group"><label>Upload Avatar</label><input type="file" id="avatarFile" accept="image/jpeg,image/png"></div>
+                <button id="saveBtn">Save</button>
+                <button id="cancelBtn" style="background:#6c757d; margin-top:10px;">Cancel</button>
+            </div>
+            <div id="changePwdForm" style="display:none;">
+                <div class="form-group"><label>Old Password</label><input type="password" id="oldPassword"></div>
+                <div class="form-group"><label>New Password</label><input type="password" id="newPassword"></div>
+                <div class="form-group"><label>Confirm New Password</label><input type="password" id="confirmNewPassword"></div>
+                <button id="submitPwdBtn">Confirm Change</button>
+                <button id="cancelPwdBtn" style="background:#6c757d; margin-top:10px;">Cancel</button>
+            </div>
+            <div id="message" class="message"></div>
+        </div>
+    </main>
+    <script type="module" src="js/profile.js"></script>
+    <script>
+        // 显示欢迎名字和管理员按钮
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('welcomeName').textContent = user.username || user.email || 'User';
+        if (user.role === 'ADMIN') {
+            document.getElementById('adminBtn').style.display = 'inline-block';
+        }
+        // 侧边栏登出
+        document.getElementById('sidebarLogout').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.clear();
+            window.location.href = 'login.html';
+        });
+    </script>
+</body>
+</html>

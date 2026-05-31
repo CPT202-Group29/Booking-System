@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Specialist Dashboard — Expert Booking</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Fira Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #F7F5F2;
+      color: #4A4A4A;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ===== LAYOUT ===== */
+    .layout { display: flex; min-height: 100vh; }
+
+    /* ===== SIDEBAR — warm cream ===== */
+    .sidebar {
+      width: 260px;
+      background: linear-gradient(180deg, #EFE8DE 0%, #E8DFD3 100%);
+      color: #5C5C5C;
+      padding: 32px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      border-right: 1px solid #DDD4C5;
+    }
+    .sidebar h2 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      margin-bottom: 2px;
+      color: #3D3D3D;
+    }
+    .sidebar p {
+      color: #A09888;
+      font-size: 12px;
+      line-height: 1.5;
+      margin-bottom: 22px;
+    }
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      background: transparent;
+      color: #8B8378;
+      border: none;
+      text-align: left;
+      padding: 11px 16px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      text-decoration: none;
+    }
+    .nav-btn:hover {
+      background: #F0EBE3;
+      color: #5C5C5C;
+    }
+    .nav-btn.active {
+      background: #E8DFD3;
+      color: #3D3D3D;
+      font-weight: 600;
+    }
+
+    /* ===== MAIN AREA ===== */
+    .main {
+      flex: 1;
+      padding: 36px 44px;
+      max-width: 1320px;
+      background: #F7F5F2;
+    }
+
+    /* ===== PAGE HEADER ===== */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 24px;
+      margin-bottom: 36px;
+      flex-wrap: wrap;
+    }
+    .page-header h1 {
+      font-size: 30px;
+      font-weight: 700;
+      color: #3D3D3D;
+      letter-spacing: -0.4px;
+      line-height: 1.2;
+    }
+    .page-header p {
+      margin-top: 4px;
+      color: #A09888;
+      font-size: 13px;
+      font-weight: 400;
+    }
+    .header-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+    /* ===== BUTTONS — soft rounded ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: none;
+      border-radius: 40px;
+      padding: 10px 22px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: #E8B4A2;
+      color: #fff;
+    }
+    .btn-primary:hover { background: #E0A18A; }
+    .btn-secondary {
+      background: #F0EBE3;
+      color: #6B6058;
+    }
+    .btn-secondary:hover { background: #E8DFD3; color: #3D3D3D; }
+    .btn-success { background: #C8E6C9; color: #2E5A30; }
+    .btn-success:hover { background: #A5D6A7; }
+    .btn-danger { background: #F5D5D5; color: #8B3A3A; }
+    .btn-danger:hover { background: #F0C0C0; }
+    .btn-sm {
+      padding: 6px 16px;
+      border-radius: 40px;
+      font-size: 12px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      font-family: inherit;
+    }
+
+    /* ===== KPI CARDS — soft shadows, big radius ===== */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+      margin-bottom: 36px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 22px 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.03), 0 8px 32px rgba(0,0,0,0.03);
+      transition: box-shadow 0.3s ease, transform 0.3s ease;
+      cursor: default;
+    }
+    .card:hover {
+      box-shadow: 0 4px 18px rgba(0,0,0,0.05), 0 12px 40px rgba(0,0,0,0.04);
+      transform: translateY(-2px);
+    }
+    .card h3 {
+      font-size: 11px;
+      font-weight: 600;
+      color: #A09888;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 10px;
+    }
+    .card .value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #3D3D3D;
+      line-height: 1;
+    }
+
+    /* ===== SECTION PANELS ===== */
+    .section {
+      background: #fff;
+      border-radius: 22px;
+      padding: 32px 36px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.03), 0 8px 32px rgba(0,0,0,0.03);
+      margin-bottom: 28px;
+    }
+    .section h2 {
+      font-size: 19px;
+      font-weight: 700;
+      color: #3D3D3D;
+      margin-bottom: 4px;
+      letter-spacing: -0.2px;
+    }
+    .section-subtitle {
+      color: #B8AFA2;
+      font-size: 13px;
+      margin-bottom: 28px;
+    }
+
+    /* ===== PROFILE ===== */
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+    .profile-avatar {
+      width: 140px;
+      height: 140px;
+      border-radius: 40px;
+      background: linear-gradient(135deg, #F5E6D8, #E8D5C4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #C4A88B;
+      font-size: 44px;
+      font-weight: 700;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: box-shadow 0.3s ease;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+    .profile-avatar:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+    .profile-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 40px;
+    }
+    .profile-avatar .upload-hint {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0,0,0,0.35);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 500;
+      text-align: center;
+      padding: 5px 0;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .profile-avatar:hover .upload-hint { opacity: 1; }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+    .info-item {
+      background: #FAF8F5;
+      border-radius: 14px;
+      padding: 14px 18px;
+    }
+    .info-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #B8AFA2;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .info-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: #4A4A4A;
+      word-break: break-word;
+    }
+
+    /* ===== STATUS BADGES — muted tones ===== */
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+    .status-available { background: #D9EAD3; color: #3D6B35; }
+    .status-pending { background: #FCE8D5; color: #8B6914; }
+    .status-confirmed { background: #D5E5F0; color: #3A5A7C; }
+    .status-completed { background: #E0DFF0; color: #4A4080; }
+    .status-cancelled, .status-expired, .status-unavailable { background: #F0D5D5; color: #8A4040; }
+
+    /* ===== TABLE ===== */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead th {
+      background: #FAF8F5;
+      color: #A09888;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 2px solid #EDE8E0;
+    }
+    tbody td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #F5F0EB;
+      color: #5C5C5C;
+      vertical-align: middle;
+    }
+    tbody tr { transition: background 0.2s ease; }
+    tbody tr:hover { background: #FAF8F5; }
+
+    /* ===== SLOT FORM ===== */
+    .slot-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #8B8378;
+    }
+    .field input,
+    .field textarea {
+      border: 1.5px solid #EDE8E0;
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-size: 13px;
+      font-family: inherit;
+      width: 100%;
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+      background: #FAF8F5;
+      color: #4A4A4A;
+    }
+    .field input:focus,
+    .field textarea:focus {
+      outline: none;
+      border-color: #D4C4B0;
+      box-shadow: 0 0 0 4px rgba(200,180,155,0.12);
+      background: #fff;
+    }
+    .field textarea { min-height: 100px; resize: vertical; }
+
+    /* ===== SLOT CARDS ===== */
+    .slot-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+    }
+    .slot-card {
+      border: 1px solid #EDE8E0;
+      border-radius: 18px;
+      padding: 20px;
+      background: #FAF8F5;
+      transition: box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+    .slot-card:hover {
+      border-color: #DDD4C5;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+    }
+    .slot-card h4 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #3D3D3D;
+      margin-bottom: 8px;
+    }
+    .slot-card p {
+      margin: 4px 0;
+      color: #8B8378;
+      font-size: 13px;
+    }
+    .slot-actions { margin-top: 14px; display: flex; gap: 8px; }
+    .table-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    /* ===== NOTICE / MESSAGE ===== */
+    .notice {
+      margin-top: 18px;
+      padding: 14px 18px;
+      border-radius: 14px;
+      background: #F5F0EB;
+      color: #6B6058;
+      font-size: 13px;
+      line-height: 1.5;
+      border: 1px solid #EDE8E0;
+    }
+    .message {
+      margin-bottom: 22px;
+      padding: 14px 20px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 500;
+      display: none;
+    }
+    .message.success { background: #D9EAD3; color: #3D6B35; display: block; border: 1px solid #C5DCBE; }
+    .message.error { background: #F0D5D5; color: #8A4040; display: block; border: 1px solid #E0C0C0; }
+    .empty { color: #B8AFA2; font-size: 13px; padding: 14px 0; }
+    .cancel-reminder {
+      margin-top: 6px;
+      color: #C47070;
+      font-weight: 600;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 900px) {
+      .profile-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .layout { flex-direction: column; }
+      .sidebar { width: 100%; padding: 20px; }
+      .main { padding: 20px; }
+      .page-header h1 { font-size: 22px; }
+      .cards { grid-template-columns: repeat(2, 1fr); }
+      .slot-form { grid-template-columns: 1fr; }
+      th, td { font-size: 11px; padding: 10px; }
+    }
+  </style>
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div>
+        <h2>Specialist Portal</h2>
+        <p>Independent specialist-side page for profile, bookings, and time slots.</p>
+      </div>
+
+      <button class="nav-btn active" onclick="scrollToSection('profile-section')">My Profile</button>
+      <button class="nav-btn" onclick="scrollToSection('bookings-section')">My Bookings</button>
+      <button class="nav-btn" onclick="scrollToSection('slots-section')">My Time Slots</button>
+      <a href="#" class="nav-btn" onclick="localStorage.clear();window.location.href='login.html'" style="margin-top:auto;">Logout</a>
+    </aside>
+
+    <main class="main">
+      <div class="page-header">
+        <div>
+          <h1>Specialist Dashboard</h1>
+          <p>Manage your profile, view assigned bookings, and maintain your own available slots.</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-secondary" onclick="goBack()">Back</button>
+          <button class="btn btn-primary" onclick="initDashboard()">Refresh</button>
+        </div>
+      </div>
+
+      <div id="globalMessage" class="message"></div>
+
+      <section class="cards">
+        <div class="card">
+          <h3>Total Bookings</h3>
+          <div class="value" id="totalBookings">0</div>
+        </div>
+        <div class="card">
+          <h3>Pending Bookings</h3>
+          <div class="value" id="pendingBookings">0</div>
+        </div>
+        <div class="card">
+          <h3>Confirmed Bookings</h3>
+          <div class="value" id="confirmedBookings">0</div>
+        </div>
+        <div class="card">
+          <h3>Rejected</h3>
+          <div class="value" id="rejectedBookings">0</div>
+        </div>
+        <div class="card">
+          <h3>Available Slots</h3>
+          <div class="value" id="totalSlots">0</div>
+        </div>
+      </section>
+
+      <section class="section" id="profile-section">
+        <h2>My Profile</h2>
+        <p class="section-subtitle">Profile data is loaded from the specialist backend API.</p>
+
+        <div class="profile-grid">
+          <div class="profile-avatar" id="avatarBox" onclick="document.getElementById('avatarFileInput').click()" title="Click to upload avatar">
+            <span id="avatarInitials">SP</span>
+            <img id="avatarImg" src="" alt="avatar" style="display:none;" />
+            <div class="upload-hint">Change Photo</div>
+            <input type="file" id="avatarFileInput" accept="image/*" onchange="uploadAvatar()" style="display:none;" />
+          </div>
+
+          <div>
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">Specialist ID</div>
+                <div class="info-value" id="profileId">-</div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">Name</div>
+                <div class="info-value" id="profileNameText">-</div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">Contact</div>
+                <div class="info-value" id="profileContactText">-</div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">Expertise</div>
+                <div class="info-value" id="profileExpertise">-</div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">Level</div>
+                <div class="info-value" id="profileLevel">-</div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">Fee</div>
+                <div class="info-value" id="profileFee">-</div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">Current Status</div>
+                <div class="info-value" id="profileStatus">-</div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">Description</div>
+                <div class="info-value" id="profileDescriptionText">-</div>
+              </div>
+            </div>
+
+            <div class="field" style="margin-bottom: 14px;">
+              <label for="profileNameInput">Update Name</label>
+              <input type="text" id="profileNameInput" placeholder="Enter your name" />
+            </div>
+
+            <div class="field" style="margin-bottom: 14px;">
+              <label for="profileContactInput">Update Contact</label>
+              <input type="text" id="profileContactInput" placeholder="Enter your contact" />
+            </div>
+
+            <div class="field" style="margin-bottom: 14px;">
+              <label for="profileDescriptionInput">Update Description</label>
+              <textarea id="profileDescriptionInput" placeholder="Enter your description"></textarea>
+            </div>
+
+            <button class="btn btn-primary" onclick="updateProfile()">Save Profile</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="bookings-section">
+        <h2>My Bookings</h2>
+        <p class="section-subtitle">Only bookings related to the current specialist are shown here.</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Booking ID</th>
+              <th>Customer</th>
+              <th>Topic</th>
+              <th>Date</th>
+              <th>Time Slot</th>
+              <th>Status</th>
+              <th>Cancel Reason / Reminder</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="bookingsTableBody"></tbody>
+        </table>
+
+        <div id="bookingsEmpty" class="empty" style="display:none;">No bookings found.</div>
+      </section>
+
+      <section class="section" id="slots-section">
+        <h2>My Time Slots</h2>
+        <p class="section-subtitle">The specialist only needs to choose time values. No manual specialist ID input is required.</p>
+
+        <div class="slot-form">
+          <div class="field">
+            <label for="slotStartTime">Start Time</label>
+            <input type="datetime-local" id="slotStartTime" />
+          </div>
+
+          <div class="field">
+            <label for="slotEndTime">End Time</label>
+            <input type="datetime-local" id="slotEndTime" />
+          </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="createSlot()">Add Slot</button>
+
+        <div class="notice">
+          Slot creation uses the specialist ID that has already been stored after login.
+        </div>
+
+        <div id="slotsContainer" class="slot-list" style="margin-top:20px;"></div>
+        <div id="slotsEmpty" class="empty" style="display:none;">No available slots found.</div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = '';
+
+    function getToken() {
+      return localStorage.getItem('token');
+    }
+
+    function getUser() {
+      try {
+        return JSON.parse(localStorage.getItem('user')) || {};
+      } catch {
+        return {};
+      }
+    }
+
+    function getSpecialistId() {
+      const user = getUser();
+      return user.specialistId || user.id || null;
+    }
+
+    async function authFetch(url, options = {}) {
+      const token = getToken();
+      const headers = {
+        'Content-Type': 'application/json',
+        ...(options.headers || {})
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(url, {
+        ...options,
+        headers
+      });
+
+      if (!response.ok) {
+        let errorText = `HTTP ${response.status}`;
+        try {
+          const data = await response.json();
+          errorText = data.error || data.message || JSON.stringify(data);
+        } catch {
+          try {
+            errorText = await response.text();
+          } catch {}
+        }
+        throw new Error(errorText);
+      }
+
+      if (response.status === 204) return null;
+
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        return response.json();
+      }
+      return response.text();
+    }
+
+    function showMessage(text, type = 'success') {
+      const box = document.getElementById('globalMessage');
+      box.className = `message ${type}`;
+      box.textContent = text;
+    }
+
+    function clearMessage() {
+      const box = document.getElementById('globalMessage');
+      box.className = 'message';
+      box.textContent = '';
+    }
+
+    function formatDateTime(value) {
+      if (!value) return '-';
+      return value.replace('T', ' ');
+    }
+
+    function formatDate(value) {
+      if (!value) return '-';
+      return value.split('T')[0];
+    }
+
+    function formatTime(value) {
+      if (!value) return '-';
+      const t = value.split('T')[1];
+      return t ? t.substring(0, 5) : '-';
+    }
+
+    function normalizeStatusText(status) {
+      if (status === null || status === undefined) return 'Unknown';
+      if (typeof status === 'number') return status === 1 ? 'Available' : 'Unavailable';
+      const s = String(status).toUpperCase();
+      if (s === 'AVAILABLE' || s === '1') return 'Available';
+      if (s === 'UNAVAILABLE' || s === '0') return 'Unavailable';
+      return String(status);
+    }
+
+    function getStatusClass(status) {
+      let s;
+      if (typeof status === 'number') {
+        s = status === 1 ? 'AVAILABLE' : 'UNAVAILABLE';
+      } else {
+        s = String(status || '').toUpperCase();
+      }
+      if (s === 'AVAILABLE') return 'status-available';
+      if (s === 'PENDING') return 'status-pending';
+      if (s === 'CONFIRMED') return 'status-confirmed';
+      if (s === 'COMPLETED') return 'status-completed';
+      if (['CANCELLED', 'EXPIRED', 'UNAVAILABLE'].includes(s)) return 'status-cancelled';
+      return 'status-pending';
+    }
+
+    function canSpecialistCancel(status) {
+      const s = (status || '').toUpperCase();
+      return s === 'PENDING' || s === 'CONFIRMED';
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function updateStats(bookings = [], slots = []) {
+      document.getElementById('totalBookings').textContent = bookings.length;
+      document.getElementById('pendingBookings').textContent =
+        bookings.filter(b => (b.status || '').toUpperCase() === 'PENDING').length;
+      document.getElementById('confirmedBookings').textContent =
+        bookings.filter(b => (b.status || '').toUpperCase() === 'CONFIRMED').length;
+      document.getElementById('rejectedBookings').textContent =
+        bookings.filter(b => ['CANCELLED','REJECTED','EXPIRED'].includes((b.status || '').toUpperCase())).length;
+      document.getElementById('totalSlots').textContent = slots.length;
+    }
+
+    async function loadProfile() {
+      const specialistId = getSpecialistId();
+      if (!specialistId) throw new Error('No specialistId found in localStorage user');
+
+      const data = await authFetch(`${API_BASE}/api/specialist/${specialistId}/profile`);
+
+      document.getElementById('profileId').textContent = data.id ?? specialistId;
+      document.getElementById('profileNameText').textContent = data.name || '-';
+      document.getElementById('profileContactText').textContent = data.contact || '-';
+      document.getElementById('profileExpertise').textContent = data.expertise || '-';
+      document.getElementById('profileLevel').textContent = data.level || '-';
+      document.getElementById('profileFee').textContent = data.fee != null ? `¥${data.fee}` : '-';
+      document.getElementById('profileDescriptionText').textContent = data.description || '-';
+
+      const statusText = normalizeStatusText(data.status);
+      document.getElementById('profileStatus').innerHTML =
+        `<span class="status-badge ${getStatusClass(data.status)}">${statusText}</span>`;
+
+      document.getElementById('profileNameInput').value = data.name || '';
+      document.getElementById('profileContactInput').value = data.contact || '';
+      document.getElementById('profileDescriptionInput').value = data.description || '';
+
+      const initials = (data.name || 'SP')
+        .split(' ')
+        .map(part => part[0])
+        .join('')
+        .substring(0, 2)
+        .toUpperCase();
+
+      // Show avatar image or initials
+      const avatarImg = document.getElementById('avatarImg');
+      const avatarInitials = document.getElementById('avatarInitials');
+      if (data.avatarUrl) {
+        avatarImg.src = data.avatarUrl;
+        avatarImg.style.display = 'block';
+        avatarInitials.style.display = 'none';
+      } else {
+        avatarImg.style.display = 'none';
+        avatarInitials.style.display = 'block';
+        avatarInitials.textContent = initials || 'SP';
+      }
+    }
+
+    async function uploadAvatar() {
+      const fileInput = document.getElementById('avatarFileInput');
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      if (file.size > 2 * 1024 * 1024) {
+        showMessage('File size exceeds 2MB limit.', 'error');
+        fileInput.value = '';
+        return;
+      }
+
+      try {
+        clearMessage();
+        const specialistId = getSpecialistId();
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const token = getToken();
+        const response = await fetch(`${API_BASE}/api/specialist/${specialistId}/avatar`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || 'Upload failed');
+        }
+
+        const data = await response.json();
+        document.getElementById('avatarImg').src = data.avatarUrl;
+        document.getElementById('avatarImg').style.display = 'block';
+        document.getElementById('avatarInitials').style.display = 'none';
+        showMessage('Avatar updated successfully.', 'success');
+      } catch (error) {
+        showMessage(`Avatar upload failed: ${error.message}`, 'error');
+      } finally {
+        fileInput.value = '';
+      }
+    }
+
+    async function updateProfile() {
+      try {
+        clearMessage();
+        const specialistId = getSpecialistId();
+
+        const body = {
+          name: document.getElementById('profileNameInput').value.trim(),
+          contact: document.getElementById('profileContactInput').value.trim(),
+          description: document.getElementById('profileDescriptionInput').value.trim()
+        };
+
+        await authFetch(`${API_BASE}/api/specialist/${specialistId}/profile`, {
+          method: 'PUT',
+          body: JSON.stringify(body)
+        });
+
+        showMessage('Profile updated successfully.', 'success');
+        await loadProfile();
+      } catch (error) {
+        showMessage(`Profile update failed: ${error.message}`, 'error');
+      }
+    }
+
+    async function loadBookings() {
+      const specialistId = getSpecialistId();
+      const bookings = await authFetch(`${API_BASE}/api/specialist/${specialistId}/bookings`);
+      const tbody = document.getElementById('bookingsTableBody');
+      const empty = document.getElementById('bookingsEmpty');
+
+      tbody.innerHTML = '';
+
+      if (!bookings || bookings.length === 0) {
+        empty.style.display = 'block';
+        return [];
+      }
+
+      empty.style.display = 'none';
+
+      bookings.forEach(booking => {
+        const status = booking.status || '-';
+        const cancelReason = booking.cancelReason || '-';
+        const customerText = booking.customerName || ('User #' + booking.customerId) || '-';
+        const dateText = booking.date || booking.bookingDate || '-';
+        const timeText = booking.time || '-';
+
+        const cancelReminder = (status || '').toUpperCase() === 'CANCELLED'
+          ? `<div class="cancel-reminder">
+               User Reminder: The customer will see this booking as cancelled in My Bookings.
+               ${booking.cancelReason ? `Reason: ${escapeHtml(booking.cancelReason)}` : ''}
+             </div>`
+          : '';
+
+        let actionHtml = '';
+
+        if ((status || '').toUpperCase() === 'PENDING') {
+          actionHtml += `<button class="btn-sm btn-success" onclick="confirmBooking(${booking.id})">Confirm</button>`;
+        }
+
+        if ((status || '').toUpperCase() === 'CONFIRMED') {
+          actionHtml += `<button class="btn-sm btn-success" onclick="completeBooking(${booking.id})">Complete</button>`;
+        }
+
+        if (canSpecialistCancel(status)) {
+          actionHtml += `<button class="btn-sm btn-danger" onclick="cancelBooking(${booking.id})">Cancel</button>`;
+        }
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${booking.id ?? '-'}</td>
+          <td>${customerText}</td>
+          <td>${escapeHtml(booking.topic || '-')}</td>
+          <td>${dateText}</td>
+          <td>${timeText}</td>
+          <td><span class="status-badge ${getStatusClass(status)}">${status}</span></td>
+          <td>
+            ${escapeHtml(cancelReason)}
+            ${cancelReminder}
+          </td>
+          <td><div class="table-actions">${actionHtml || '-'}</div></td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      return bookings;
+    }
+
+    async function confirmBooking(id) {
+      try {
+        clearMessage();
+        await authFetch(`${API_BASE}/api/specialist/bookings/${id}/confirm`, {
+          method: 'PUT'
+        });
+        showMessage(`Booking ${id} confirmed successfully.`, 'success');
+        await reloadData();
+      } catch (error) {
+        showMessage(`Confirm failed: ${error.message}`, 'error');
+      }
+    }
+
+    async function completeBooking(id) {
+      try {
+        clearMessage();
+        await authFetch(`${API_BASE}/api/specialist/bookings/${id}/complete`, {
+          method: 'PUT'
+        });
+        showMessage(`Booking ${id} completed successfully.`, 'success');
+        await reloadData();
+      } catch (error) {
+        showMessage(`Complete failed: ${error.message}`, 'error');
+      }
+    }
+
+    async function cancelBooking(id) {
+      const cancelReason = prompt('Please enter a clear cancellation reason for the customer:');
+      if (!cancelReason || !cancelReason.trim()) return;
+
+      const confirmed = confirm(
+        'After cancellation, the customer will see a clear cancellation reminder in My Bookings. Continue?'
+      );
+      if (!confirmed) return;
+
+      try {
+        clearMessage();
+
+        await authFetch(`${API_BASE}/api/specialist/bookings/${id}/cancel`, {
+          method: 'POST',
+          body: JSON.stringify({
+            cancelReason: cancelReason.trim(),
+            reason: cancelReason.trim(),
+            changedBy: 'SPECIALIST'
+          })
+        });
+
+        showMessage(
+          `Booking ${id} cancelled successfully. The customer will be clearly reminded in My Bookings.`,
+          'success'
+        );
+
+        await reloadData();
+      } catch (error) {
+        showMessage(`Cancel failed: ${error.message}`, 'error');
+      }
+    }
+
+    async function loadSlots() {
+      const specialistId = getSpecialistId();
+      const slots = await authFetch(`${API_BASE}/api/specialist/${specialistId}/slots`);
+      const container = document.getElementById('slotsContainer');
+      const empty = document.getElementById('slotsEmpty');
+
+      container.innerHTML = '';
+
+      if (!slots || slots.length === 0) {
+        empty.style.display = 'block';
+        return [];
+      }
+
+      empty.style.display = 'none';
+
+      slots.forEach(slot => {
+        const now = new Date();
+        const endTime = new Date(slot.endTime);
+        const isPast = endTime < now;
+        const statusLabel = isPast ? 'Expired' : 'Available';
+        const statusClass = isPast ? 'status-expired' : 'status-available';
+
+        const card = document.createElement('div');
+        card.className = 'slot-card';
+        card.innerHTML = `
+          <h4>${formatDate(slot.startTime)}</h4>
+          <p><strong>Time:</strong> ${formatTime(slot.startTime)} - ${formatTime(slot.endTime)}</p>
+          <p><strong>Status:</strong> <span class="status-badge ${statusClass}">${statusLabel}</span></p>
+          <div class="slot-actions">
+            <button class="btn-sm btn-danger" onclick="deleteSlot(${slot.id})">Delete</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      return slots;
+    }
+
+    async function createSlot() {
+      try {
+        clearMessage();
+        const specialistId = getSpecialistId();
+        const startTime = document.getElementById('slotStartTime').value;
+        const endTime = document.getElementById('slotEndTime').value;
+
+        if (!startTime || !endTime) {
+          showMessage('Please select both start time and end time.', 'error');
+          return;
+        }
+
+        await authFetch(`${API_BASE}/api/specialist/${specialistId}/slots`, {
+          method: 'POST',
+          body: JSON.stringify({
+            startTime: `${startTime}:00`,
+            endTime: `${endTime}:00`
+          })
+        });
+
+        showMessage('Slot created successfully.', 'success');
+        document.getElementById('slotStartTime').value = '';
+        document.getElementById('slotEndTime').value = '';
+        await reloadData();
+      } catch (error) {
+        showMessage(`Create slot failed: ${error.message}`, 'error');
+      }
+    }
+
+    async function deleteSlot(id) {
+      if (!confirm(`Are you sure you want to delete slot ${id}?`)) return;
+
+      try {
+        clearMessage();
+        await authFetch(`${API_BASE}/api/specialist/slots/${id}`, {
+          method: 'DELETE'
+        });
+        showMessage(`Slot ${id} deleted successfully.`, 'success');
+        await reloadData();
+      } catch (error) {
+        showMessage(`Delete slot failed: ${error.message}`, 'error');
+      }
+    }
+
+    async function reloadData() {
+      const [bookings, slots] = await Promise.all([
+        loadBookings(),
+        loadSlots()
+      ]);
+      updateStats(bookings, slots);
+    }
+
+    async function initDashboard() {
+      try {
+        clearMessage();
+        const specialistId = getSpecialistId();
+
+        if (!specialistId) {
+          showMessage('No specialistId found in localStorage user.', 'error');
+          return;
+        }
+
+        await loadProfile();
+        await reloadData();
+      } catch (error) {
+        showMessage(`Dashboard loading failed: ${error.message}`, 'error');
+      }
+    }
+
+    function scrollToSection(id) {
+      const target = document.getElementById(id);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function goBack() {
+      history.back();
+    }
+
+    initDashboard();
+  </script>
+</body>
+</html>

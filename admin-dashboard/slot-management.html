@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="auth-check.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Time Slot Management</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <h2>Booking Admin</h2>
+      <nav>
+        <a href="index.html">Dashboard</a>
+        <a href="specialist-management.html">Specialists</a>
+        <a href="booking-management.html">Bookings</a>
+        <a class="active" href="slot-management.html">Time Slots</a>
+        <a href="expertise-management.html">Expertise</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="page-header">
+        <div>
+          <h1>Manage Time Slots</h1>
+        </div>
+        <button type="button" class="secondary-btn back-btn" onclick="goBackFromAdmin()">← Back</button>
+      </header>
+
+      <section class="panel" id="slotFormPanel">
+        <div class="panel-header">
+          <h2 id="formTitle">Create New Slot</h2>
+        </div>
+
+        <form id="slotForm" class="specialist-form">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="specialistId">Specialist ID</label>
+              <input type="number" id="specialistId" required />
+            </div>
+            <div class="form-group">
+              <label for="startTime">Start Time</label>
+              <input type="datetime-local" id="startTime" required />
+            </div>
+            <div class="form-group">
+              <label for="endTime">End Time</label>
+              <input type="datetime-local" id="endTime" required />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="primary-btn" id="submitBtn">Save Slot</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel" style="margin-top:20px;">
+        <div class="panel-header">
+          <h2>Existing Slots</h2>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Specialist ID</th>
+              <th>Start Time</th>
+              <th>End Time</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="slotListBody">
+            <tr><td colspan="5">Loading slots...</td></tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+  <script src="slot-management.js"></script>
+  <script src="validation-en.js"></script>
+</body>
+</html>

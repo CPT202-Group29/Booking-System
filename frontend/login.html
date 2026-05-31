@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Expert Booking System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Fira Sans', Arial, sans-serif;
+            background: #F7F5F2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .login-card {
+            background: #fff;
+            padding: 40px 36px;
+            border-radius: 22px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.03), 0 8px 32px rgba(0,0,0,0.03);
+            width: 100%;
+            max-width: 420px;
+        }
+        .login-card h2 {
+            text-align: center;
+            margin-bottom: 28px;
+            color: #3D3D3D;
+            font-size: 22px;
+        }
+        .form-group { margin-bottom: 18px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #8B8378;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid #EDE8E0;
+            border-radius: 14px;
+            font-size: 14px;
+            font-family: inherit;
+            background: #FAF8F5;
+            color: #4A4A4A;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #D4C4B0;
+            box-shadow: 0 0 0 4px rgba(200,180,155,0.12);
+            background: #fff;
+        }
+        .remember-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 18px;
+            color: #8B8378;
+            font-size: 13px;
+        }
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: #E8B4A2;
+            color: #fff;
+            border: none;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .btn-login:hover { background: #E0A18A; }
+        .message { margin-top: 16px; padding: 12px 16px; border-radius: 14px; font-size: 13px; font-weight: 500; }
+        .error { background: #F0D5D5; color: #8A4040; border: 1px solid #E0C0C0; }
+        .success { background: #D9EAD3; color: #3D6B35; border: 1px solid #C5DCBE; }
+        .login-card p {
+            text-align: center;
+            margin-top: 18px;
+            color: #A09888;
+            font-size: 13px;
+        }
+        .login-card p a { color: #C4A88B; text-decoration: none; font-weight: 500; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h2>Welcome Back</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="email" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" required>
+            </div>
+            <div class="remember-row">
+                <input type="checkbox" id="rememberMe">
+                <label for="rememberMe">Remember me</label>
+            </div>
+            <button type="submit" class="btn-login">Login</button>
+        </form>
+        <div id="message" class="message"></div>
+        <p><a href="forgot-password.html">Forgot password?</a></p>
+        <p>No account? <a href="register.html">Register now</a></p>
+    </div>
+    <script type="module" src="js/auth.js"></script>
+</body>
+</html>

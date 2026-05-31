@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Expert Booking System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Fira Sans', Arial, sans-serif;
+            background: #F7F5F2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .register-card {
+            background: #fff;
+            padding: 40px 36px;
+            border-radius: 22px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.03), 0 8px 32px rgba(0,0,0,0.03);
+            width: 100%;
+            max-width: 480px;
+        }
+        .tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #EDE8E0;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #A09888;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            font-family: inherit;
+        }
+        .tab-btn.active {
+            color: #C4A88B;
+            border-bottom-color: #C4A88B;
+            font-weight: 600;
+        }
+        .form-group { margin-bottom: 18px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #8B8378;
+            font-size: 13px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid #EDE8E0;
+            border-radius: 14px;
+            font-size: 14px;
+            font-family: inherit;
+            background: #FAF8F5;
+            color: #4A4A4A;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #D4C4B0;
+            box-shadow: 0 0 0 4px rgba(200,180,155,0.12);
+            background: #fff;
+        }
+        .verification-row { display: flex; gap: 10px; }
+        .verification-row button {
+            white-space: nowrap;
+            padding: 0 16px;
+            background: #E8B4A2;
+            color: #fff;
+            border: none;
+            border-radius: 40px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.25s ease;
+        }
+        .verification-row button:hover { background: #E0A18A; }
+        .btn-register {
+            width: 100%;
+            padding: 12px;
+            background: #E8B4A2;
+            color: #fff;
+            border: none;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: all 0.25s ease;
+        }
+        .btn-register:hover { background: #E0A18A; }
+        .message { margin-top: 16px; padding: 12px 16px; border-radius: 14px; font-size: 13px; font-weight: 500; }
+        .error { background: #F0D5D5; color: #8A4040; border: 1px solid #E0C0C0; }
+        .success { background: #D9EAD3; color: #3D6B35; border: 1px solid #C5DCBE; }
+        .info { background: #F0EBE3; color: #6B6058; border: 1px solid #E8DFD3; }
+        .register-card p { text-align: center; margin-top: 18px; color: #A09888; font-size: 13px; }
+        .register-card p a { color: #C4A88B; text-decoration: none; font-weight: 500; }
+        small { display: block; margin-top: 4px; font-size: 12px; color: #A09888; }
+    </style>
+</head>
+<body>
+    <div class="register-card">
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="customer">Customer</button>
+            <button class="tab-btn" data-tab="specialist">Specialist Applicant</button>
+        </div>
+
+        <!-- 客户注册表单 -->
+        <form id="customerForm" class="tab-content">
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="custName" required>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="custEmail" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="custPassword" required>
+                <small>At least 6 characters, include letters and numbers</small>
+            </div>
+            <div class="form-group">
+                <label>Confirm Password</label>
+                <input type="password" id="custConfirmPassword" required>
+            </div>
+            <div class="form-group">
+                <label>Verification Code</label>
+                <div class="verification-row">
+                    <input type="text" id="custVerificationCode" placeholder="6-digit code">
+                    <button type="button" id="sendCustCodeBtn">Send Code</button>
+                </div>
+            </div>
+            <button type="submit" class="btn-register">Register as Customer</button>
+        </form>
+
+        <!-- 专家注册表单 -->
+        <form id="specialistForm" class="tab-content" style="display:none;">
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="specName" required>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="specEmail" required>
+            </div>
+            <div class="form-group">
+                <label>Expertise</label>
+                <input type="text" id="specExpertise" placeholder="e.g., Psychology, Career Advice" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="specPassword" required>
+                <small>At least 6 characters, include letters and numbers</small>
+            </div>
+            <div class="form-group">
+                <label>Confirm Password</label>
+                <input type="password" id="specConfirmPassword" required>
+            </div>
+            <div class="form-group">
+                <label>Verification Code</label>
+                <div style="display:flex; gap:8px;">
+                    <input type="text" id="specVerificationCode" required placeholder="6-digit code" style="flex:1;">
+                    <button type="button" id="sendSpecCodeBtn" class="btn-send-code">Send Code</button>
+                </div>
+            </div>
+            <div class="info" style="margin-bottom: 16px; padding: 10px;">
+                <strong>Note:</strong> After submitting the application, the admin will review your request and assign your service level and fee. You will be able to login only after approval.
+            </div>
+            <button type="submit" class="btn-register">Submit Application</button>
+        </form>
+
+        <div id="message" class="message"></div>
+        <p>Already have an account? <a href="login.html">Sign in</a></p>
+    </div>
+
+    <script type="module">
+        import { register, sendVerificationCode, registerSpecialist } from './js/api.js';
+
+        // Tab switching
+        const tabs = document.querySelectorAll('.tab-btn');
+        const customerForm = document.getElementById('customerForm');
+        const specialistForm = document.getElementById('specialistForm');
+        let activeTab = 'customer';
+
+        tabs.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabs.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeTab = btn.dataset.tab;
+                if (activeTab === 'customer') {
+                    customerForm.style.display = 'block';
+                    specialistForm.style.display = 'none';
+                } else {
+                    customerForm.style.display = 'none';
+                    specialistForm.style.display = 'block';
+                }
+            });
+        });
+
+        function showMessage(text, type) {
+            const msgDiv = document.getElementById('message');
+            msgDiv.innerHTML = `<div class="${type}">${text}</div>`;
+            setTimeout(() => msgDiv.innerHTML = '', 5000);
+        }
+
+        // 客户注册逻辑（保留原有验证码倒计时等）
+        let custCountdown = 0;
+        const sendCustBtn = document.getElementById('sendCustCodeBtn');
+        const custEmail = document.getElementById('custEmail');
+
+        sendCustBtn.addEventListener('click', async () => {
+            const email = custEmail.value.trim();
+            if (!email) { showMessage('Please enter email first', 'error'); return; }
+            if (custCountdown > 0) { showMessage(`Please wait ${custCountdown} seconds`, 'error'); return; }
+            try {
+                await sendVerificationCode(email);
+                showMessage('Verification code sent (check console)', 'success');
+                custCountdown = 60;
+                sendCustBtn.disabled = true;
+                const interval = setInterval(() => {
+                    custCountdown--;
+                    sendCustBtn.innerText = `${custCountdown}s`;
+                    if (custCountdown <= 0) {
+                        clearInterval(interval);
+                        sendCustBtn.disabled = false;
+                        sendCustBtn.innerText = 'Send Code';
+                    }
+                }, 1000);
+            } catch (err) {
+                showMessage(err.message, 'error');
+            }
+        });
+
+        customerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('custName').value.trim();
+            const email = custEmail.value.trim();
+            const password = document.getElementById('custPassword').value;
+            const confirm = document.getElementById('custConfirmPassword').value;
+            const code = document.getElementById('custVerificationCode').value.trim();
+            if (!name || !email || !password || !confirm || !code) {
+                showMessage('Please fill all fields', 'error');
+                return;
+            }
+            if (password !== confirm) {
+                showMessage('Passwords do not match', 'error');
+                return;
+            }
+            const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/;
+            if (!passwordRegex.test(password)) {
+                showMessage('Password must be at least 6 characters with letters and numbers', 'error');
+                return;
+            }
+            try {
+                await register(name, email, password, code);
+                showMessage('Registration successful! Redirecting to login...', 'success');
+                setTimeout(() => window.location.href = 'login.html', 1500);
+            } catch (err) {
+                showMessage(err.message, 'error');
+            }
+        });
+
+        // 专家发送验证码
+        let specCountdown = 0;
+        const sendSpecBtn = document.getElementById('sendSpecCodeBtn');
+        const specEmail = document.getElementById('specEmail');
+
+        sendSpecBtn.addEventListener('click', async () => {
+            const email = specEmail.value.trim();
+            if (!email) { showMessage('Please enter email first', 'error'); return; }
+            if (specCountdown > 0) { showMessage('Please wait ' + specCountdown + 's', 'error'); return; }
+            try {
+                await sendVerificationCode(email);
+                showMessage('Verification code sent (check console)', 'success');
+                specCountdown = 60;
+                sendSpecBtn.disabled = true;
+                const interval = setInterval(() => {
+                    specCountdown--;
+                    sendSpecBtn.innerText = specCountdown + 's';
+                    if (specCountdown <= 0) {
+                        clearInterval(interval);
+                        sendSpecBtn.disabled = false;
+                        sendSpecBtn.innerText = 'Send Code';
+                    }
+                }, 1000);
+            } catch (err) {
+                showMessage(err.message, 'error');
+            }
+        });
+
+        // 专家注册逻辑（需要验证码）
+        specialistForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('specName').value.trim();
+            const email = document.getElementById('specEmail').value.trim();
+            const expertise = document.getElementById('specExpertise').value.trim();
+            const password = document.getElementById('specPassword').value;
+            const confirm = document.getElementById('specConfirmPassword').value;
+            const code = document.getElementById('specVerificationCode').value.trim();
+            if (!name || !email || !expertise || !password || !confirm || !code) {
+                showMessage('Please fill all fields including verification code', 'error');
+                return;
+            }
+            if (password !== confirm) {
+                showMessage('Passwords do not match', 'error');
+                return;
+            }
+            const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/;
+            if (!passwordRegex.test(password)) {
+                showMessage('Password must be at least 6 characters with letters and numbers', 'error');
+                return;
+            }
+            try {
+                await registerSpecialist(name, email, expertise, password, code);
+                showMessage('Application submitted! Please wait for admin approval. You will receive an email once approved.', 'success');
+                specialistForm.reset();
+            } catch (err) {
+                showMessage(err.message, 'error');
+            }
+        });
+    </script>
+</body>
+</html>

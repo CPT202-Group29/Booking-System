@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="auth-check.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Specialist Management</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <h2>Booking Admin</h2>
+      <nav>
+        <a href="index.html">Dashboard</a>
+        <a class="active" href="specialist-management.html">Specialists</a>
+        <a href="booking-management.html">Bookings</a>
+        <a href="slot-management.html">Time Slots</a>
+        <a href="expertise-management.html">Expertise</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="page-header">
+        <div>
+          <h1>Specialist Management</h1>
+          <p>Create, update, and manage specialist records using the same fields as the front-end specialist pages.</p>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="secondary-btn back-btn" onclick="goBackFromAdmin()">← Back</button>
+          <button class="primary-btn" id="showFormBtn">Add Specialist</button>
+        </div>
+      </header>
+
+      <section class="stats-grid">
+        <div class="stat-card">
+          <p>Total Specialists</p>
+          <h2 id="totalSpecialists">0</h2>
+        </div>
+
+        <div class="stat-card">
+          <p>Available Specialists</p>
+          <h2 id="availableSpecialists">0</h2>
+        </div>
+
+        <div class="stat-card">
+          <p>Unavailable Specialists</p>
+          <h2 id="unavailableSpecialists">0</h2>
+        </div>
+      </section>
+
+      <section class="panel" id="specialistFormPanel">
+        <div class="panel-header">
+          <div>
+            <h2 id="formTitle">Add Specialist</h2>
+            <p class="panel-subtitle">
+              Fields are aligned with A3 specialist list and details page.
+            </p>
+          </div>
+        </div>
+
+        <form id="specialistForm" class="specialist-form">
+          <input type="hidden" id="editIndex" value="" />
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="name">Name</label>
+              <input type="text" id="name" placeholder="e.g. Dr. Wang" required />
+            </div>
+
+            <div class="form-group">
+              <label for="expertise">Expertise</label>
+              <input type="text" id="expertise" placeholder="e.g. Academic Support" required />
+            </div>
+
+            <div class="form-group">
+              <label for="level">Level</label>
+              <select id="level" required>
+                <option value="">Select level</option>
+                <option value="Junior">Junior</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Senior">Senior</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="fee">Fee</label>
+              <select id="fee" required>
+                <option value="">Select fee</option>
+                <option value="50">50</option>
+                <option value="90">90</option>
+                <option value="120">120</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="status">Status</label>
+              <select id="status" required>
+                <option value="1">Available</option>
+                <option value="0">Unavailable</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="contact">Contact</label>
+              <input type="email" id="contact" placeholder="e.g. wang@example.com" required />
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="description">Description</label>
+            <textarea id="description" rows="4" placeholder="Briefly describe the specialist's consultation area." required></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="primary-btn" id="submitBtn">Save Specialist</button>
+            <button type="button" class="secondary-btn" id="resetBtn">Clear Form</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Specialist Records</h2>
+            <p class="panel-subtitle">
+              Admin records use: name, expertise, level, fee, status, contact, description.
+            </p>
+          </div>
+
+          <select id="statusFilter">
+            <option value="All">All Status</option>
+            <option value="Available">Available</option>
+            <option value="Unavailable">Unavailable</option>
+          </select>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Expertise</th>
+              <th>Level</th>
+              <th>Fee</th>
+              <th>Status</th>
+              <th>Contact</th>
+              <th>Description</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="specialistTableBody"></tbody>
+        </table>
+      </section>
+
+      <section class="panel" id="pendingPanel">
+        <div class="panel-header">
+          <h2>Pending Applications</h2>
+          <p class="panel-subtitle">Review and approve/reject specialist registration requests.</p>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Expertise</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="pendingTableBody">
+            <tr><td colspan="5">Loading...</td></tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+
+  <script src="specialist-management.js"></script>
+  <script src="validation-en.js"></script>
+</body>
+</html>
